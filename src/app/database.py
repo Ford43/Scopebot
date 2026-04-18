@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # รูปแบบ: postgresql+asyncpg://user:password@host:port/dbname
-DATABASE_URL = "postgresql+asyncpg://admin:password@localhost/scopebot"
+DATABASE_URL = "postgresql+asyncpg://postgres:ford2543@localhost/scopebot"
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
