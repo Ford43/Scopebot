@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard, MessageSquare, Brain, FileText, History, Puzzle,
-  LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Hourglass, Mic,
+  LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
-  Home, Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Eye,
+  Home, Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
+  Hourglass,Eye,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
@@ -16,12 +17,13 @@ import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import BotsPage from "./BotsPage";
+
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
   | "dashboard" | "unified-chat" | "analytics"
-  | "documents" | "search-history" | "integration" | "chat"
-  | "user-management";
+  | "documents" | "search-history" | "integration" | "chat" | "bots"  | "user-management";
 
 interface Message {
   id: string;
@@ -67,6 +69,7 @@ const viewLabels: Record<ActiveView, string> = {
   "search-history": "ประวัติการค้นหา",
   integration:      "Integration",
   chat:             "Home",
+  bots:             "Bots",
   "user-management": "User Management",
 };
 
@@ -89,6 +92,7 @@ function getStatusClass(status: string) {
     default: return "bg-gray-100 text-gray-600";
   }
 }
+
 function groupByDate(items: HistoryItem[]) {
   const today     = new Date(); today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
@@ -549,6 +553,7 @@ export default function ChatInterface() {
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
       case "user-management": return renderUserManagement();
+      case "bots":           return <BotsPage />;
       case "chat":           return renderChat();
     }
   };
@@ -909,6 +914,22 @@ export default function ChatInterface() {
               {/* USER role: inline history */}
               {role === "user" && (
                 <>
+                  {/* Bots */}
+                  <button
+                    onClick={() => setActiveView("bots")}
+                    title={sidebarCollapsed ? "Bots" : undefined}
+                    className={`w-full flex items-center rounded-lg text-sm transition-colors ${
+                      sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
+                    } ${
+                      activeView === "bots"
+                        ? "bg-amber-400 text-gray-900"
+                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    }`}
+                  >
+                    <Bot className={`w-4 h-4 flex-shrink-0 ${activeView === "bots" ? "text-gray-900" : "text-gray-500"}`} />
+                    {!sidebarCollapsed && <span className="flex-1">Bots</span>}
+                  </button>
+
                   <button
                     onClick={() => setShowHistoryDrawer(true)}
                     title={sidebarCollapsed ? "ประวัติการค้นหา" : undefined}
@@ -1247,7 +1268,7 @@ export default function ChatInterface() {
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {activeView !== "chat" && renderTopBar()}
-        <main className={`flex-1 ${activeView === "chat" ? "overflow-y-auto" : "overflow-y-auto p-6"}`}>
+        <main className={`flex-1 ${activeView === "chat" || activeView === "bots" ? "overflow-y-auto" : "overflow-y-auto p-6"}`}>
           {renderContent()}
         </main>
       </div>
