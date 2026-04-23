@@ -259,6 +259,9 @@ export default function ChatInterface() {
     { id: "documents"       as ActiveView, label: "Documents",         icon: FileText },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
     { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
+    { id: "chat" as ActiveView, label: "Chat", icon: MessageSquare },
+    { id: "user-management" as ActiveView, label: "User Management", icon: User },
+    { id: "bots"            as ActiveView, label: "Bots",             icon: Bot },
   ];
 
   const supportMenuItems = [
@@ -868,37 +871,6 @@ export default function ChatInterface() {
 
           {!sidebarCollapsed && <p className="text-[10px] text-gray-600 uppercase tracking-wider px-3 mb-1.5">ผู้ใช้งาน</p>}
 
-          {/* Home */}
-          <button
-            onClick={() => setActiveView("chat")}
-            title={sidebarCollapsed ? "Home" : undefined}
-            className={`w-full flex items-center rounded-lg text-sm transition-colors ${
-              sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-            } ${
-              activeView === "chat"
-                ? "bg-amber-400 text-gray-900"
-                : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            }`}
-          >
-            <Home className={`w-4 h-4 flex-shrink-0 ${activeView === "chat" ? "text-gray-900" : "text-gray-500"}`} />
-            {!sidebarCollapsed && <span className="flex-1">Home</span>}
-          </button>
-
-          {/* User Management button */}
-          <button
-            onClick={() => setActiveView("user-management")}
-            title={sidebarCollapsed ? "User Management" : undefined}
-            className={`w-full flex items-center rounded-lg text-sm transition-colors ${
-              sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-            } ${
-              activeView === "user-management"
-                ? "bg-amber-400 text-gray-900"
-                : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            }`}
-          >
-            <User className={`w-4 h-4 flex-shrink-0 ${activeView === "user-management" ? "text-gray-900" : "text-gray-500"}`} />
-            {!sidebarCollapsed && <span className="flex-1">User Management</span>}
-          </button>
 
           {/* ── เมนูหลัก section ── */}
           {(isAuthenticated) && (
