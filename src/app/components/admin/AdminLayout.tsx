@@ -20,7 +20,6 @@ import { useAuth } from "../../contexts/AuthContext";
 const menuItems = [
   { id: "dashboard",      label: "Dashboard",           path: "/",               icon: LayoutDashboard },
   { id: "chat",           label: "Unified Chat",         path: "/unified-chat",   icon: MessageSquare,  badge: true },
-  { id: "analytics",      label: "AI Analytics",         path: "/analytics",      icon: Brain },
   { id: "documents",      label: "Documents",            path: "/documents",      icon: FileText },
   { id: "search-history", label: "ประวัติการค้นหา",     path: "/search-history", icon: History },
   { id: "integration",    label: "Integration",          path: "/integration",    icon: Puzzle },
