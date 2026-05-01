@@ -9,7 +9,6 @@ import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
 import Dashboard   from "../admin/Dashboard";
-import AIAnalytics from "../admin/AIAnalytics";
 import Documents   from "../admin/Documents";
 import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
@@ -22,8 +21,7 @@ import BotsPage from "./BotsPage";
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
-  | "dashboard" | "unified-chat" | "analytics"
-  | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+  | "dashboard" | "unified-chat" | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
 
 interface Message {
   id: string;
@@ -64,7 +62,6 @@ const categoryColors: Record<string, string> = {
 const viewLabels: Record<ActiveView, string> = {
   dashboard:        "Dashboard",
   "unified-chat":   "Unified Chat",
-  analytics:        "AI Analytics",
   documents:        "Documents",
   "search-history": "ประวัติการค้นหา",
   integration:      "Integration",
@@ -195,7 +192,6 @@ export default function ChatInterface() {
   const adminMenuItems = [
     { id: "dashboard"       as ActiveView, label: "Dashboard",        icon: LayoutDashboard },
     { id: "unified-chat"    as ActiveView, label: "Unified Chat",      icon: MessageSquare, badge: true },
-    { id: "analytics"       as ActiveView, label: "AI Analytics",      icon: Brain },
     { id: "documents"       as ActiveView, label: "Documents",         icon: FileText },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
     { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
@@ -212,7 +208,6 @@ export default function ChatInterface() {
     switch (activeView) {
       case "dashboard":      return <Dashboard />;
       case "unified-chat":   return <UnifiedChat />;
-      case "analytics":      return <AIAnalytics />;
       case "documents":      return <Documents />;
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
