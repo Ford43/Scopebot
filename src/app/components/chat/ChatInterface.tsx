@@ -3,8 +3,8 @@ import {
   LayoutDashboard, MessageSquare, Brain, FileText, History, Puzzle,
   LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
-  Home, Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
-  Hourglass, Eye, Settings, // <-- เพิ่ม Settings ตรงนี้
+  Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
+  Hourglass, Eye, Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
@@ -15,10 +15,7 @@ import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
 import UserManagement from "../admin/UserManagement";
-import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import BotsPage from "./BotsPage";
-
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
@@ -98,10 +95,10 @@ export default function ChatInterface() {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showUserMenu, setShowUserMenu]   = useState(false);
   const [topSearch, setTopSearch]         = useState("");
-  const [activeView, setActiveView]       = useState<ActiveView>("chat");
+  const [activeView, setActiveView]       = useState<ActiveView>("bots"); // เปลี่ยนค่าเริ่มต้นเป็น bots
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
-  // เพิ่ม State ของ Bot
+  // State ของ Bot
   const [activeBot, setActiveBot] = useState<any>(null);
   const [forceEditBot, setForceEditBot] = useState<string | null>(null);
 
@@ -119,7 +116,7 @@ export default function ChatInterface() {
       prevRoleRef.current = user?.role;
       if (user?.role === "admin")   setActiveView("dashboard");
       else if (user?.role === "support") setActiveView("unified-chat");
-      else setActiveView("chat");
+      else setActiveView("bots"); // เปลี่ยนให้ user ทั่วไปเห็นหน้า bots เป็นหน้าแรก
     }
   }, [user?.role]);
 
@@ -177,7 +174,7 @@ export default function ChatInterface() {
     }, delay);
   };
 
-  const handleNewChat = () => { setMessages([]); setInputValue(""); setActiveView("chat"); };
+  const handleNewChat = () => { setMessages([]); setInputValue(""); };
 
   const handleHistoryClick = (query: string) => {
     setShowHistoryDrawer(false);
@@ -203,7 +200,7 @@ export default function ChatInterface() {
     { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
     { id: "user-management" as ActiveView, label: "User Management", icon: User },
     { id: "bots"            as ActiveView, label: "Bots",              icon: Bot },
-    { id: "chat"            as ActiveView, label: "Chat",              icon: Home },
+    // ลบเมนู Chat ออกจากส่วนของ Admin แล้ว
   ];
 
   const supportMenuItems = [
@@ -563,24 +560,6 @@ export default function ChatInterface() {
 
           {!sidebarCollapsed && role !== "admin" && <p className="text-[10px] text-gray-600 uppercase tracking-wider px-3 mb-1.5">ผู้ใช้งาน</p>}
 
-          {/* Chat — hidden for admin (moved into เมนูหลัก) */}
-          {role !== "admin" && (
-          <button
-            onClick={() => { setActiveView("chat"); setActiveBot(null); }}
-            title={sidebarCollapsed ? "Chat" : undefined}
-            className={`w-full flex items-center rounded-lg text-sm transition-colors ${
-              sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-            } ${
-              activeView === "chat"
-                ? "bg-amber-400 text-gray-900"
-                : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            }`}
-          >
-            <Home className={`w-4 h-4 flex-shrink-0 ${activeView === "chat" ? "text-gray-900" : "text-gray-500"}`} />
-            {!sidebarCollapsed && <span className="flex-1">Chat</span>}
-          </button>
-          )}
-
           {/* ── เมนูหลัก section ── */}
           {(isAuthenticated) && (
             <>
@@ -703,7 +682,6 @@ export default function ChatInterface() {
                         key={item.id}
                         onClick={() => {
                           setActiveView(item.id);
-                          if(item.id === "chat") setActiveBot(null); // ล้างบอทเวลาสลับไปเมนู Chat ธรรมดา
                         }}
                         title={sidebarCollapsed ? item.label : undefined}
                         className={`w-full flex items-center rounded-lg text-sm transition-colors ${
@@ -798,12 +776,13 @@ export default function ChatInterface() {
                   <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{user?.name}</p>
                   <p className="text-xs text-gray-400">{user?.email}</p>
                 </div>
+                {/* แก้ไขเมนูดรอปดาวน์มุมขวาบนให้วิ่งไปหน้า Bots แทน Chat */}
                 <button
-                  onClick={() => { setShowUserMenu(false); setActiveView("chat"); setActiveBot(null); }}
+                  onClick={() => { setShowUserMenu(false); setActiveView("bots"); setActiveBot(null); }}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
                 >
-                  <Home className="w-4 h-4" />
-                  Chat
+                  <Bot className="w-4 h-4" />
+                  Bots
                 </button>
                 <button
                   onClick={() => { setShowUserMenu(false); handleLogout(); }}
