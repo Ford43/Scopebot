@@ -4,7 +4,8 @@ import {
   LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
   Home, Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
-    Hourglass,Eye,} from "lucide-react";
+  Hourglass, Eye, Settings, // <-- เพิ่ม Settings ตรงนี้
+} from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
@@ -21,7 +22,8 @@ import BotsPage from "./BotsPage";
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
-  | "dashboard" | "unified-chat" | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+  | "dashboard" | "unified-chat"
+  | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
 
 interface Message {
   id: string;
@@ -99,6 +101,10 @@ export default function ChatInterface() {
   const [activeView, setActiveView]       = useState<ActiveView>("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
+  // เพิ่ม State ของ Bot
+  const [activeBot, setActiveBot] = useState<any>(null);
+  const [forceEditBot, setForceEditBot] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const prevRoleRef    = useRef<string | undefined>(undefined);
@@ -212,7 +218,19 @@ export default function ChatInterface() {
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
       case "user-management": return <UserManagement/>;
-      case "bots":           return <BotsPage />;
+      case "bots":           
+        return (
+          <BotsPage 
+            onSelectBot={(bot) => {
+              setActiveBot(bot);
+              setActiveView("chat");
+              setMessages([]);
+              setInputValue("");
+            }}
+            forceEditBotId={forceEditBot}
+            onClearForceEdit={() => setForceEditBot(null)}
+          />
+        );
       case "chat":           return renderChat();
     }
   };
@@ -226,23 +244,39 @@ export default function ChatInterface() {
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center">
-            <Zap className="w-4 h-4 text-gray-900" />
+            {activeBot ? <Bot className="w-4 h-4 text-gray-900" /> : <Zap className="w-4 h-4 text-gray-900" />}
           </div>
           <div>
-            <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>scopebot</p>
+            <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>
+              {activeBot ? activeBot.name : "scopebot"}
+            </p>
             <p className="text-[11px] text-green-500 flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />
               Online
             </p>
           </div>
         </div>
-        <button
-          onClick={handleNewChat}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 border border-gray-200 hover:border-amber-300 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <PenSquare className="w-3.5 h-3.5" />
-          แชทใหม่
-        </button>
+        <div className="flex items-center gap-2">
+          {activeBot && (
+            <button
+              onClick={() => {
+                setForceEditBot(activeBot.id);
+                setActiveView("bots");
+              }}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 border border-gray-200 hover:border-amber-300 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              ตั้งค่าบอท
+            </button>
+          )}
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 border border-gray-200 hover:border-amber-300 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <PenSquare className="w-3.5 h-3.5" />
+            แชทใหม่
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -250,11 +284,13 @@ export default function ChatInterface() {
         {isWelcomeScreen ? (
           <div className="flex flex-col items-center justify-center h-full px-6 pb-8">
             <div className="w-20 h-20 bg-amber-400 rounded-3xl flex items-center justify-center mb-5 shadow-lg shadow-amber-200">
-              <Zap className="w-10 h-10 text-gray-900" />
+              {activeBot ? <Bot className="w-10 h-10 text-gray-900" /> : <Zap className="w-10 h-10 text-gray-900" />}
             </div>
-            <h1 className="text-gray-900 mb-2 text-center">Welcome to scopebot</h1>
+            <h1 className="text-gray-900 mb-2 text-center">
+              Welcome to {activeBot ? activeBot.name : "scopebot"}
+            </h1>
             <p className="text-sm text-gray-500 text-center max-w-md leading-relaxed mb-8">
-              ผู้ช่วยดิจิทัลอัจฉริยะ พร้อมให้บริการข้อมูลและความช่วยเหลือด้วยความเป็นมิตร
+              {activeBot ? activeBot.description : "ผู้ช่วยดิจิทัลอัจฉริยะ พร้อมให้บริการข้อมูลและความช่วยเหลือด้วยความเป็นมิตร"}
             </p>
 
             {/* Guest banner */}
@@ -326,7 +362,7 @@ export default function ChatInterface() {
                 {message.sender === "bot" ? (
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Zap className="w-4 h-4 text-gray-900" />
+                      {activeBot ? <Bot className="w-4 h-4 text-gray-900" /> : <Zap className="w-4 h-4 text-gray-900" />}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1.5">
@@ -367,7 +403,7 @@ export default function ChatInterface() {
             {isTyping && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-4 h-4 text-gray-900" />
+                  {activeBot ? <Bot className="w-4 h-4 text-gray-900" /> : <Zap className="w-4 h-4 text-gray-900" />}
                 </div>
                 <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm border border-gray-100">
                   <div className="flex gap-1 items-center h-4">
@@ -530,7 +566,7 @@ export default function ChatInterface() {
           {/* Chat — hidden for admin (moved into เมนูหลัก) */}
           {role !== "admin" && (
           <button
-            onClick={() => setActiveView("chat")}
+            onClick={() => { setActiveView("chat"); setActiveBot(null); }}
             title={sidebarCollapsed ? "Chat" : undefined}
             className={`w-full flex items-center rounded-lg text-sm transition-colors ${
               sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
@@ -665,7 +701,10 @@ export default function ChatInterface() {
                     return (
                       <button
                         key={item.id}
-                        onClick={() => setActiveView(item.id)}
+                        onClick={() => {
+                          setActiveView(item.id);
+                          if(item.id === "chat") setActiveBot(null); // ล้างบอทเวลาสลับไปเมนู Chat ธรรมดา
+                        }}
                         title={sidebarCollapsed ? item.label : undefined}
                         className={`w-full flex items-center rounded-lg text-sm transition-colors ${
                           sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
@@ -760,7 +799,7 @@ export default function ChatInterface() {
                   <p className="text-xs text-gray-400">{user?.email}</p>
                 </div>
                 <button
-                  onClick={() => { setShowUserMenu(false); setActiveView("chat"); }}
+                  onClick={() => { setShowUserMenu(false); setActiveView("chat"); setActiveBot(null); }}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
                 >
                   <Home className="w-4 h-4" />

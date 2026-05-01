@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search, Plus, ArrowLeft, Bot, Trash2, Edit2,
   BookOpen, X, Upload,
 } from "lucide-react";
 
 /* ─── Types ─── */
-interface BotItem {
+export interface BotItem {
   id: string;
   name: string;
   description: string;
@@ -20,7 +20,8 @@ const KNOWLEDGE_LIST = [
   { id: "k4", label: "HR FAQ" },
 ];
 
-const INITIAL_BOTS: BotItem[] = [
+// ทำให้ข้อมูลบอทคงอยู่แม้จะสลับแท็บไปมา
+export let globalBots: BotItem[] = [
   {
     id: "b1",
     name: "Bot 1",
@@ -333,11 +334,30 @@ function BotForm({ existing, onBack, onSave }: BotFormProps) {
 /* ════════════════════════════════════════════════
    Main Bots Page
 ════════════════════════════════════════════════ */
-export default function BotsPage() {
-  const [bots, setBots] = useState<BotItem[]>(INITIAL_BOTS);
+
+interface BotsPageProps {
+  onSelectBot?: (bot: BotItem) => void;
+  forceEditBotId?: string | null;
+  onClearForceEdit?: () => void;
+}
+
+export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit }: BotsPageProps = {}) {
+  const [bots, setBots] = useState<BotItem[]>(globalBots);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingBot, setEditingBot] = useState<BotItem | undefined>(undefined);
+
+  // ตรวจสอบว่ามีการสั่งให้เข้าสู่โหมดการแก้ไขจากหน้าอื่นหรือไม่
+  useEffect(() => {
+    if (forceEditBotId) {
+      const bot = bots.find(b => b.id === forceEditBotId);
+      if (bot) {
+        setEditingBot(bot);
+        setView("edit");
+      }
+      if (onClearForceEdit) onClearForceEdit();
+    }
+  }, [forceEditBotId, bots, onClearForceEdit]);
 
   const filtered = bots.filter(
     (b) =>
@@ -346,21 +366,23 @@ export default function BotsPage() {
   );
 
   const handleSave = (bot: BotItem) => {
-    setBots((prev) => {
-      const idx = prev.findIndex((b) => b.id === bot.id);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = bot;
-        return copy;
-      }
-      return [...prev, bot];
-    });
+    const idx = bots.findIndex((b) => b.id === bot.id);
+    let newBots = [...bots];
+    if (idx >= 0) {
+      newBots[idx] = bot;
+    } else {
+      newBots.push(bot);
+    }
+    setBots(newBots);
+    globalBots = newBots; // เซฟลงในตัวแปร Global ด้วย
     setView("list");
     setEditingBot(undefined);
   };
 
   const handleDelete = (id: string) => {
-    setBots((prev) => prev.filter((b) => b.id !== id));
+    const newBots = bots.filter((b) => b.id !== id);
+    setBots(newBots);
+    globalBots = newBots;
   };
 
   const handleEdit = (bot: BotItem) => {
@@ -436,7 +458,7 @@ export default function BotsPage() {
               <div
                 key={bot.id}
                 className="group relative border border-gray-200 rounded-2xl p-5 hover:border-amber-300 hover:shadow-md hover:shadow-amber-50 transition-all cursor-pointer bg-white"
-                onClick={() => handleEdit(bot)}
+                onClick={() => onSelectBot ? onSelectBot(bot) : handleEdit(bot)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div
