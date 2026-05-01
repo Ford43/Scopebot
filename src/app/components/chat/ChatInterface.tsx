@@ -4,7 +4,7 @@ import {
   LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
   Home, Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
-} from "lucide-react";
+    Hourglass,Eye,} from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,12 +14,16 @@ import Documents   from "../admin/Documents";
 import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
+import UserManagement from "../admin/UserManagement";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import BotsPage from "./BotsPage";
+
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
   | "dashboard" | "unified-chat" | "analytics"
-  | "documents" | "search-history" | "integration" | "chat" | "bots";
+  | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
 
 interface Message {
   id: string;
@@ -66,6 +70,7 @@ const viewLabels: Record<ActiveView, string> = {
   integration:      "Integration",
   chat:             "Chat",
   bots:             "Bots",
+  "user-management": "User Management",
 };
 
 function groupByDate(items: HistoryItem[]) {
@@ -96,7 +101,7 @@ export default function ChatInterface() {
   const [topSearch, setTopSearch]         = useState("");
   const [activeView, setActiveView]       = useState<ActiveView>("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const prevRoleRef    = useRef<string | undefined>(undefined);
@@ -178,7 +183,6 @@ export default function ChatInterface() {
   };
 
   const handleLogout = () => { logout(); navigate("/login"); };
-
   const filteredHistory = historyItems.filter((h) =>
     h.query.toLowerCase().includes(historySearch.toLowerCase())
   );
@@ -195,6 +199,7 @@ export default function ChatInterface() {
     { id: "documents"       as ActiveView, label: "Documents",         icon: FileText },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
     { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
+    { id: "user-management" as ActiveView, label: "User Management", icon: User },
     { id: "bots"            as ActiveView, label: "Bots",              icon: Bot },
     { id: "chat"            as ActiveView, label: "Chat",              icon: Home },
   ];
@@ -203,9 +208,6 @@ export default function ChatInterface() {
     { id: "unified-chat" as ActiveView, label: "Unified Chat", icon: MessageSquare, badge: true },
   ];
 
-  /* ──────────────────────────────────────────
-     Render admin views
-  ────────────────────────────────────────── */
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":      return <Dashboard />;
@@ -214,6 +216,7 @@ export default function ChatInterface() {
       case "documents":      return <Documents />;
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
+      case "user-management": return <UserManagement/>;
       case "bots":           return <BotsPage />;
       case "chat":           return renderChat();
     }
