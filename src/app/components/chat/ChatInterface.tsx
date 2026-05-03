@@ -1,16 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  LayoutDashboard, MessageSquare, Brain, FileText, History, Puzzle,
+  LayoutDashboard, MessageSquare, History, Puzzle,
   LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
-  Crown, Shield, UserCircle2, AlertTriangle, Send, Menu, Bot,
-  Hourglass, Eye, Settings,
+  Crown, UserCircle2, AlertTriangle, Send, Menu, Bot, Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
 import Dashboard   from "../admin/Dashboard";
-import Documents   from "../admin/Documents";
 import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
@@ -20,7 +18,7 @@ import BotsPage from "./BotsPage";
 /* ─────────────── Types ─────────────── */
 type ActiveView =
   | "dashboard" | "unified-chat"
-  | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+  | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
 
 interface Message {
   id: string;
@@ -61,7 +59,6 @@ const categoryColors: Record<string, string> = {
 const viewLabels: Record<ActiveView, string> = {
   dashboard:        "Dashboard",
   "unified-chat":   "Unified Chat",
-  documents:        "Documents",
   "search-history": "ประวัติการค้นหา",
   integration:      "Integration",
   chat:             "Chat",
@@ -95,7 +92,7 @@ export default function ChatInterface() {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showUserMenu, setShowUserMenu]   = useState(false);
   const [topSearch, setTopSearch]         = useState("");
-  const [activeView, setActiveView]       = useState<ActiveView>("bots"); // เปลี่ยนค่าเริ่มต้นเป็น bots
+  const [activeView, setActiveView]       = useState<ActiveView>("bots");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // State ของ Bot
@@ -116,7 +113,7 @@ export default function ChatInterface() {
       prevRoleRef.current = user?.role;
       if (user?.role === "admin")   setActiveView("dashboard");
       else if (user?.role === "support") setActiveView("unified-chat");
-      else setActiveView("bots"); // เปลี่ยนให้ user ทั่วไปเห็นหน้า bots เป็นหน้าแรก
+      else setActiveView("bots");
     }
   }, [user?.role]);
 
@@ -195,12 +192,10 @@ export default function ChatInterface() {
   const adminMenuItems = [
     { id: "dashboard"       as ActiveView, label: "Dashboard",        icon: LayoutDashboard },
     { id: "unified-chat"    as ActiveView, label: "Unified Chat",      icon: MessageSquare, badge: true },
-    { id: "documents"       as ActiveView, label: "Documents",         icon: FileText },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
     { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
     { id: "user-management" as ActiveView, label: "User Management", icon: User },
     { id: "bots"            as ActiveView, label: "Bots",              icon: Bot },
-    // ลบเมนู Chat ออกจากส่วนของ Admin แล้ว
   ];
 
   const supportMenuItems = [
@@ -211,7 +206,6 @@ export default function ChatInterface() {
     switch (activeView) {
       case "dashboard":      return <Dashboard />;
       case "unified-chat":   return <UnifiedChat />;
-      case "documents":      return <Documents />;
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
       case "user-management": return <UserManagement/>;
@@ -776,7 +770,6 @@ export default function ChatInterface() {
                   <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{user?.name}</p>
                   <p className="text-xs text-gray-400">{user?.email}</p>
                 </div>
-                {/* แก้ไขเมนูดรอปดาวน์มุมขวาบนให้วิ่งไปหน้า Bots แทน Chat */}
                 <button
                   onClick={() => { setShowUserMenu(false); setActiveView("bots"); setActiveBot(null); }}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
