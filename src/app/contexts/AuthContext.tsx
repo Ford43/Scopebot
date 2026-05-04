@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
-  id: string;
+  id: string | number;
   email: string;
   name: string;
+  username: string; // เพิ่ม username เพราะหลังบ้านใช้ตัวนี้
   role: "admin" | "support" | "user";
+  is_approved?: boolean;
 }
 
 interface AuthContextType {
@@ -19,47 +21,92 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user database
-const mockUsers = [
-  { id: "1", email: "admin@scopebot.com",    password: "admin123",    name: "Admin Master",  role: "admin"   as const },
-  { id: "2", email: "support@scopebot.com",  password: "support123",  name: "Support Team",  role: "support" as const },
-  { id: "3", email: "user@example.com",     password: "user123",     name: "คุณลูกค้า",      role: "user"    as const },
-];
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
+  // 1. ตรวจสอบ Token เมื่อเปิดเว็บขึ้นมา
   useEffect(() => {
-    const savedUser = localStorage.getItem("scopebot_user");
-    if (savedUser) setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem("scopebot_token");
+    if (token) {
+      fetchMe(token);
+    }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    await new Promise((r) => setTimeout(r, 500));
-    const found = mockUsers.find((u) => u.email === email && u.password === password);
-    if (found) {
-      const info: User = { id: found.id, email: found.email, name: found.name, role: found.role };
-      setUser(info);
-      localStorage.setItem("scopebot_user", JSON.stringify(info));
-      return true;
+  // 2. ฟังก์ชันดึงข้อมูลผู้ใช้จากหลังบ้านด้วย Token
+  const fetchMe = async (token: string) => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // เอาข้อมูลจาก API มาตั้งค่าเป็น User ของหน้าบ้าน
+        setUser({ 
+          ...data, 
+          name: data.username // Map username จากหลังบ้านให้เป็น name ของหน้าบ้าน
+        });
+      } else {
+        // ถ้า Token หมดอายุหรือพัง ให้ลบทิ้ง
+        localStorage.removeItem("scopebot_token");
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user:", error);
     }
-    return false;
   };
 
+  // 3. ฟังก์ชัน Login (ยิง API ไปหา FastAPI)
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // เก็บ Token ไว้ใน LocalStorage
+        localStorage.setItem("scopebot_token", data.access_token);
+        // ดึงข้อมูล User ต่อทันที
+        await fetchMe(data.access_token);
+        return true;
+      }
+      return false; // ถ้ารหัสผิด จะตกมาตรงนี้
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
+  };
+
+  // 4. ฟังก์ชัน Signup (ยิง API ไปหา FastAPI)
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
-    await new Promise((r) => setTimeout(r, 500));
-    if (mockUsers.find((u) => u.email === email)) return false;
-    const newUser = { id: Date.now().toString(), email, password, name, role: "user" as const };
-    mockUsers.push(newUser);
-    const info: User = { id: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role };
-    setUser(info);
-    localStorage.setItem("scopebot_user", JSON.stringify(info));
-    return true;
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // หลังบ้านรับ email, username, password
+        body: JSON.stringify({ email, username: name, password }) 
+      });
+
+      if (res.ok) {
+        // สมัครสำเร็จ ให้ Login อัตโนมัติ
+        return await login(email, password);
+      }
+      return false;
+    } catch (error) {
+      console.error("Signup error:", error);
+      return false;
+    }
   };
 
+  // 5. ฟังก์ชัน Logout
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("scopebot_user");
+    localStorage.removeItem("scopebot_token"); // ลบ Token ออก
   };
 
   return (
