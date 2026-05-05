@@ -292,6 +292,13 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
             "success"
         )
     except Exception as e:
+        # 🔴 เพิ่มโค้ดส่วนนี้เพื่อให้มันปริ้นท์ Error สีแดงๆ ออกมาที่หน้า Terminal
+        import traceback
+        print(f"\n{'='*50}")
+        print(f"❌ ERROR INGESTING FILE: {filename}")
+        traceback.print_exc()
+        print(f"{'='*50}\n")
+
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
         if bot:
             bot.status = models.BotStatus.inactive

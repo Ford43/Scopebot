@@ -6,7 +6,7 @@ load_dotenv()
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 # ===== LLM =====
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:1.5b")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 
 # ===== Embedding =====
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")

@@ -6,7 +6,6 @@ import {
   Crown, UserCircle2, AlertTriangle, Send, Menu, Bot, Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
 import Dashboard   from "../admin/Dashboard";
 import Integration from "../admin/Integration";
@@ -54,6 +53,7 @@ const categoryColors: Record<string, string> = {
   "IT Support":   "bg-gray-200 text-gray-700",
   "เวลาทำงาน":   "bg-amber-50 text-amber-600",
   "การสมัครงาน": "bg-gray-100 text-gray-600",
+  "Error":       "bg-red-100 text-red-600",
 };
 
 const viewLabels: Record<ActiveView, string> = {
@@ -98,6 +98,9 @@ export default function ChatInterface() {
   // State ของ Bot
   const [activeBot, setActiveBot] = useState<any>(null);
   const [forceEditBot, setForceEditBot] = useState<string | null>(null);
+  
+  // Session ID สำหรับการแชทแต่ละรอบ
+  const currentSessionId = useRef<string>(Date.now().toString());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
@@ -131,12 +134,20 @@ export default function ChatInterface() {
   const timeNow = () =>
     new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
-  const handleSend = (overrideText?: string) => {
+  /* ────────── ยิง API ไปหา FastAPI จริง ────────── */
+  const handleSend = async (overrideText?: string) => {
     const text = (overrideText ?? inputValue).trim();
     if (!text || isTyping) return;
+    
+    if (!activeBot || !activeBot.bot_id) {
+      alert("กรุณาเลือกบอทก่อนเริ่มการสนทนา");
+      return;
+    }
+
     const now = new Date();
     const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
+    // 1. เพิ่มข้อความ User ลงหน้าจอ
     setMessages((prev) => [
       ...prev,
       { id: Date.now().toString(), sender: "user", text, time: timeStr },
@@ -144,34 +155,69 @@ export default function ChatInterface() {
     setInputValue("");
     setIsTyping(true);
 
-    const aiResult = generateAIResponse(text);
-    const delay    = getTypingDelay(aiResult.response.length);
-
     /* Save history only for authenticated users */
     if (isAuthenticated) {
       setHistoryItems((prev) => [
-        { id: Date.now().toString(), query: text, category: aiResult.category, time: timeStr, timestamp: now.getTime() },
+        { id: Date.now().toString(), query: text, time: timeStr, timestamp: now.getTime() },
         ...prev,
       ]);
     }
 
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem("scopebot_token");
+      
+      // 2. ยิง Request ไปหา FastAPI
+      const res = await fetch(`/api/chat/${activeBot.bot_id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          question: text,
+          session_id: currentSessionId.current,
+          source_channel: "web"
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "เกิดข้อผิดพลาดในการเชื่อมต่อกับบอท");
+      }
+
+      // 3. เพิ่มข้อความ AI ลงหน้าจอ
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           sender: "bot",
-          text: aiResult.response,
+          text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
           time: timeNow(),
-          confidence: aiResult.confidence,
-          category: aiResult.category,
         },
       ]);
+    } catch (error: any) {
+      console.error("Chat Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: "bot",
+          text: `❌ ขออภัย เกิดข้อผิดพลาด:\n${error.message}`,
+          time: timeNow(),
+          category: "Error"
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, delay);
+    }
   };
 
-  const handleNewChat = () => { setMessages([]); setInputValue(""); };
+  const handleNewChat = () => { 
+    currentSessionId.current = Date.now().toString(); // Reset Session
+    setMessages([]); 
+    setInputValue(""); 
+  };
 
   const handleHistoryClick = (query: string) => {
     setShowHistoryDrawer(false);
@@ -213,6 +259,7 @@ export default function ChatInterface() {
         return (
           <BotsPage 
             onSelectBot={(bot) => {
+              currentSessionId.current = Date.now().toString(); // เริ่มเซสชันใหม่เมื่อเปลี่ยนบอท
               setActiveBot(bot);
               setActiveView("chat");
               setMessages([]);
@@ -251,7 +298,7 @@ export default function ChatInterface() {
           {activeBot && (
             <button
               onClick={() => {
-                setForceEditBot(activeBot.id);
+                setForceEditBot(activeBot.bot_id); // ใช้ bot_id ของ API
                 setActiveView("bots");
               }}
               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 border border-gray-200 hover:border-amber-300 px-3 py-1.5 rounded-lg transition-colors"
@@ -367,7 +414,9 @@ export default function ChatInterface() {
                           <Sparkles className="w-3 h-3 text-amber-400" />
                         )}
                       </div>
-                      <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3 text-sm text-gray-800 whitespace-pre-line shadow-sm border border-gray-100 max-w-[85%]">
+                      <div className={`rounded-2xl rounded-tl-none px-4 py-3 text-sm whitespace-pre-line shadow-sm border max-w-[85%] ${
+                        message.category === "Error" ? "bg-red-50 border-red-200 text-red-700" : "bg-white border-gray-100 text-gray-800"
+                      }`}>
                         {message.text}
                       </div>
                       {message.confidence && (
