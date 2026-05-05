@@ -18,8 +18,8 @@ VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "vector_db")
 TOP_K = int(os.getenv("TOP_K", 5))  
 
 # ===== Chunker =====
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 512)) 
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 100))
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1000)) 
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 200))
 
 # ===== Prompt =====
 SYSTEM_PROMPT = """

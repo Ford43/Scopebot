@@ -43,6 +43,7 @@ class UserOut(BaseModel):
 class BotCreate(BaseModel):
     name: str
     description: Optional[str] = None
+    system_prompt: Optional[str] = None
 
 
 class BotUpdate(BaseModel):
@@ -50,6 +51,7 @@ class BotUpdate(BaseModel):
     description: Optional[str] = None
     line_channel_token: Optional[str] = None
     line_channel_secret: Optional[str] = None
+    system_prompt: Optional[str] = None
 
 
 class BotOut(BaseModel):

@@ -22,7 +22,7 @@ def chat(
         raise HTTPException(status_code=400, detail="Bot ยังไม่พร้อมใช้งาน")
 
     # ถามผ่าน RAG pipeline
-    answer = ask_rag(body.question, bot_id)
+    answer = ask_rag(body.question, bot_id, user_system_prompt=bot.system_prompt)
     is_bot_answered = answer != "ไม่พบข้อมูล"
 
     # บันทึก conversation

@@ -52,6 +52,7 @@ class Bot(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     status = Column(Enum(BotStatus), default=BotStatus.inactive)
+    system_prompt = Column(Text, nullable=True)
     is_line_connected = Column(Boolean, default=False)
     is_web_connected = Column(Boolean, default=False)
     line_channel_token = Column(String, nullable=True)

@@ -21,6 +21,7 @@ export interface BotItem {
   name: string;
   description: string;
   status: string;
+  system_prompt?: string;
   created_at: string;
   documents?: Doc[];
 }
@@ -101,6 +102,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
   // General States
   const [name, setName] = useState(existing?.name ?? "");
   const [desc, setDesc] = useState(existing?.description ?? "");
+  const [systemPrompt, setSystemPrompt] = useState(existing?.system_prompt ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   
@@ -111,6 +113,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
   const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [botStatus, setBotStatus] = useState<string>(existing?.status || "active");
 
   // ดึง Token
   const token = localStorage.getItem("scopebot_token");
@@ -134,6 +137,39 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
   useEffect(() => {
     if (existing) fetchDocs();
   }, [existing, fetchDocs]);
+
+  // 2. ระบบ Polling ตรวจสอบสถานะ
+  useEffect(() => {
+    if (!existing?.bot_id) return;
+    let interval: ReturnType<typeof setInterval>;
+
+    const checkBotStatus = async () => {
+      try {
+        const res = await fetch(`/api/bots/${existing.bot_id}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setBotStatus(data.status); // อัปเดตสถานะให้ UI
+
+          // ถ้าเสร็จแล้วให้หยุดเช็ค และรีเฟรชหน้าเอกสาร 1 ครั้ง
+          if (data.status !== "processing") {
+            clearInterval(interval);
+            fetchDocs();
+          }
+        }
+      } catch (error) {
+        console.error("Check status error:", error);
+      }
+    };
+
+    // ถ้าสถานะเป็น processing ให้ยิงไปเช็คทุกๆ 3 วินาที
+    if (botStatus === "processing") {
+      interval = setInterval(checkBotStatus, 3000);
+    }
+
+    return () => clearInterval(interval);
+  }, [existing?.bot_id, botStatus, token, fetchDocs]);
 
   // กรองเอกสาร
   const filteredDocs = docs.filter((d) => {
@@ -164,7 +200,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ name: name.trim(), description: desc.trim() })
+        body: JSON.stringify({ name: name.trim(), description: desc.trim(), system_prompt: systemPrompt.trim() })
       });
 
       if (res.ok) {
@@ -210,6 +246,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` }
         });
+        setBotStatus("processing");
 
       } catch (error) {
         console.error("File processing error", error);
@@ -230,15 +267,24 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
   };
 
   // ลบเอกสารออกจากบอท
+  // ลบเอกสารออกจากบอท (และลบออกจากระบบถาวร)
   const handleDeleteDoc = async (doc_id: number) => {
     if (!existing?.bot_id) return;
+    
+    // แนะนำให้เพิ่ม Confirm เผื่อผู้ใช้กดพลาดครับ
+    if (!window.confirm("คุณต้องการลบเอกสารนี้ออกจากระบบอย่างถาวรใช่หรือไม่?")) return;
+
     try {
-      const res = await fetch(`/api/documents/${doc_id}/unassign/${existing.bot_id}`, {
+      // แก้ไข URL จาก /unassign/... เป็นการลบที่ Document ID โดยตรง
+      const res = await fetch(`/api/documents/${doc_id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
+      
       if (res.ok) {
-        fetchDocs(); // โหลดใหม่
+        fetchDocs(); // โหลดรายการเอกสารใหม่
+      } else {
+        console.error("Failed to delete document");
       }
     } catch (error) {
       console.error("Delete doc error:", error);
@@ -278,7 +324,11 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
             <h1 className="text-2xl text-gray-900 truncate" style={{ fontWeight: 700 }}>
               {name || "บอทใหม่ยังไม่มีชื่อ"}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">ID: {existing?.bot_id ?? "จะถูกสร้างอัตโนมัติ"}</p>
+            <div className="flex items-center gap-3 mt-1.5"></div>
+              <p className="text-sm text-gray-500 mt-1">ID: {existing?.bot_id ?? "จะถูกสร้างอัตโนมัติ"}</p>
+              {existing && (
+                 <StatusBadge status={botStatus === "processing" ? "processing" : existing.status} />
+              )}
           </div>
         </div>
 
@@ -336,6 +386,22 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-amber-400 resize-none bg-gray-50"
               />
             </div>
+
+            <div className="pt-2">
+              <label className="block text-sm text-gray-800 mb-2" style={{ fontWeight: 600 }}>
+                System Prompt (พฤติกรรมบอท)
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                กำหนดบุคลิก กฎเกณฑ์ หรือวิธีการตอบของบอทตัวนี้ (ปล่อยว่างไว้หากต้องการใช้ค่าเริ่มต้น)
+              </p>
+              <textarea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder="ตัวอย่าง: คุณคือผู้ช่วยฝ่ายบุคคลของบริษัท จงตอบคำถามด้วยความสุภาพและลงท้ายด้วย 'ครับ/ค่ะ' เสมอ หากไม่รู้ให้ตอบว่าไม่ทราบ ห้ามเดาคำตอบเองเด็ดขาด"
+                rows={5}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-amber-400 bg-white font-mono"
+              />
+            </div>
             
             {!existing && (
                <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm px-4 py-3 rounded-xl mt-4">
@@ -348,6 +414,15 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
         {/* Tab 2: Knowledge Base (Documents UI) */}
         {activeTab === "knowledge" && existing && (
           <div className="space-y-6">
+            {botStatus === "processing" && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                <Clock className="w-5 h-5 animate-spin text-amber-500" />
+                <div>
+                  <p className="text-sm font-semibold">กำลังเรียนรู้เอกสาร (Processing...)</p>
+                  <p className="text-xs opacity-80">โปรดรอสักครู่ ระบบกำลังแปลงไฟล์เพื่อนำไปสร้างฐานความรู้ หากเสร็จแล้วสถานะจะอัปเดตอัตโนมัติ</p>
+                </div>
+              </div>
+            )}
             {/* Dropzone */}
             <div
               onDragOver={onDragOver}
@@ -411,7 +486,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
                       </div>
                       <div className="flex items-center gap-3 mt-1">
                         <p className="text-[11px] text-gray-400">{formatBytes(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString('th-TH')}</p>
-                        <StatusBadge status="ready" />
+                        <StatusBadge status={botStatus === "processing" ? "processing" : "ready"} />
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">

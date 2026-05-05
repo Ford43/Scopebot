@@ -46,6 +46,7 @@ def create_bot(
         bot_id=bot_id_str,
         name=body.name,
         description=body.description,
+        system_prompt=body.system_prompt,
         owner_id=current_user.id
     )
     db.add(bot)
