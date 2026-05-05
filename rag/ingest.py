@@ -1,0 +1,62 @@
+import sys
+import os
+import shutil
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from config import EMBEDDING_MODEL
+from rag.document_loader import load_documents
+from rag.chunker import split_documents
+
+from langchain_huggingface import HuggingFaceEmbeddings
+
+try:
+    from langchain_chroma import Chroma
+except:
+    from langchain_community.vectorstores import Chroma
+
+
+def ingest(bot_id):
+    print(f"Ingest for bot: {bot_id}")
+
+    embedding = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    persist_path = f"vector_db/{bot_id}"
+
+    if os.path.exists(persist_path):
+        print("Clearing old DB...")
+        shutil.rmtree(persist_path)
+
+    print("Loading documents...")
+    docs = load_documents(bot_id)
+
+    # guard — ถ้าไม่มีเอกสารให้หยุดเลย
+    if not docs:
+        print(f"❌ ไม่พบเอกสารสำหรับ bot: {bot_id} — กรุณาตรวจสอบโฟลเดอร์ data/{bot_id}/")
+        return
+
+    print("Splitting documents...")
+    chunks = split_documents(docs)
+
+    # guard — ถ้าไม่มี chunks ให้หยุดเลย
+    if not chunks:
+        print(f"ไม่มี chunks สำหรับ bot: {bot_id} — ข้ามการบันทึก DB")
+        return
+
+    for chunk in chunks:
+        chunk.metadata["bot_id"] = bot_id
+
+    print("Creating embeddings & saving to DB...")
+    db = Chroma.from_documents(
+        documents=chunks,
+        embedding=embedding,
+        persist_directory=persist_path
+    )
+
+    print(f"Ingestion complete for {bot_id}!")
+
+if __name__ == "__main__":
+    print("🔥 INGEST START")
+
+    bot_id = sys.argv[1] if len(sys.argv) > 1 else "bot_nt"
+
+    ingest(bot_id)
