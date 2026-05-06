@@ -428,7 +428,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
             </div>
             
             {existing && (
-              <div className="pt-8 mt-4 border-t border-red-100">
+              <div className="pt-8 mt-6 border-t border-red-100 flex flex-col items-center">
                 <button
                   onClick={handleDeleteBot}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium"
