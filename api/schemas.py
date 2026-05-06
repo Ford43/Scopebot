@@ -64,6 +64,7 @@ class BotOut(BaseModel):
     is_web_connected: bool
     owner_id: int
     created_at: datetime
+    system_prompt: Optional[str] = None
 
     class Config:
         from_attributes = True
