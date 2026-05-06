@@ -216,6 +216,26 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
     }
   };
 
+  // ฟังก์ชันสำหรับลบบอทในหน้าตั้งค่า
+  const handleDeleteBot = async () => {
+    if (!existing?.bot_id) return;
+    if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบบอทนี้? ข้อมูลและเอกสารจะถูกลบทั้งหมด")) return;
+    
+    try {
+      const res = await fetch(`/api/bots/${existing.bot_id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        onSaveSuccess(); // ลบเสร็จให้กลับไปหน้าหลักและรีเฟรช
+      } else {
+        console.error("Failed to delete bot");
+      }
+    } catch (error) {
+      console.error("Delete bot error:", error);
+    }
+  };
+
   // จัดการอัปโหลดไฟล์ และ Assign ให้บอท
   const addFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !existing?.bot_id) return;
@@ -302,14 +322,18 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
           <ArrowLeft className="w-4 h-4" />
           กลับหน้าหลัก
         </button>
+
+        {/* จัดกลุ่มปุ่มด้านขวา */}
+        <div className="flex items-center gap-3">
         <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50"
-          style={{ fontWeight: 600 }}
-        >
-          {isSaving ? "กำลังบันทึก..." : (existing ? "บันทึกการตั้งค่า" : "สร้างบอท")}
-        </button>
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50"
+            style={{ fontWeight: 600 }}
+          >
+            {isSaving ? "กำลังบันทึก..." : (existing ? "บันทึกการตั้งค่า" : "สร้างบอท")}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 px-8 py-6 max-w-4xl w-full mx-auto">
@@ -403,10 +427,16 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
               />
             </div>
             
-            {!existing && (
-               <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm px-4 py-3 rounded-xl mt-4">
-                 💡 <b>ข้อแนะนำ:</b> กรุณากดปุ่ม <b>"สร้างบอท"</b> มุมขวาบน เพื่อบันทึกข้อมูลเบื้องต้นก่อน จากนั้นคุณถึงจะสามารถอัปโหลดเอกสารฐานความรู้ได้ครับ
-               </div>
+            {existing && (
+              <div className="pt-8 mt-4 border-t border-red-100">
+                <button
+                  onClick={handleDeleteBot}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  ลบบอท
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -659,49 +689,44 @@ export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((bot, idx) => (
-              <div
-                key={bot.id}
-                className="group relative border border-gray-200 rounded-2xl p-5 hover:border-amber-300 hover:shadow-md hover:shadow-amber-50 transition-all cursor-pointer bg-white flex flex-col h-full"
+              <div className="group relative border border-gray-200 rounded-2xl p-5 hover:border-amber-300 hover:shadow-md hover:shadow-amber-50 transition-all cursor-pointer bg-white flex flex-col h-full"
                 onClick={() => onSelectBot ? onSelectBot(bot) : handleEdit(bot)}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${avatarColour(idx)}`}>
-                    <Bot className="w-6 h-6 text-white" />
+                {/* จัด flex ให้ โลโก้-ชื่อ อยู่ซ้าย และ ปุ่ม Edit อยู่ขวา */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3 min-w-0 pr-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${avatarColour(idx)}`}>
+                      <Bot className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-base text-gray-900 truncate" style={{ fontWeight: 600 }}>
+                        {bot.name}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
+                        สถานะ: <span className={bot.status === 'active' ? 'text-green-500' : 'text-amber-500'}>{bot.status.toUpperCase()}</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-base text-gray-900 truncate" style={{ fontWeight: 600 }}>
-                      {bot.name}
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
-                      สถานะ: <span className={bot.status === 'active' ? 'text-green-500' : 'text-amber-500'}>{bot.status.toUpperCase()}</span>
-                    </p>
-                  </div>
+
+                  {/* ปุ่มตั้งค่ามุมขวาบน (เพิ่ม flex-shrink-0 ไม่ให้โดนบีบ) */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEdit(bot); }}
+                    className="flex-shrink-0 p-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors border border-amber-200 shadow-sm"
+                    title="ตั้งค่า/เอกสาร"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed mb-4 flex-1">
                   {bot.description || "ไม่มีคำอธิบาย"}
                 </p>
 
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                {/* ส่วนท้าย: เหลือแค่วันที่สร้าง เอาปุ่มลบ/แก้ไขออก */}
+                <div className="mt-auto pt-3 border-t border-gray-100">
                   <span className="text-[10px] text-gray-400">
                     สร้างเมื่อ {new Date(bot.created_at).toLocaleDateString('th-TH')}
                   </span>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleEdit(bot); }}
-                      className="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors"
-                      title="ตั้งค่า/เอกสาร"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(bot.bot_id); }}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                      title="ลบบอท"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}
