@@ -94,6 +94,7 @@ export default function ChatInterface() {
   const [topSearch, setTopSearch]         = useState("");
   const [activeView, setActiveView]       = useState<ActiveView>("bots");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   
   // State ของ Bot
   const [activeBot, setActiveBot] = useState<any>(null);
@@ -164,11 +165,33 @@ export default function ChatInterface() {
        }
     };
 
-    // เช็คข้อความใหม่ทุกๆ 3 วินาที
     const interval = setInterval(pollAdminReply, 3000);
     return () => clearInterval(interval);
   }, [activeBot, activeView]);
 
+    // ดึงจำนวนการแจ้งเตือนที่ยังไม่อ่าน (เฉพาะตอนที่ Login แล้ว)
+  useEffect(() => {
+  if (!isAuthenticated) return;
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem("scopebot_token");
+      const res = await fetch("/api/notifications/unread-count", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadNotifs(data.count || 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications count", error);
+    }
+  };
+
+    fetchUnreadCount(); // ดึงครั้งแรก
+    const interval = setInterval(fetchUnreadCount, 10000); // เช็คทุก 10 วินาที
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
   const timeNow = () =>
     new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
@@ -833,7 +856,13 @@ export default function ChatInterface() {
       <div className="flex items-center gap-2 ml-4">
         <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+          {/* ถ้ามีแจ้งเตือน จะแสดงจุดสีแดงกระพริบ */}
+          {unreadNotifs > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
         </button>
 
         <div className="relative">

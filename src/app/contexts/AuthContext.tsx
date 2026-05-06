@@ -93,8 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (res.ok) {
-        // สมัครสำเร็จ ให้ Login อัตโนมัติ
-        return await login(email, password);
+        // สมัครสำเร็จ แต่ต้องรอแอดมินอนุมัติ จึงยังไม่ Login ตอนนี้ ให้คืนค่า true กลับไปเฉยๆ
+        return true; 
       }
       return false;
     } catch (error) {

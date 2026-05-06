@@ -27,6 +27,24 @@ def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # เพิ่มโค้ดส่วนนี้: ดึงรายชื่อ Admin และ Support เพื่อส่งแจ้งเตือน
+    admin_support_users = db.query(models.User).filter(
+        models.User.role.in_(["admin", "support"])
+    ).all()
+
+    # สร้าง Notification ยิงเข้ากระดิ่งให้ทุกคนที่มีสิทธิ์อนุมัติ
+    for staff in admin_support_users:
+        notif = models.Notification(
+            user_id=staff.id,
+            title="มีผู้สมัครสมาชิกใหม่",
+            message=f"ผู้ใช้ {user.username} ({user.email}) สมัครสมาชิกใหม่และกำลังรอการอนุมัติ",
+            type="warning" # ใช้ warning สีเหลืองจะได้สะดุดตา
+        )
+        db.add(notif)
+    
+    db.commit() # บันทึกแจ้งเตือนลงฐานข้อมูล
+
     return user
 
 
