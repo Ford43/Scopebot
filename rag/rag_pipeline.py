@@ -16,8 +16,9 @@ def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
     # ดึง docs ที่เกี่ยวข้อง
     docs = retrieve_docs(question, bot_id)
 
+    # 🟢 แก้ไขจุดที่ 1: ถ้าไม่พบเอกสารเลย ให้ส่ง Signal โอนสาย
     if not docs:
-        return "ไม่พบข้อมูล"
+        return "REQUIRE_HUMAN_HANDOFF"
 
     context = build_context(docs)
 
@@ -59,7 +60,11 @@ def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
             print(f"[DEBUG] System Prompt:\n {final_system_prompt}") # ลองปริ้นท์ดูเพื่อความชัวร์
             print(f"[DEBUG] Answer:\n {answer}")
 
-        return answer if answer else "ไม่พบข้อมูล"
+        # 🟢 แก้ไขจุดที่ 2: ตรวจสอบคำตอบของ LLM ว่าตอบไม่ได้หรือไม่
+        if not answer or "ไม่พบข้อมูล" in answer:
+            return "REQUIRE_HUMAN_HANDOFF"
+
+        return answer
 
     except Exception as e:
         print(f"LLM error: {e}")

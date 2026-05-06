@@ -259,11 +259,17 @@ export default function ChatInterface() {
         return (
           <BotsPage 
             onSelectBot={(bot) => {
-              currentSessionId.current = Date.now().toString(); // เริ่มเซสชันใหม่เมื่อเปลี่ยนบอท
-              setActiveBot(bot);
-              setActiveView("chat");
-              setMessages([]);
-              setInputValue("");
+              // เพิ่มการเช็ค: ถ้าบอทที่กด เป็นบอทตัวเดียวกับที่คุยค้างไว้
+              if (activeBot && activeBot.bot_id === bot.bot_id) {
+                setActiveView("chat"); // แค่สลับหน้ากลับไป ไม่ต้องรีเซ็ตข้อมูล
+              } else {
+                // แต่ถ้ากดบอทตัวใหม่ ค่อยล้างหน้าจอและเริ่มเซสชันใหม่
+                currentSessionId.current = Date.now().toString(); // เริ่มเซสชันใหม่เมื่อเปลี่ยนบอท
+                setActiveBot(bot);
+                setActiveView("chat");
+                setMessages([]);
+                setInputValue("");
+              }
             }}
             forceEditBotId={forceEditBot}
             onClearForceEdit={() => setForceEditBot(null)}
@@ -820,7 +826,7 @@ export default function ChatInterface() {
                   <p className="text-xs text-gray-400">{user?.email}</p>
                 </div>
                 <button
-                  onClick={() => { setShowUserMenu(false); setActiveView("bots"); setActiveBot(null); }}
+                  onClick={() => { setShowUserMenu(false); setActiveView("bots"); }}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
                 >
                   <Bot className="w-4 h-4" />
