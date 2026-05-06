@@ -43,6 +43,24 @@ def chat(
             "is_answered_by_bot": False,
             "conversation_id": 0
         }
+    
+    user_msg = body.question.strip().lower()
+    handoff_keywords = ["ขอคุยกับเจ้าหน้าที่", "ติดต่อเจ้าหน้าที่", "ติดต่อแอดมิน", "คุยกับคน"]
+    
+    if any(kw in user_msg for kw in handoff_keywords):
+        answer = "REQUIRE_HUMAN_HANDOFF"
+    else:
+        # ถ้าไม่มีคำขอคุยกับเจ้าหน้าที่ ค่อยถามผ่าน RAG pipeline ปกติ
+        answer = ask_rag(body.question, bot_id, user_system_prompt=bot.system_prompt)
+    
+    is_bot_answered = True
+    display_answer = answer
+
+    # 3. ดักจับ Signal โอนสาย
+    if answer == "REQUIRE_HUMAN_HANDOFF" or answer == "ไม่พบข้อมูล" or answer == "ครับ": 
+        # (เพิ่มการดักคำว่า "ครับ" เผื่อบอทหลุดตอบมาสั้นๆ)
+        is_bot_answered = False
+        display_answer = "กำลังโอนสายไปยังเจ้าหน้าที่ กรุณารอสักครู่ค่ะ..."
 
     # 2. ถ้าไม่ได้คุยกับเจ้าหน้าที่ ให้ถามผ่าน RAG pipeline ปกติ [cite: 371]
     answer = ask_rag(body.question, bot_id, user_system_prompt=bot.system_prompt) 
@@ -50,7 +68,7 @@ def chat(
     is_bot_answered = True
     display_answer = answer
 
-    # 3. 🟢 ดักจับ Signal โอนสายจาก RAG
+    # 3. ดักจับ Signal โอนสายจาก RAG
     if answer == "REQUIRE_HUMAN_HANDOFF" or answer == "ไม่พบข้อมูล":
         is_bot_answered = False
         display_answer = "ไม่พบข้อมูลในระบบ กำลังโอนสายไปยังเจ้าหน้าที่ กรุณารอสักครู่ค่ะ..."
@@ -104,3 +122,27 @@ def chat(
         "is_answered_by_bot": is_bot_answered, 
         "conversation_id": conversation.id 
     }
+
+@router.get("/{bot_id}/session/{session_id}/updates")
+def get_session_updates(bot_id: str, session_id: str, db: Session = Depends(get_db)):
+    bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
+    if not bot:
+        return []
+    
+    # หา Session ปัจจุบัน
+    active_session = db.query(models.LiveSession).filter(
+        models.LiveSession.line_user_id == session_id,
+        models.LiveSession.bot_id == bot.id,
+        models.LiveSession.is_active == True
+    ).first()
+    
+    if not active_session:
+        return []
+        
+    # ดึงเฉพาะข้อความล่าสุดจาก "เจ้าหน้าที่" (staff)
+    staff_msgs = db.query(models.LiveMessage).filter(
+        models.LiveMessage.session_id == active_session.id,
+        models.LiveMessage.sender_type == models.SenderType.staff
+    ).order_by(models.LiveMessage.created_at.asc()).all()
+    
+    return [{"id": str(m.id), "message": m.message, "created_at": m.created_at} for m in staff_msgs]

@@ -31,12 +31,14 @@ export default function UnifiedChat() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const res = await fetch("/api/live/sessions?mode=waiting", {
+        // ดึง session ทั้งหมดที่ยัง active อยู่ 
+        const res = await fetch("/api/live/sessions", {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
-          setSessions(data);
+          // 🟢 กรองเอาเฉพาะลูกค้าที่ "รอตอบ" หรือ "กำลังคุยอยู่กับแอดมิน"
+          setSessions(data.filter((s: any) => s.mode === "waiting" || s.mode === "human"));
         }
       } catch (error) {
         console.error("Failed to fetch sessions", error);

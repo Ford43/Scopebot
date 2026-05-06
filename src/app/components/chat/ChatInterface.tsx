@@ -131,6 +131,44 @@ export default function ChatInterface() {
     }
   }, [inputValue]);
 
+  useEffect(() => {
+    if (!activeBot || activeView !== "chat") return;
+    
+    const pollAdminReply = async () => {
+       try {
+         const res = await fetch(`/api/chat/${activeBot.bot_id}/session/${currentSessionId.current}/updates`);
+         if (res.ok) {
+           const newMsgs = await res.json();
+           if (newMsgs.length > 0) {
+              setMessages(prev => {
+                 // เช็คว่ามีข้อความนี้แสดงบนจอไปแล้วหรือยัง
+                 const existingIds = new Set(prev.map(m => m.id));
+                 
+                 const msgsToAdd = newMsgs
+                   .filter((m: any) => !existingIds.has("staff-" + m.id))
+                   .map((m: any) => ({
+                     id: "staff-" + m.id,
+                     sender: "bot",
+                     text: `👩‍💻 [เจ้าหน้าที่]: ${m.message}`,
+                     time: new Date(m.created_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+                     category: "Support"
+                   }));
+                   
+                 if (msgsToAdd.length > 0) return [...prev, ...msgsToAdd];
+                 return prev;
+              });
+           }
+         }
+       } catch (e) {
+         console.error(e);
+       }
+    };
+
+    // เช็คข้อความใหม่ทุกๆ 3 วินาที
+    const interval = setInterval(pollAdminReply, 3000);
+    return () => clearInterval(interval);
+  }, [activeBot, activeView]);
+
   const timeNow = () =>
     new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
