@@ -57,13 +57,13 @@ const categoryColors: Record<string, string> = {
 };
 
 const viewLabels: Record<ActiveView, string> = {
-  dashboard:        "Dashboard",
-  "unified-chat":   "Unified Chat",
+  dashboard:        "แดชบอร์ด",
+  "unified-chat":   "แชทรวม",
   "search-history": "ประวัติการค้นหา",
-  integration:      "Integration",
-  chat:             "Chat",
-  bots:             "Bots",
-  "user-management": "User Management",
+  integration:      "การเชื่อมต่อ",
+  chat:             "แชท",
+  bots:             "บอท",
+  "user-management": "จัดการผู้ใช้งาน",
 };
 
 function groupByDate(items: HistoryItem[]) {
@@ -297,16 +297,16 @@ export default function ChatInterface() {
      Role-based menu definitions
   ────────────────────────────────────────── */
   const adminMenuItems = [
-    { id: "dashboard"       as ActiveView, label: "Dashboard",        icon: LayoutDashboard },
-    { id: "unified-chat"    as ActiveView, label: "Unified Chat",      icon: MessageSquare, badge: true },
+    { id: "dashboard"       as ActiveView, label: "แดชบอร์ด",        icon: LayoutDashboard },
+    { id: "bots"            as ActiveView, label: "บอท",              icon: Bot },
+    { id: "unified-chat"    as ActiveView, label: "แชทรวม",         icon: MessageSquare, badge: true },
+    { id: "user-management" as ActiveView, label: "จัดการผู้ใช้งาน",  icon: User },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
-    { id: "integration"     as ActiveView, label: "Integration",       icon: Puzzle },
-    { id: "user-management" as ActiveView, label: "User Management", icon: User },
-    { id: "bots"            as ActiveView, label: "Bots",              icon: Bot },
+    { id: "integration"     as ActiveView, label: "การเชื่อมต่อ",      icon: Puzzle },
   ];
 
   const supportMenuItems = [
-    { id: "unified-chat" as ActiveView, label: "Unified Chat", icon: MessageSquare, badge: true },
+    { id: "unified-chat" as ActiveView, label: "แชทรวม", icon: MessageSquare, badge: true },
   ];
 
   const renderContent = () => {
@@ -687,7 +687,7 @@ export default function ChatInterface() {
                   {/* Bots */}
                   <button
                     onClick={() => setActiveView("bots")}
-                    title={sidebarCollapsed ? "Bots" : undefined}
+                    title={sidebarCollapsed ? "บอท" : undefined}
                     className={`w-full flex items-center rounded-lg text-sm transition-colors ${
                       sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
                     } ${
@@ -697,7 +697,7 @@ export default function ChatInterface() {
                     }`}
                   >
                     <Bot className={`w-4 h-4 flex-shrink-0 ${activeView === "bots" ? "text-gray-900" : "text-gray-500"}`} />
-                    {!sidebarCollapsed && <span className="flex-1">Bots</span>}
+                    {!sidebarCollapsed && <span className="flex-1">บอท</span>}
                   </button>
 
                   <button
