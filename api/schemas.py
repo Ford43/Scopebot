@@ -106,7 +106,9 @@ class ConversationOut(BaseModel):
 # =====================
 class ApproveUser(BaseModel):
     is_approved: bool
+    is_active: Optional[bool] = None
     max_bots: Optional[int] = 3
+    role: Optional[str] = None
 
 # =====================
 # Document Schemas (ใหม่)

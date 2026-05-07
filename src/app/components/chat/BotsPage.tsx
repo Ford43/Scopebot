@@ -3,6 +3,8 @@ import {
   Search, Plus, ArrowLeft, Bot, Trash2, Edit2,
   X, Upload, FileText, CheckCircle, Clock, AlertCircle, Eye
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
 
 /* ─── Types & Interfaces ─── */
 interface Doc {
@@ -203,7 +205,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
       if (res.ok) {
         const savedBot = await res.json(); // Backend จะคืนค่า bot_id ของบอทตัวใหม่มาให้
 
-        // 🟢 หากเป็นการสร้างบอทใหม่ และมีการอัปโหลดไฟล์ค้างไว้ใน State
+        //  หากเป็นการสร้างบอทใหม่ และมีการอัปโหลดไฟล์ค้างไว้ใน State
         if (!existing && docs.length > 0) {
           for (const doc of docs) {
             // สั่ง Assign เอกสารเข้ากับบอทตัวใหม่ที่เพิ่งสร้างเสร็จ
@@ -556,6 +558,11 @@ export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingBot, setEditingBot] = useState<BotItem | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  // ดึงข้อมูล user มาเช็ค max_bots
+  const { user } = useAuth();
+  // ตรวจสอบว่าสร้างบอทครบกำหนดหรือยัง
+  const maxBots = user?.max_bots || 5; // ใช้ค่าจาก DB ถ้าไม่มีให้ default เป็น 5 [cite: 13, 19]
+  const isLimitReached = bots.length >= maxBots;
 
   // โหลดรายชื่อบอทจาก API
   const fetchBots = useCallback(async () => {
@@ -644,17 +651,35 @@ export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit
           <h1 className="text-xl text-gray-900" style={{ fontWeight: 700 }}>
             จัดการบอท
           </h1>
-          <button
-            onClick={() => {
-              setEditingBot(undefined);
-              setView("create");
-            }}
-            className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm px-4 py-2 rounded-lg transition-colors shadow-sm shadow-amber-200"
-            style={{ fontWeight: 600 }}
-          >
-            <Plus className="w-4 h-4" />
-            สร้างบอทใหม่
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block"> {/* ใช้ span ครอบเพื่อให้ Tooltip ทำงานแม้ปุ่มจะ disabled */}
+                <button
+                  onClick={() => {
+                    if (!isLimitReached) {
+                      setEditingBot(undefined);
+                      setView("create");
+                    }
+                  }}
+                  disabled={isLimitReached}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all shadow-sm ${
+                    isLimitReached 
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300" 
+                      : "bg-amber-400 hover:bg-amber-500 text-gray-900 shadow-amber-200"
+                  }`}
+                  style={{ fontWeight: 600 }}
+                >
+                  <Plus className="w-4 h-4" />
+                  สร้างบอทใหม่
+                </button>
+              </span>
+            </TooltipTrigger>
+            {isLimitReached && (
+              <TooltipContent side="bottom" className="bg-slate-800 text-white border-none px-3 py-2 text-xs">
+                <p>⚠️ คุณสร้างบอทครบขีดจำกัด ({maxBots} ตัว) แล้ว</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
         </div>
 
         <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 max-w-xs bg-gray-50">
@@ -733,19 +758,37 @@ export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit
             ))}
 
             {/* Create new card */}
-            <button
-              onClick={() => {
-                setEditingBot(undefined);
-                setView("create");
-              }}
-              className="border-2 border-dashed border-gray-200 rounded-2xl p-5 hover:border-amber-300 hover:bg-amber-50/30 transition-all flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-amber-500 min-h-[180px]"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-1">
-                <Plus className="w-6 h-6" />
-              </div>
-              <span className="text-sm" style={{ fontWeight: 600 }}>สร้างบอทใหม่</span>
-              <span className="text-xs text-gray-400 px-4 text-center">เพิ่ม Workspace อิสระสำหรับธุรกิจ</span>
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    if (!isLimitReached) {
+                      setEditingBot(undefined);
+                      setView("create");
+                    }
+                  }}
+                  disabled={isLimitReached}
+                  className={`border-2 border-dashed rounded-2xl p-5 transition-all flex flex-col items-center justify-center gap-2 min-h-[180px] ${
+                    isLimitReached 
+                      ? "border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" 
+                      : "border-gray-200 hover:border-amber-300 hover:bg-amber-50/30 text-gray-400 hover:text-amber-500"
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1 ${isLimitReached ? "bg-slate-100" : "bg-gray-100"}`}>
+                    <Plus className={`w-6 h-6 ${isLimitReached ? "text-slate-300" : ""}`} />
+                  </div>
+                  <span className="text-sm" style={{ fontWeight: 600 }}>สร้างบอทใหม่</span>
+                  <span className="text-xs px-4 text-center">
+                    {isLimitReached ? `เต็มโควต้า ${maxBots} บอทแล้ว` : "เพิ่ม Workspace อิสระสำหรับธุรกิจ"}
+                  </span>
+                </button>
+              </TooltipTrigger>
+              {isLimitReached && (
+                <TooltipContent side="top" className="bg-slate-800 text-white border-none px-3 py-2 text-xs">
+                  <p>⚠️ คุณสร้างบอทครบขีดจำกัด ({maxBots} ตัว) แล้ว</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
           </div>
         )}
       </div>

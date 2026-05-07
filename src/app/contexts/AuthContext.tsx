@@ -7,6 +7,7 @@ interface User {
   username: string; // เพิ่ม username เพราะหลังบ้านใช้ตัวนี้
   role: "admin" | "support" | "user";
   is_approved?: boolean;
+  max_bots?: number;
 }
 
 interface AuthContextType {

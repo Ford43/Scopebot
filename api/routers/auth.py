@@ -87,9 +87,15 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบ User")
 
-    user.is_approved = body.is_approved
+    if body.is_approved is not None:
+        user.is_approved = body.is_approved
+    if body.is_active is not None:
+        user.is_active = body.is_active
     if body.max_bots is not None:
         user.max_bots = body.max_bots
+    if body.role is not None:
+        user.role = body.role
+
     db.commit()
     db.refresh(user)
     return user
