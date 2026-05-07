@@ -133,7 +133,7 @@ export default function UserManagement() {
     <div className="p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">User Management</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">จัดการผู้ใช้งาน</h1>
           <p className="mt-2 text-sm text-slate-500 max-w-2xl">
             จัดการบัญชีผู้ใช้งานทั้งหมด อนุมัติการเข้าถึง และตรวจสอบสถานะระบบ
           </p>
@@ -254,7 +254,7 @@ export default function UserManagement() {
                       </td>
                       <td className="px-4 py-4 flex items-center justify-end gap-2 text-slate-500">
                         
-                        {/* 🟢 ปุ่มอนุมัติ (จะแสดงเฉพาะคนที่มีสถานะ Pending) */}
+                        {/*  ปุ่มอนุมัติ (จะแสดงเฉพาะคนที่มีสถานะ Pending) */}
                         {status === "Pending" && (
                           <Tooltip>
                             <TooltipTrigger asChild>

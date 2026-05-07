@@ -196,18 +196,24 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
       
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ name: name.trim(), description: desc.trim(), system_prompt: systemPrompt.trim() })
       });
 
       if (res.ok) {
-        onSaveSuccess(); // กลับไปหน้ารายการ
-      } else {
-        const errorData = await res.json();
-        setErrors({ name: errorData.detail || "เกิดข้อผิดพลาดในการบันทึก" });
+        const savedBot = await res.json(); // Backend จะคืนค่า bot_id ของบอทตัวใหม่มาให้
+
+        // 🟢 หากเป็นการสร้างบอทใหม่ และมีการอัปโหลดไฟล์ค้างไว้ใน State
+        if (!existing && docs.length > 0) {
+          for (const doc of docs) {
+            // สั่ง Assign เอกสารเข้ากับบอทตัวใหม่ที่เพิ่งสร้างเสร็จ
+            await fetch(`/api/documents/${doc.id}/assign/${savedBot.bot_id}`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+          }
+        }
+        onSaveSuccess();
       }
     } catch (error) {
       console.error("Save bot error:", error);
@@ -238,43 +244,40 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
 
   // จัดการอัปโหลดไฟล์ และ Assign ให้บอท
   const addFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !existing?.bot_id) return;
+    if (!files || files.length === 0) return; 
     setIsUploading(true);
 
     for (const file of Array.from(files)) {
       try {
-        // 1. Upload ไฟล์ไปที่ส่วนกลางก่อน
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("category", "ทั่วไป"); // default
+        formData.append("category", "ทั่วไป");
 
+        // 1. อัปโหลดเข้า Library กลางเสมอ
         const uploadRes = await fetch("/api/documents/upload", {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData
         });
-        
-        if (!uploadRes.ok) {
-          console.error("Upload failed for", file.name);
-          continue;
-        }
-        
+
+        if (!uploadRes.ok) continue;
         const docData = await uploadRes.json();
 
-        // 2. Assign ไฟล์เข้ากับ Bot ปัจจุบัน
-        await fetch(`/api/documents/${docData.id}/assign/${existing.bot_id}`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        setBotStatus("processing");
-
+        if (existing?.bot_id) {
+          // กรณี "แก้ไขบอทเดิม": ให้เชื่อมต่อเอกสารทันที
+          await fetch(`/api/documents/${docData.id}/assign/${existing.bot_id}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+        } else {
+          // กรณี "กำลังสร้างบอทใหม่": เก็บข้อมูลไฟล์ไว้ใน State docs ก่อน
+          setDocs(prev => [...prev, docData]);
+        }
       } catch (error) {
         console.error("File processing error", error);
       }
     }
-    
-    // โหลดรายชื่อเอกสารใหม่เมื่อเสร็จสิ้น
-    await fetchDocs();
+    if (existing?.bot_id) await fetchDocs();
     setIsUploading(false);
   };
 
@@ -369,12 +372,10 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
           </button>
           
           <button
-            onClick={() => existing && setActiveTab("knowledge")}
-            disabled={!existing}
+            onClick={() => setActiveTab("knowledge")} // 🟢 ปลดล็อกให้กดได้ตลอด
             className={`pb-3 text-sm transition-colors relative flex items-center gap-2 ${
               activeTab === "knowledge" ? "text-amber-600 font-semibold" : "text-gray-500 hover:text-gray-700"
-            } ${!existing ? "opacity-40 cursor-not-allowed" : ""}`}
-            title={!existing ? "กรุณาสร้างบอทก่อนอัปโหลดเอกสาร" : ""}
+            }`}
           >
             ฐานความรู้ (เอกสาร)
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-[10px]">{docs.length}</span>
@@ -442,7 +443,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
         )}
 
         {/* Tab 2: Knowledge Base (Documents UI) */}
-        {activeTab === "knowledge" && existing && (
+        {activeTab === "knowledge" && (
           <div className="space-y-6">
             {botStatus === "processing" && (
               <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl flex items-center gap-3">
@@ -641,7 +642,7 @@ export default function BotsPage({ onSelectBot, forceEditBotId, onClearForceEdit
       <div className="px-8 pt-7 pb-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl text-gray-900" style={{ fontWeight: 700 }}>
-            My Workspaces (Bots)
+            จัดการบอท
           </h1>
           <button
             onClick={() => {

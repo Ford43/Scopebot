@@ -45,8 +45,11 @@ async def upload_document(
         models.Document.filename == file.filename,
         models.Document.owner_id == current_user.id
     ).first()
+
     if existing:
-        raise HTTPException(status_code=400, detail=f"มีไฟล์ชื่อ {file.filename} อยู่แล้ว")
+        # หากมีไฟล์ชื่อนี้อยู่แล้วใน Library ของ User คนนี้
+        # ให้ส่งข้อมูลไฟล์เดิมกลับไปเลย โดยไม่ต้องบันทึกใหม่และไม่เกิด Error
+        return existing 
 
     # บันทึกไฟล์
     folder = os.path.join(UPLOAD_BASE, str(current_user.id))

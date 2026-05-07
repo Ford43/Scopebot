@@ -320,12 +320,22 @@ export default function ChatInterface() {
         return (
           <BotsPage 
             onSelectBot={(bot) => {
-              // เพิ่มการเช็ค: ถ้าบอทที่กด เป็นบอทตัวเดียวกับที่คุยค้างไว้
+              // 🟢 เปลี่ยนมาตรวจสอบที่สถานะ 'inactive' แทน
+              // เพราะสถานะ inactive หมายถึงบอทเพิ่งสร้างและยังไม่มีเอกสาร 
+              if (bot.status === "inactive") {
+                alert("ไม่สามารถเข้าหน้าแชทได้: บอทตัวนี้ยังไม่มีฐานความรู้ หรือยังไม่ได้ตั้งค่าเอกสาร");
+                
+                // พาผู้ใช้ไปหน้าตั้งค่าเพื่อเพิ่มเอกสาร
+                setForceEditBot(bot.bot_id);
+                setActiveView("bots");
+                return;
+              }
+
+              // หากสถานะเป็น active หรือ processing ให้เข้าหน้าแชทตามปกติ [cite: 10, 285]
               if (activeBot && activeBot.bot_id === bot.bot_id) {
-                setActiveView("chat"); // แค่สลับหน้ากลับไป ไม่ต้องรีเซ็ตข้อมูล
+                setActiveView("chat");
               } else {
-                // แต่ถ้ากดบอทตัวใหม่ ค่อยล้างหน้าจอและเริ่มเซสชันใหม่
-                currentSessionId.current = Date.now().toString(); // เริ่มเซสชันใหม่เมื่อเปลี่ยนบอท
+                currentSessionId.current = Date.now().toString();
                 setActiveBot(bot);
                 setActiveView("chat");
                 setMessages([]);
