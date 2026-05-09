@@ -1,0 +1,49 @@
+# ===== FastAPI & Server =====
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+
+# ===== Database =====
+sqlalchemy
+alembic
+
+# ===== Auth =====
+passlib==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]
+pydantic[email]
+
+# ===== RAG / LangChain =====
+langchain
+langchain-community
+langchain-chroma
+langchain-huggingface
+langchain-text-splitters
+
+# ===== Vector DB =====
+chromadb
+
+# ===== Embeddings =====
+sentence-transformers
+transformers
+torch
+
+# ===== LLM =====
+ollama
+
+# ===== Document Loaders =====
+pymupdf
+python-docx
+pandas
+beautifulsoup4
+markdown
+
+# ===== Line Bot =====
+line-bot-sdk
+
+# ===== Utilities =====
+python-dotenv
+tqdm
+numpy
+faiss-cpu
