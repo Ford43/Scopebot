@@ -24,7 +24,11 @@ def retrieve_docs(query, bot_id, score_threshold=1.5):
 
     db = get_vector_db(bot_id)
 
+<<<<<<< HEAD
     results = db.similarity_search_with_score(query, k=3)
+=======
+    results = db.similarity_search_with_score(query, k=TOP_K)
+>>>>>>> master
 
     results = sorted(results, key=lambda x: x[1])
 

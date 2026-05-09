@@ -7,7 +7,11 @@ import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 export const router = createBrowserRouter([
   {
     path: "/",
+<<<<<<< HEAD
     element: <Navigate to="/chat" replace />,
+=======
+    element: <Navigate to="/login" replace />,
+>>>>>>> master
   },
   {
     path: "/chat",

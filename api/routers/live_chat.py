@@ -151,6 +151,22 @@ def staff_reply(
         message=clean_message
     )
     db.add(msg)
+<<<<<<< HEAD
+=======
+
+    # mark conversation ที่ค้างอยู่ทั้งหมดของ session นี้ว่า resolved แล้ว
+    db.query(models.Conversation).filter(
+        models.Conversation.bot_id == session.bot_id,
+        models.Conversation.session_id == session.line_user_id,
+        models.Conversation.is_answered_by_bot == False,
+        models.Conversation.is_resolved == False
+    ).update({
+        "is_resolved": True,
+        "answer": clean_message
+    })
+    
+    # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง
+>>>>>>> master
     db.commit()
 
     # ส่งข้อความผ่าน Line

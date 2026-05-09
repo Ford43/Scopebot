@@ -1,5 +1,9 @@
 import os
 import uuid
+<<<<<<< HEAD
+=======
+import time
+>>>>>>> master
 import shutil
 from sqlalchemy.orm import Session
 from api.database import get_db
@@ -46,6 +50,10 @@ def create_bot(
         bot_id=bot_id_str,
         name=body.name,
         description=body.description,
+<<<<<<< HEAD
+=======
+        system_prompt=body.system_prompt,
+>>>>>>> master
         owner_id=current_user.id
     )
     db.add(bot)
@@ -108,7 +116,37 @@ def delete_bot(
 
     db.delete(bot)
     db.commit()
+<<<<<<< HEAD
     return {"message": f"ลบ Bot {bot_id} เรียบร้อย"}
+=======
+    # 1. สร้างฟังก์ชันย่อยสำหรับบังคับลบโฟลเดอร์พร้อม retry
+    def force_delete_folder(folder_path):
+        if not os.path.exists(folder_path):
+            return
+            
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                shutil.rmtree(folder_path)
+                print(f"Deleted folder: {folder_path}")
+                break # ลบสำเร็จ ออกจาก loop
+            except PermissionError as e:
+                print(f"Attempt {attempt + 1}: Cannot delete {folder_path} yet ({e}). Waiting...")
+                time.sleep(1) # รอ 1 วินาทีแล้วลองใหม่
+            except Exception as e:
+                print(f"Error deleting {folder_path}: {e}")
+                break
+
+    # 2. ทำการลบโฟลเดอร์ Data
+    bot_data_dir = os.path.join("data", bot_id)
+    force_delete_folder(bot_data_dir)
+
+    # 3. ทำการลบโฟลเดอร์ Vector DB
+    vdb = os.path.join("vector_db", bot_id)
+    force_delete_folder(vdb)
+
+    return {"message": "ลบบอทสำเร็จ"}
+>>>>>>> master
 
 
 @router.get("/{bot_id}/documents")

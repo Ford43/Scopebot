@@ -11,6 +11,7 @@ def build_context(docs):
         parts.append(f"[เอกสารที่ {i}]\n{doc.page_content.strip()}")
     return "\n\n".join(parts)
 
+<<<<<<< HEAD
 
 def ask_rag(question: str, bot_id: str) -> str:
     # ดึง docs ที่เกี่ยวข้อง
@@ -18,6 +19,16 @@ def ask_rag(question: str, bot_id: str) -> str:
 
     if not docs:
         return "ไม่พบข้อมูล"
+=======
+# 1. เพิ่มพารามิเตอร์ user_system_prompt ในวงเล็บ
+def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
+    # ดึง docs ที่เกี่ยวข้อง
+    docs = retrieve_docs(question, bot_id)
+
+    # 🟢 แก้ไขจุดที่ 1: ถ้าไม่พบเอกสารเลย ให้ส่ง Signal โอนสาย
+    if not docs:
+        return "REQUIRE_HUMAN_HANDOFF"
+>>>>>>> master
 
     context = build_context(docs)
 
@@ -32,11 +43,24 @@ def ask_rag(question: str, bot_id: str) -> str:
 
 คำตอบ:"""
 
+<<<<<<< HEAD
+=======
+    # 2. สร้าง Hybrid Prompt ตรงนี้
+    final_system_prompt = SYSTEM_PROMPT
+    if user_system_prompt and user_system_prompt.strip() != "":
+        final_system_prompt += f"\n\nคำสั่งเพิ่มเติมเกี่ยวกับบทบาทและพฤติกรรมของคุณ:\n{user_system_prompt}"
+
+>>>>>>> master
     try:
         response = ollama.chat(
             model=MODEL_NAME,
             messages=[
+<<<<<<< HEAD
                 {"role": "system", "content": SYSTEM_PROMPT},
+=======
+                # 3. เปลี่ยนจาก SYSTEM_PROMPT เป็น final_system_prompt
+                {"role": "system", "content": final_system_prompt},
+>>>>>>> master
                 {"role": "user", "content": prompt}
             ],
             options={
@@ -50,10 +74,24 @@ def ask_rag(question: str, bot_id: str) -> str:
         answer = response["message"]["content"].strip()
 
         if DEBUG:
+<<<<<<< HEAD
             print(f"[DEBUG] Answer:\n {answer}")
 
         return answer if answer else "ไม่พบข้อมูล"
 
     except Exception as e:
         print(f"❌ LLM error: {e}")
+=======
+            print(f"[DEBUG] System Prompt:\n {final_system_prompt}") # ลองปริ้นท์ดูเพื่อความชัวร์
+            print(f"[DEBUG] Answer:\n {answer}")
+
+        # 🟢 แก้ไขจุดที่ 2: ตรวจสอบคำตอบของ LLM ว่าตอบไม่ได้หรือไม่
+        if not answer or "ไม่พบข้อมูล" in answer:
+            return "REQUIRE_HUMAN_HANDOFF"
+
+        return answer
+
+    except Exception as e:
+        print(f"LLM error: {e}")
+>>>>>>> master
         return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"

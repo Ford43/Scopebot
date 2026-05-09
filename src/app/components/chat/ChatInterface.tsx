@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import {
+<<<<<<< HEAD
   LayoutDashboard, MessageSquare, Brain, FileText, History, Puzzle,
   LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
   ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
@@ -11,6 +12,16 @@ import { generateAIResponse, getTypingDelay } from "../../utils/aiEngine";
 import { useAuth } from "../../contexts/AuthContext";
 import Dashboard   from "../admin/Dashboard";
 import Documents   from "../admin/Documents";
+=======
+  LayoutDashboard, MessageSquare, History, Puzzle,
+  LogOut, User, Search, Bell, ChevronDown, Sparkles, Zap, Plus, Mic,
+  ImageIcon, Headphones, PenSquare, ChevronRight, Trash2, Clock, X,
+  Crown, UserCircle2, AlertTriangle, Send, Menu, Bot, Settings,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../../contexts/AuthContext";
+import Dashboard   from "../admin/Dashboard";
+>>>>>>> master
 import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
@@ -20,7 +31,11 @@ import BotsPage from "./BotsPage";
 /* ─────────────── Types ─────────────── */
 type ActiveView =
   | "dashboard" | "unified-chat"
+<<<<<<< HEAD
   | "documents" | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+=======
+  | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+>>>>>>> master
 
 interface Message {
   id: string;
@@ -56,6 +71,7 @@ const categoryColors: Record<string, string> = {
   "IT Support":   "bg-gray-200 text-gray-700",
   "เวลาทำงาน":   "bg-amber-50 text-amber-600",
   "การสมัครงาน": "bg-gray-100 text-gray-600",
+<<<<<<< HEAD
 };
 
 const viewLabels: Record<ActiveView, string> = {
@@ -67,6 +83,19 @@ const viewLabels: Record<ActiveView, string> = {
   chat:             "Chat",
   bots:             "Bots",
   "user-management": "User Management",
+=======
+  "Error":       "bg-red-100 text-red-600",
+};
+
+const viewLabels: Record<ActiveView, string> = {
+  dashboard:        "แดชบอร์ด",
+  "unified-chat":   "แชทรวม",
+  "search-history": "ประวัติการค้นหา",
+  integration:      "การเชื่อมต่อ",
+  chat:             "แชท",
+  bots:             "บอท",
+  "user-management": "จัดการผู้ใช้งาน",
+>>>>>>> master
 };
 
 function groupByDate(items: HistoryItem[]) {
@@ -95,12 +124,24 @@ export default function ChatInterface() {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showUserMenu, setShowUserMenu]   = useState(false);
   const [topSearch, setTopSearch]         = useState("");
+<<<<<<< HEAD
   const [activeView, setActiveView]       = useState<ActiveView>("bots"); // เปลี่ยนค่าเริ่มต้นเป็น bots
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+=======
+  const [activeView, setActiveView]       = useState<ActiveView>("bots");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+>>>>>>> master
   
   // State ของ Bot
   const [activeBot, setActiveBot] = useState<any>(null);
   const [forceEditBot, setForceEditBot] = useState<string | null>(null);
+<<<<<<< HEAD
+=======
+  
+  // Session ID สำหรับการแชทแต่ละรอบ
+  const currentSessionId = useRef<string>(Date.now().toString());
+>>>>>>> master
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
@@ -116,7 +157,11 @@ export default function ChatInterface() {
       prevRoleRef.current = user?.role;
       if (user?.role === "admin")   setActiveView("dashboard");
       else if (user?.role === "support") setActiveView("unified-chat");
+<<<<<<< HEAD
       else setActiveView("bots"); // เปลี่ยนให้ user ทั่วไปเห็นหน้า bots เป็นหน้าแรก
+=======
+      else setActiveView("bots");
+>>>>>>> master
     }
   }, [user?.role]);
 
@@ -131,6 +176,7 @@ export default function ChatInterface() {
     }
   }, [inputValue]);
 
+<<<<<<< HEAD
   const timeNow = () =>
     new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
@@ -140,6 +186,85 @@ export default function ChatInterface() {
     const now = new Date();
     const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
+=======
+  useEffect(() => {
+    if (!activeBot || activeView !== "chat") return;
+    
+    const pollAdminReply = async () => {
+       try {
+         const res = await fetch(`/api/chat/${activeBot.bot_id}/session/${currentSessionId.current}/updates`);
+         if (res.ok) {
+           const newMsgs = await res.json();
+           if (newMsgs.length > 0) {
+              setMessages(prev => {
+                 // เช็คว่ามีข้อความนี้แสดงบนจอไปแล้วหรือยัง
+                 const existingIds = new Set(prev.map(m => m.id));
+                 
+                 const msgsToAdd = newMsgs
+                   .filter((m: any) => !existingIds.has("staff-" + m.id))
+                   .map((m: any) => ({
+                     id: "staff-" + m.id,
+                     sender: "bot",
+                     text: `👩‍💻 [เจ้าหน้าที่]: ${m.message}`,
+                     time: new Date(m.created_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+                     category: "Support"
+                   }));
+                   
+                 if (msgsToAdd.length > 0) return [...prev, ...msgsToAdd];
+                 return prev;
+              });
+           }
+         }
+       } catch (e) {
+         console.error(e);
+       }
+    };
+
+    const interval = setInterval(pollAdminReply, 3000);
+    return () => clearInterval(interval);
+  }, [activeBot, activeView]);
+
+    // ดึงจำนวนการแจ้งเตือนที่ยังไม่อ่าน (เฉพาะตอนที่ Login แล้ว)
+  useEffect(() => {
+  if (!isAuthenticated) return;
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem("scopebot_token");
+      const res = await fetch("/api/notifications/unread-count", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadNotifs(data.count || 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications count", error);
+    }
+  };
+
+    fetchUnreadCount(); // ดึงครั้งแรก
+    const interval = setInterval(fetchUnreadCount, 10000); // เช็คทุก 10 วินาที
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+  const timeNow = () =>
+    new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+
+  /* ────────── ยิง API ไปหา FastAPI จริง ────────── */
+  const handleSend = async (overrideText?: string) => {
+    const text = (overrideText ?? inputValue).trim();
+    if (!text || isTyping) return;
+    
+    if (!activeBot || !activeBot.bot_id) {
+      alert("กรุณาเลือกบอทก่อนเริ่มการสนทนา");
+      return;
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+
+    // 1. เพิ่มข้อความ User ลงหน้าจอ
+>>>>>>> master
     setMessages((prev) => [
       ...prev,
       { id: Date.now().toString(), sender: "user", text, time: timeStr },
@@ -147,6 +272,7 @@ export default function ChatInterface() {
     setInputValue("");
     setIsTyping(true);
 
+<<<<<<< HEAD
     const aiResult = generateAIResponse(text);
     const delay    = getTypingDelay(aiResult.response.length);
 
@@ -154,16 +280,50 @@ export default function ChatInterface() {
     if (isAuthenticated) {
       setHistoryItems((prev) => [
         { id: Date.now().toString(), query: text, category: aiResult.category, time: timeStr, timestamp: now.getTime() },
+=======
+    /* Save history only for authenticated users */
+    if (isAuthenticated) {
+      setHistoryItems((prev) => [
+        { id: Date.now().toString(), query: text, time: timeStr, timestamp: now.getTime() },
+>>>>>>> master
         ...prev,
       ]);
     }
 
+<<<<<<< HEAD
     setTimeout(() => {
+=======
+    try {
+      const token = localStorage.getItem("scopebot_token");
+      
+      // 2. ยิง Request ไปหา FastAPI
+      const res = await fetch(`/api/chat/${activeBot.bot_id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          question: text,
+          session_id: currentSessionId.current,
+          source_channel: "web"
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "เกิดข้อผิดพลาดในการเชื่อมต่อกับบอท");
+      }
+
+      // 3. เพิ่มข้อความ AI ลงหน้าจอ
+>>>>>>> master
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           sender: "bot",
+<<<<<<< HEAD
           text: aiResult.response,
           time: timeNow(),
           confidence: aiResult.confidence,
@@ -175,6 +335,34 @@ export default function ChatInterface() {
   };
 
   const handleNewChat = () => { setMessages([]); setInputValue(""); };
+=======
+          text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
+          time: timeNow(),
+        },
+      ]);
+    } catch (error: any) {
+      console.error("Chat Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: "bot",
+          text: `❌ ขออภัย เกิดข้อผิดพลาด:\n${error.message}`,
+          time: timeNow(),
+          category: "Error"
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleNewChat = () => { 
+    currentSessionId.current = Date.now().toString(); // Reset Session
+    setMessages([]); 
+    setInputValue(""); 
+  };
+>>>>>>> master
 
   const handleHistoryClick = (query: string) => {
     setShowHistoryDrawer(false);
@@ -193,6 +381,7 @@ export default function ChatInterface() {
      Role-based menu definitions
   ────────────────────────────────────────── */
   const adminMenuItems = [
+<<<<<<< HEAD
     { id: "dashboard"       as ActiveView, label: "Dashboard",        icon: LayoutDashboard },
     { id: "unified-chat"    as ActiveView, label: "Unified Chat",      icon: MessageSquare, badge: true },
     { id: "documents"       as ActiveView, label: "Documents",         icon: FileText },
@@ -205,13 +394,28 @@ export default function ChatInterface() {
 
   const supportMenuItems = [
     { id: "unified-chat" as ActiveView, label: "Unified Chat", icon: MessageSquare, badge: true },
+=======
+    { id: "dashboard"       as ActiveView, label: "แดชบอร์ด",        icon: LayoutDashboard },
+    { id: "bots"            as ActiveView, label: "บอท",              icon: Bot },
+    { id: "unified-chat"    as ActiveView, label: "แชทรวม",         icon: MessageSquare, badge: true },
+    { id: "user-management" as ActiveView, label: "จัดการผู้ใช้งาน",  icon: User },
+    { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
+    { id: "integration"     as ActiveView, label: "การเชื่อมต่อ",      icon: Puzzle },
+  ];
+
+  const supportMenuItems = [
+    { id: "unified-chat" as ActiveView, label: "แชทรวม", icon: MessageSquare, badge: true },
+>>>>>>> master
   ];
 
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":      return <Dashboard />;
       case "unified-chat":   return <UnifiedChat />;
+<<<<<<< HEAD
       case "documents":      return <Documents />;
+=======
+>>>>>>> master
       case "search-history": return <SearchHistory />;
       case "integration":    return <Integration />;
       case "user-management": return <UserManagement/>;
@@ -219,10 +423,34 @@ export default function ChatInterface() {
         return (
           <BotsPage 
             onSelectBot={(bot) => {
+<<<<<<< HEAD
               setActiveBot(bot);
               setActiveView("chat");
               setMessages([]);
               setInputValue("");
+=======
+              // 🟢 เปลี่ยนมาตรวจสอบที่สถานะ 'inactive' แทน
+              // เพราะสถานะ inactive หมายถึงบอทเพิ่งสร้างและยังไม่มีเอกสาร 
+              if (bot.status === "inactive") {
+                alert("ไม่สามารถเข้าหน้าแชทได้: บอทตัวนี้ยังไม่มีฐานความรู้ หรือยังไม่ได้ตั้งค่าเอกสาร");
+                
+                // พาผู้ใช้ไปหน้าตั้งค่าเพื่อเพิ่มเอกสาร
+                setForceEditBot(bot.bot_id);
+                setActiveView("bots");
+                return;
+              }
+
+              // หากสถานะเป็น active หรือ processing ให้เข้าหน้าแชทตามปกติ [cite: 10, 285]
+              if (activeBot && activeBot.bot_id === bot.bot_id) {
+                setActiveView("chat");
+              } else {
+                currentSessionId.current = Date.now().toString();
+                setActiveBot(bot);
+                setActiveView("chat");
+                setMessages([]);
+                setInputValue("");
+              }
+>>>>>>> master
             }}
             forceEditBotId={forceEditBot}
             onClearForceEdit={() => setForceEditBot(null)}
@@ -257,7 +485,11 @@ export default function ChatInterface() {
           {activeBot && (
             <button
               onClick={() => {
+<<<<<<< HEAD
                 setForceEditBot(activeBot.id);
+=======
+                setForceEditBot(activeBot.bot_id); // ใช้ bot_id ของ API
+>>>>>>> master
                 setActiveView("bots");
               }}
               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 border border-gray-200 hover:border-amber-300 px-3 py-1.5 rounded-lg transition-colors"
@@ -373,7 +605,13 @@ export default function ChatInterface() {
                           <Sparkles className="w-3 h-3 text-amber-400" />
                         )}
                       </div>
+<<<<<<< HEAD
                       <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3 text-sm text-gray-800 whitespace-pre-line shadow-sm border border-gray-100 max-w-[85%]">
+=======
+                      <div className={`rounded-2xl rounded-tl-none px-4 py-3 text-sm whitespace-pre-line shadow-sm border max-w-[85%] ${
+                        message.category === "Error" ? "bg-red-50 border-red-200 text-red-700" : "bg-white border-gray-100 text-gray-800"
+                      }`}>
+>>>>>>> master
                         {message.text}
                       </div>
                       {message.confidence && (
@@ -577,7 +815,11 @@ export default function ChatInterface() {
                   {/* Bots */}
                   <button
                     onClick={() => setActiveView("bots")}
+<<<<<<< HEAD
                     title={sidebarCollapsed ? "Bots" : undefined}
+=======
+                    title={sidebarCollapsed ? "บอท" : undefined}
+>>>>>>> master
                     className={`w-full flex items-center rounded-lg text-sm transition-colors ${
                       sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
                     } ${
@@ -587,7 +829,11 @@ export default function ChatInterface() {
                     }`}
                   >
                     <Bot className={`w-4 h-4 flex-shrink-0 ${activeView === "bots" ? "text-gray-900" : "text-gray-500"}`} />
+<<<<<<< HEAD
                     {!sidebarCollapsed && <span className="flex-1">Bots</span>}
+=======
+                    {!sidebarCollapsed && <span className="flex-1">บอท</span>}
+>>>>>>> master
                   </button>
 
                   <button
@@ -746,7 +992,17 @@ export default function ChatInterface() {
       <div className="flex items-center gap-2 ml-4">
         <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <Bell className="w-4 h-4" />
+<<<<<<< HEAD
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+=======
+          {/* ถ้ามีแจ้งเตือน จะแสดงจุดสีแดงกระพริบ */}
+          {unreadNotifs > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
+>>>>>>> master
         </button>
 
         <div className="relative">
@@ -776,9 +1032,14 @@ export default function ChatInterface() {
                   <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{user?.name}</p>
                   <p className="text-xs text-gray-400">{user?.email}</p>
                 </div>
+<<<<<<< HEAD
                 {/* แก้ไขเมนูดรอปดาวน์มุมขวาบนให้วิ่งไปหน้า Bots แทน Chat */}
                 <button
                   onClick={() => { setShowUserMenu(false); setActiveView("bots"); setActiveBot(null); }}
+=======
+                <button
+                  onClick={() => { setShowUserMenu(false); setActiveView("bots"); }}
+>>>>>>> master
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
                 >
                   <Bot className="w-4 h-4" />
