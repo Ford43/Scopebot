@@ -3,11 +3,8 @@ from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
 from rag.rag_pipeline import ask_rag
-<<<<<<< HEAD
-=======
 from sqlalchemy import func
 from sqlalchemy.types import Integer
->>>>>>> master
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -18,10 +15,6 @@ def chat(
     body: schemas.ChatRequest,
     db: Session = Depends(get_db)
 ):
-<<<<<<< HEAD
-    # ดึง bot (ไม่ต้อง login สำหรับ endpoint นี้ — ลูกค้าใช้)
-=======
->>>>>>> master
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     if not bot:
         raise HTTPException(status_code=404, detail="ไม่พบ Bot")
@@ -29,12 +22,6 @@ def chat(
     if bot.status != models.BotStatus.active:
         raise HTTPException(status_code=400, detail="Bot ยังไม่พร้อมใช้งาน")
 
-<<<<<<< HEAD
-    # ถามผ่าน RAG pipeline
-    answer = ask_rag(body.question, bot_id)
-    is_bot_answered = answer != "ไม่พบข้อมูล"
-
-=======
     # กรอง question สั้นเกินไป
     if len(body.question.strip()) < 2:
         return {
@@ -144,20 +131,14 @@ def chat(
                 user_id=bot.owner_id
             ))
 
->>>>>>> master
     # บันทึก conversation
     conversation = models.Conversation(
         session_id=body.session_id,
         question=body.question,
         answer=answer,
         is_answered_by_bot=is_bot_answered,
-<<<<<<< HEAD
-        is_resolved=is_bot_answered,  # ถ้า bot ตอบได้ = resolved
-        source_channel=body.source_channel,
-=======
         is_resolved=is_bot_answered,
         source_channel=body.source_channel or "web",
->>>>>>> master
         bot_id=bot.id
     )
     db.add(conversation)
@@ -187,57 +168,33 @@ def get_history(
     query = db.query(models.Conversation).filter(
         models.Conversation.bot_id == bot.id
     )
-<<<<<<< HEAD
-
-    if source_channel:
-        query = query.filter(models.Conversation.source_channel == source_channel)
-
-    total = query.count()
-=======
     if source_channel:
         query = query.filter(
             models.Conversation.source_channel == source_channel
         )
 
->>>>>>> master
     conversations = query.order_by(
         models.Conversation.created_at.desc()
     ).offset((page - 1) * limit).limit(limit).all()
 
     return conversations
 
-<<<<<<< HEAD
-=======
 
->>>>>>> master
 @router.get("/{bot_id}/unanswered", response_model=list[schemas.ConversationOut])
 def get_unanswered(
     bot_id: str,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
-<<<<<<< HEAD
-    """คำถามที่ Bot ตอบไม่ได้ รอ human ตอบ"""
-=======
->>>>>>> master
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     if not bot:
         raise HTTPException(status_code=404, detail="ไม่พบ Bot")
 
-<<<<<<< HEAD
-    return db.query(models.Conversation)\
-        .filter(
-            models.Conversation.bot_id == bot.id,
-            models.Conversation.is_answered_by_bot == False,
-            models.Conversation.is_resolved == False
-        ).all()
-=======
     return db.query(models.Conversation).filter(
         models.Conversation.bot_id == bot.id,
         models.Conversation.is_answered_by_bot == False,
         models.Conversation.is_resolved == False
     ).order_by(models.Conversation.created_at.desc()).all()
->>>>>>> master
 
 
 @router.patch("/conversations/{conv_id}/resolve")
@@ -247,14 +204,9 @@ def resolve_conversation(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
-<<<<<<< HEAD
-    """User ตอบแทน Bot"""
-    conv = db.query(models.Conversation).filter(models.Conversation.id == conv_id).first()
-=======
     conv = db.query(models.Conversation).filter(
         models.Conversation.id == conv_id
     ).first()
->>>>>>> master
     if not conv:
         raise HTTPException(status_code=404, detail="ไม่พบ Conversation")
 
@@ -262,9 +214,6 @@ def resolve_conversation(
     conv.is_resolved = True
     conv.is_answered_by_bot = False
     db.commit()
-<<<<<<< HEAD
-    return {"message": "ตอบกลับเรียบร้อย"}
-=======
     return {"message": "ตอบกลับเรียบร้อย"}
 
 
@@ -390,4 +339,3 @@ def get_all_sessions(
         })
 
     return results
->>>>>>> master

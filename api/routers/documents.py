@@ -45,16 +45,11 @@ async def upload_document(
         models.Document.filename == file.filename,
         models.Document.owner_id == current_user.id
     ).first()
-<<<<<<< HEAD
-    if existing:
-        raise HTTPException(status_code=400, detail=f"มีไฟล์ชื่อ {file.filename} อยู่แล้ว")
-=======
 
     if existing:
         # หากมีไฟล์ชื่อนี้อยู่แล้วใน Library ของ User คนนี้
         # ให้ส่งข้อมูลไฟล์เดิมกลับไปเลย โดยไม่ต้องบันทึกใหม่และไม่เกิด Error
         return existing 
->>>>>>> master
 
     # บันทึกไฟล์
     folder = os.path.join(UPLOAD_BASE, str(current_user.id))
@@ -300,8 +295,6 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
             "success"
         )
     except Exception as e:
-<<<<<<< HEAD
-=======
         # 🔴 เพิ่มโค้ดส่วนนี้เพื่อให้มันปริ้นท์ Error สีแดงๆ ออกมาที่หน้า Terminal
         import traceback
         print(f"\n{'='*50}")
@@ -309,7 +302,6 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
         traceback.print_exc()
         print(f"{'='*50}\n")
 
->>>>>>> master
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
         if bot:
             bot.status = models.BotStatus.inactive

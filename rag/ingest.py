@@ -1,11 +1,8 @@
 import sys
 import os
 import shutil
-<<<<<<< HEAD
-=======
 import gc
 import chromadb # เพิ่ม chromadb เพื่อเข้าถึงคำสั่งเคลียร์แคช
->>>>>>> master
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -29,9 +26,6 @@ def ingest(bot_id):
 
     if os.path.exists(persist_path):
         print("Clearing old DB...")
-<<<<<<< HEAD
-        shutil.rmtree(persist_path)
-=======
         
         # --- [เพิ่มโค้ดส่วนนี้เพื่อปลดล็อคไฟล์] ---
         try:
@@ -44,7 +38,6 @@ def ingest(bot_id):
         
         # ใช้ ignore_errors=True ช่วยข้ามไฟล์ที่ลบไม่ได้ชั่วคราว
         shutil.rmtree(persist_path, ignore_errors=True)
->>>>>>> master
 
     print("Loading documents...")
     docs = load_documents(bot_id)

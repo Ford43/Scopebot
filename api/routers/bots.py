@@ -1,9 +1,6 @@
 import os
 import uuid
-<<<<<<< HEAD
-=======
 import time
->>>>>>> master
 import shutil
 from sqlalchemy.orm import Session
 from api.database import get_db
@@ -50,10 +47,7 @@ def create_bot(
         bot_id=bot_id_str,
         name=body.name,
         description=body.description,
-<<<<<<< HEAD
-=======
         system_prompt=body.system_prompt,
->>>>>>> master
         owner_id=current_user.id
     )
     db.add(bot)
@@ -116,9 +110,6 @@ def delete_bot(
 
     db.delete(bot)
     db.commit()
-<<<<<<< HEAD
-    return {"message": f"ลบ Bot {bot_id} เรียบร้อย"}
-=======
     # 1. สร้างฟังก์ชันย่อยสำหรับบังคับลบโฟลเดอร์พร้อม retry
     def force_delete_folder(folder_path):
         if not os.path.exists(folder_path):
@@ -146,7 +137,6 @@ def delete_bot(
     force_delete_folder(vdb)
 
     return {"message": "ลบบอทสำเร็จ"}
->>>>>>> master
 
 
 @router.get("/{bot_id}/documents")

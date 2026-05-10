@@ -1,2 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+#Vector DB & Data
+vector_db/
+data/
+
+# Node
 node_modules/
-node_modules
+dist/
+.next/
+
+# ngrok
+ngrok.exe
+ngrok
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

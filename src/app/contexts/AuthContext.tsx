@@ -7,10 +7,7 @@ interface User {
   username: string; // เพิ่ม username เพราะหลังบ้านใช้ตัวนี้
   role: "admin" | "support" | "user";
   is_approved?: boolean;
-<<<<<<< HEAD
-=======
   max_bots?: number;
->>>>>>> master
 }
 
 interface AuthContextType {
@@ -97,13 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (res.ok) {
-<<<<<<< HEAD
-        // สมัครสำเร็จ ให้ Login อัตโนมัติ
-        return await login(email, password);
-=======
         // สมัครสำเร็จ แต่ต้องรอแอดมินอนุมัติ จึงยังไม่ Login ตอนนี้ ให้คืนค่า true กลับไปเฉยๆ
         return true; 
->>>>>>> master
       }
       return false;
     } catch (error) {

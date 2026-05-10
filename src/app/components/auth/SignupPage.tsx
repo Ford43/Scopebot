@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
-<<<<<<< HEAD
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Zap, ChevronRight } from "lucide-react";
-=======
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Zap, ChevronRight, CheckCircle } from "lucide-react";
->>>>>>> master
 
 export default function SignupPage() {
   const [name, setName]                     = useState("");
@@ -16,10 +12,7 @@ export default function SignupPage() {
   const [error, setError]                   = useState("");
   const [isLoading, setIsLoading]           = useState(false);
   const [acceptTerms, setAcceptTerms]       = useState(false);
-<<<<<<< HEAD
-=======
   const [isSuccess, setIsSuccess]           = useState(false);
->>>>>>> master
 
   const { signup } = useAuth();
   const navigate   = useNavigate();
@@ -42,16 +35,11 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const ok = await signup(email, password, name);
-<<<<<<< HEAD
-      if (ok) navigate("/chat");
-      else     setError("อีเมลนี้มีผู้ใช้งานแล้ว");
-=======
       if (ok) {
         setIsSuccess(true); // 🟢 ถ้าสมัครสำเร็จ ให้แสดงหน้าสำเร็จ
       } else {
         setError("อีเมลนี้มีผู้ใช้งานแล้ว หรือเกิดข้อผิดพลาด");
       }    setError("อีเมลนี้มีผู้ใช้งานแล้ว");
->>>>>>> master
     } catch {
       setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -72,10 +60,6 @@ export default function SignupPage() {
       <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-amber-400 rounded-full blur-3xl opacity-10 pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-yellow-300 rounded-full blur-3xl opacity-5 pointer-events-none" />
 
-<<<<<<< HEAD
-      {/* Card */}
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-black/40 p-8 my-8">
-=======
       {isSuccess ? (
         <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 text-center my-8 z-10">
           <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
@@ -96,7 +80,6 @@ export default function SignupPage() {
       ) : (
         /* 🔴 ฟอร์มสมัครสมาชิกเดิมที่ถูกครอบไว้ในเงื่อนไข else */
         <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-black/40 p-8 my-8 z-10">
->>>>>>> master
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
@@ -233,10 +216,7 @@ export default function SignupPage() {
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
-<<<<<<< HEAD
-=======
       )}
->>>>>>> master
     </div>
   );
 }

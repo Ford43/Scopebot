@@ -151,8 +151,6 @@ def staff_reply(
         message=clean_message
     )
     db.add(msg)
-<<<<<<< HEAD
-=======
 
     # mark conversation ที่ค้างอยู่ทั้งหมดของ session นี้ว่า resolved แล้ว
     db.query(models.Conversation).filter(
@@ -166,7 +164,6 @@ def staff_reply(
     })
     
     # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง
->>>>>>> master
     db.commit()
 
     # ส่งข้อความผ่าน Line

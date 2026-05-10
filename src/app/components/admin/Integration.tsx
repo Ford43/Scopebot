@@ -348,11 +348,7 @@ export default function Integration() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-<<<<<<< HEAD
-          <h1 className="text-gray-900">Integration</h1>
-=======
           <h1 className="text-gray-900">การเชื่อมต่อ</h1>
->>>>>>> master
           <p className="text-sm text-gray-500 mt-0.5">เชื่อมต่อ scopebot กับช่องทางการสื่อสารต่างๆ</p>
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">

@@ -27,8 +27,6 @@ def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-<<<<<<< HEAD
-=======
 
     # เพิ่มโค้ดส่วนนี้: ดึงรายชื่อ Admin และ Support เพื่อส่งแจ้งเตือน
     admin_support_users = db.query(models.User).filter(
@@ -47,7 +45,6 @@ def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
     
     db.commit() # บันทึกแจ้งเตือนลงฐานข้อมูล
 
->>>>>>> master
     return user
 
 
@@ -90,11 +87,6 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบ User")
 
-<<<<<<< HEAD
-    user.is_approved = body.is_approved
-    if body.max_bots is not None:
-        user.max_bots = body.max_bots
-=======
     if body.is_approved is not None:
         user.is_approved = body.is_approved
     if body.is_active is not None:
@@ -104,7 +96,6 @@ def approve_user(
     if body.role is not None:
         user.role = body.role
 
->>>>>>> master
     db.commit()
     db.refresh(user)
     return user

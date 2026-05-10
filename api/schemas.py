@@ -43,10 +43,7 @@ class UserOut(BaseModel):
 class BotCreate(BaseModel):
     name: str
     description: Optional[str] = None
-<<<<<<< HEAD
-=======
     system_prompt: Optional[str] = None
->>>>>>> master
 
 
 class BotUpdate(BaseModel):
@@ -54,10 +51,7 @@ class BotUpdate(BaseModel):
     description: Optional[str] = None
     line_channel_token: Optional[str] = None
     line_channel_secret: Optional[str] = None
-<<<<<<< HEAD
-=======
     system_prompt: Optional[str] = None
->>>>>>> master
 
 
 class BotOut(BaseModel):
@@ -70,10 +64,7 @@ class BotOut(BaseModel):
     is_web_connected: bool
     owner_id: int
     created_at: datetime
-<<<<<<< HEAD
-=======
     system_prompt: Optional[str] = None
->>>>>>> master
 
     class Config:
         from_attributes = True
@@ -115,13 +106,9 @@ class ConversationOut(BaseModel):
 # =====================
 class ApproveUser(BaseModel):
     is_approved: bool
-<<<<<<< HEAD
-    max_bots: Optional[int] = 3
-=======
     is_active: Optional[bool] = None
     max_bots: Optional[int] = 3
     role: Optional[str] = None
->>>>>>> master
 
 # =====================
 # Document Schemas (ใหม่)
