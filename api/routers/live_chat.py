@@ -144,7 +144,6 @@ def staff_reply(
     clean_message = body.message.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n").strip()
 
     # บันทึกข้อความ
-    # บันทึกข้อความลง LiveMessage (เพื่อแสดงผลในหน้า Unified Chat)
     msg = models.LiveMessage(
         session_id=session_id,
         sender_type=models.SenderType.staff,
@@ -153,17 +152,16 @@ def staff_reply(
     )
     db.add(msg)
 
-    # 🟢 เพิ่มใหม่: บันทึกข้อความลง Conversation (เพื่อแสดงผลในหน้าแชทหลักของบอท)
-    conv = models.Conversation(
-        session_id=session.line_user_id,
-        question="[ข้อความจากเจ้าหน้าที่]", # ระบุหัวข้อไว้ให้รู้ว่าไม่ใช่คำถามทั่วไป
-        answer=clean_message,
-        is_answered_by_bot=False,
-        is_resolved=True,
-        source_channel="web",
-        bot_id=session.bot_id
-    )
-    db.add(conv)
+    # mark conversation ที่ค้างอยู่ทั้งหมดของ session นี้ว่า resolved แล้ว
+    db.query(models.Conversation).filter(
+        models.Conversation.bot_id == session.bot_id,
+        models.Conversation.session_id == session.line_user_id,
+        models.Conversation.is_answered_by_bot == False,
+        models.Conversation.is_resolved == False
+    ).update({
+        "is_resolved": True,
+        "answer": clean_message
+    })
     
     # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง
     db.commit()
