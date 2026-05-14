@@ -135,7 +135,7 @@ export default function UnifiedChat() {
       <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50/50">
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-bold text-gray-800 flex items-center justify-between">
-            ลูกค้าที่รอสาย
+            รอการติดต่อจากเจ้าหน้าที่
             <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full font-semibold">
               {sessions.length} รอตอบ
             </span>

@@ -59,7 +59,7 @@ const categoryColors: Record<string, string> = {
 const viewLabels: Record<ActiveView, string> = {
   dashboard:        "แดชบอร์ด",
   "unified-chat":   "แชทรวม",
-  "search-history": "ประวัติการค้นหา",
+  "search-history": "ประวัติการสนทนา",
   integration:      "การเชื่อมต่อ",
   chat:             "แชท",
   bots:             "บอท",
@@ -301,7 +301,7 @@ export default function ChatInterface() {
     { id: "bots"            as ActiveView, label: "บอท",              icon: Bot },
     { id: "unified-chat"    as ActiveView, label: "แชทรวม",         icon: MessageSquare, badge: true },
     { id: "user-management" as ActiveView, label: "จัดการผู้ใช้งาน",  icon: User },
-    { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
+    { id: "search-history"  as ActiveView, label: "ประวัติการสนทนา",  icon: History },
     { id: "integration"     as ActiveView, label: "การเชื่อมต่อ",      icon: Puzzle },
   ];
 
@@ -712,7 +712,7 @@ export default function ChatInterface() {
 
                   <button
                     onClick={() => setShowHistoryDrawer(true)}
-                    title={sidebarCollapsed ? "ประวัติการค้นหา" : undefined}
+                    title={sidebarCollapsed ? "ประวัติการสนทนา" : undefined}
                     className={`w-full flex items-center rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ${sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"}`}
                   >
                     <History className="w-4 h-4 flex-shrink-0 text-gray-500" />
@@ -773,7 +773,7 @@ export default function ChatInterface() {
                   })}
                   <button
                     onClick={() => setShowHistoryDrawer(true)}
-                    title={sidebarCollapsed ? "ประวัติการค้นหา" : undefined}
+                    title={sidebarCollapsed ? "ประวัติการสนทนา" : undefined}
                     className={`w-full flex items-center rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ${sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"}`}
                   >
                     <History className="w-4 h-4 flex-shrink-0 text-gray-500" />
