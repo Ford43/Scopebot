@@ -191,7 +191,7 @@ export default function Documents() {
         <p className="text-gray-700 mb-1" style={{ fontWeight: 600 }}>
           {dragging ? "วางไฟล์ที่นี่เลย!" : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
         </p>
-        <p className="text-sm text-gray-400">รองรับ PDF, DOC, DOCX, XLSX, TXT (สูงสุด 10 MB / ไฟล์)</p>
+        <p className="text-sm text-gray-400">รองรับ PDF, DOC, TXT (สูงสุด 10 MB / ไฟล์)</p>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}

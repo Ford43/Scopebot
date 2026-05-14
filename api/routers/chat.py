@@ -96,7 +96,12 @@ def chat(
 
     # ---- RAG ปกติ ----
     answer = ask_rag(body.question, bot_id)
-    is_bot_answered = answer != "ไม่พบข้อมูล"
+    # 🟢 เพิ่มโค้ดดักจับตรงนี้
+    if answer == "REQUIRE_HUMAN_HANDOFF":
+        answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
+        is_bot_answered = False  # เพื่อบังคับให้ระบบสร้าง Session รอเจ้าหน้าที่
+    else:
+        is_bot_answered = answer != "ไม่พบข้อมูล" 
 
     # ถ้า Bot ตอบไม่ได้ → สร้าง session รอเจ้าหน้าที่อัตโนมัติ
     if not is_bot_answered:
