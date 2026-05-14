@@ -20,18 +20,29 @@ def get_vector_db(bot_id):
     )
 
 
-def retrieve_docs(query, bot_id, score_threshold=1.5):
+def retrieve_docs(query, bot_id, score_threshold=1.0): # 
 
-    db = get_vector_db(bot_id)
+    db = get_vector_db(bot_id) # 
 
-    results = db.similarity_search_with_score(query, k=TOP_K)
+    # ดึงข้อมูลดิบออกมาก่อน
+    results = db.similarity_search_with_score(query, k=TOP_K) # 
 
-    results = sorted(results, key=lambda x: x[1])
-
-    filtered_docs = []
-
+    # 🟢 เพิ่มบรรทัด DEBUG ตรงนี้ครับ เพื่อดูว่าฐานข้อมูลมีอะไรส่งกลับมาไหม
+    print(f"\n[DEBUG RETRIEVER] ค้นหาคำว่า: '{query}'")
+    print(f"[DEBUG RETRIEVER] พบเอกสารเบื้องต้น: {len(results)} รายการ")
     for doc, score in results:
-        if score <= score_threshold:
-            filtered_docs.append(doc)
+        print(f"   -> Score: {score:.4f} | ข้อความ: {doc.page_content[:50].strip()}...")
+    # ----------------------------------------------------
 
-    return filtered_docs
+    results = sorted(results, key=lambda x: x[1]) # 
+
+    filtered_docs = [] # 
+
+    for doc, score in results: # 
+        if score <= score_threshold: # 
+            filtered_docs.append(doc) # 
+
+    # 🟢 ลองปริ้นท์ดูว่าหลังกรองแล้วเหลือเท่าไหร่
+    print(f"[DEBUG RETRIEVER] หลังผ่านเกณฑ์ threshold ({score_threshold}) เหลือ: {len(filtered_docs)} รายการ\n")
+
+    return filtered_docs #

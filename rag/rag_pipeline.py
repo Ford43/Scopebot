@@ -2,8 +2,8 @@ import ollama
 from rag.retriever import retrieve_docs
 from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG
 
-
 def build_context(docs):
+    # (ฟังก์ชันเดิม ไม่ต้องแก้)
     if not docs:
         return ""
     parts = []
@@ -11,13 +11,14 @@ def build_context(docs):
         parts.append(f"[เอกสารที่ {i}]\n{doc.page_content.strip()}")
     return "\n\n".join(parts)
 
-# 1. เพิ่มพารามิเตอร์ user_system_prompt ในวงเล็บ
-def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
-    # ดึง docs ที่เกี่ยวข้อง
+# 🟢 1. เพิ่ม return_context: bool = False
+def ask_rag(question: str, bot_id: str, user_system_prompt: str = None, return_context: bool = False): 
     docs = retrieve_docs(question, bot_id)
 
-    # 🟢 แก้ไขจุดที่ 1: ถ้าไม่พบเอกสารเลย ให้ส่ง Signal โอนสาย
     if not docs:
+        # 🟢 2. ปรับการ Return ตาม Flag
+        if return_context:
+            return {"answer": "REQUIRE_HUMAN_HANDOFF", "context": ""}
         return "REQUIRE_HUMAN_HANDOFF"
 
     context = build_context(docs)
@@ -33,7 +34,6 @@ def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
 
 คำตอบ:"""
 
-    # 2. สร้าง Hybrid Prompt ตรงนี้
     final_system_prompt = SYSTEM_PROMPT
     if user_system_prompt and user_system_prompt.strip() != "":
         final_system_prompt += f"\n\nคำสั่งเพิ่มเติมเกี่ยวกับบทบาทและพฤติกรรมของคุณ:\n{user_system_prompt}"
@@ -42,7 +42,6 @@ def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
         response = ollama.chat(
             model=MODEL_NAME,
             messages=[
-                # 3. เปลี่ยนจาก SYSTEM_PROMPT เป็น final_system_prompt
                 {"role": "system", "content": final_system_prompt},
                 {"role": "user", "content": prompt}
             ],
@@ -56,16 +55,21 @@ def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
         )
         answer = response["message"]["content"].strip()
 
-        if DEBUG:
-            print(f"[DEBUG] System Prompt:\n {final_system_prompt}") # ลองปริ้นท์ดูเพื่อความชัวร์
-            print(f"[DEBUG] Answer:\n {answer}")
-
-        # 🟢 แก้ไขจุดที่ 2: ตรวจสอบคำตอบของ LLM ว่าตอบไม่ได้หรือไม่
         if not answer or "ไม่พบข้อมูล" in answer:
+            # 🟢 3. ปรับการ Return ตาม Flag
+            if return_context:
+                return {"answer": "REQUIRE_HUMAN_HANDOFF", "context": context}
             return "REQUIRE_HUMAN_HANDOFF"
 
+        # 🟢 4. คืนค่าเป็น Dictionary เมื่อต้องการประเมินผล
+        if return_context:
+            return {"answer": answer, "context": context}
+            
         return answer
 
     except Exception as e:
         print(f"LLM error: {e}")
-        return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"
+        error_msg = "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"
+        if return_context:
+            return {"answer": error_msg, "context": ""}
+        return error_msg
