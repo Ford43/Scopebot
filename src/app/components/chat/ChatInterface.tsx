@@ -26,6 +26,7 @@ interface Message {
   time: string;
   confidence?: number;
   category?: string;
+  context?: string;
 }
 
 interface HistoryItem {
@@ -254,6 +255,7 @@ export default function ChatInterface() {
           id: (Date.now() + 1).toString(),
           sender: "bot",
           text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
+          context: data.context,
           time: timeNow(),
         },
       ]);
@@ -495,6 +497,17 @@ export default function ChatInterface() {
                         message.category === "Error" ? "bg-red-50 border-red-200 text-red-700" : "bg-white border-gray-100 text-gray-800"
                       }`}>
                         {message.text}
+                        {message.context && (
+                          <details className="mt-3 text-xs group cursor-pointer border-t border-gray-100 pt-2">
+                            <summary className="text-amber-500 font-medium hover:text-amber-600 outline-none select-none flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              ดูเอกสารอ้างอิง (Context)
+                            </summary>
+                            <div className="mt-2 p-3 bg-amber-50/50 border border-amber-100 rounded-lg text-gray-500 max-h-40 overflow-y-auto whitespace-pre-line text-[11px] leading-relaxed">
+                              {message.context}
+                            </div>
+                          </details>
+                        )}
                       </div>
                       {message.confidence && (
                         <p className="mt-1 text-[10px] text-gray-400 ml-1">

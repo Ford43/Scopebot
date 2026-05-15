@@ -95,13 +95,22 @@ def chat(
         }
 
     # ---- RAG ปกติ ----
-    answer = ask_rag(body.question, bot_id)
-    # 🟢 เพิ่มโค้ดดักจับตรงนี้
+    # 1. สั่งให้ ask_rag คืนค่า Context กลับมาด้วย
+    rag_result = ask_rag(body.question, bot_id, return_context=True)
+    
+    # 2. แยก Answer และ Context ออกจากกัน
+    if isinstance(rag_result, dict):
+        answer = rag_result.get("answer", "ไม่พบข้อมูล")
+        context = rag_result.get("context", "")
+    else:
+        answer = rag_result
+        context = ""
+
     if answer == "REQUIRE_HUMAN_HANDOFF":
         answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
-        is_bot_answered = False  # เพื่อบังคับให้ระบบสร้าง Session รอเจ้าหน้าที่
+        is_bot_answered = False
     else:
-        is_bot_answered = answer != "ไม่พบข้อมูล" 
+        is_bot_answered = answer != "ไม่พบข้อมูล"
 
     # ถ้า Bot ตอบไม่ได้ → สร้าง session รอเจ้าหน้าที่อัตโนมัติ
     if not is_bot_answered:
@@ -152,6 +161,7 @@ def chat(
 
     return {
         "answer": answer,
+        "context": context,
         "is_answered_by_bot": is_bot_answered,
         "conversation_id": conversation.id
     }
