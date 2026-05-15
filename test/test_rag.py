@@ -1,13 +1,15 @@
 import ollama
 from rag.rag_pipeline import ask_rag
-from config import MODEL_NAME # ดึงชื่อโมเดลที่คุณใช้ในโปรเจกต์มาเป็นกรรมการ
+from config import MODEL_NAME 
+from langchain_google_genai import ChatGoogleGenerativeAI
 
-# 1. ชุดข้อสอบ (เปลี่ยนคำถามและเฉลยให้ตรงกับไฟล์ traffic_law.pdf หรือชีทเรียนที่คุณอัปโหลดไว้)
+# 1. ชุดข้อสอบ (เปลี่ยนคำถามและเฉลยให้ตรงกับไฟล์ หรือชีทเรียนที่คุณอัปโหลดไว้)
 TEST_CASES = [
     {
         "bot_id": "bot_ff592db3",  # ใช้ ID ของบอทที่เพิ่ง Ingest ล่าสุด
         "question": "พนักงานจะได้สิทธิลาพักร้อนกี่วันต่อปี และมีเงื่อนไขอะไรบ้าง?",
-        "ground_truth": "พนักงานที่ผ่านการทดลองงานแล้ว (119 วัน) จะได้รับสิทธิลาพักร้อน 10 วันต่อปี และไม่สามารถสะสมข้ามปีได้ (ยกเว้นหัวหน้างานไม่อนุมัติให้ลาเนื่องจากความจำเป็นของงาน)"
+        "ground_truth": """พนักงานที่ผ่านการทดลองงานแล้ว (119 วัน) 
+        จะได้รับสิทธิลาพักร้อน 10 วันต่อปี และไม่สามารถสะสมข้ามปีได้ (ยกเว้นหัวหน้างานไม่อนุมัติให้ลาเนื่องจากความจำเป็นของงาน)"""
     },
     {
         "bot_id": "bot_ff592db3",
@@ -21,8 +23,15 @@ TEST_CASES = [
     }
 ]
 
+GEMINI_API_KEY = "AIzaSyBoHKEiCJ_O7P44kDbFKw7Bx_A2zfXNaJw"
+
 def llm_judge(question, answer, context, ground_truth):
-    """ให้ Ollama สวมบทบาทเป็นกรรมการตรวจข้อสอบ"""
+    # เรียกใช้ Gemini 1.5 Flash (ฉลาดมาก เร็วจัด และฟรีโควตาเยอะมาก)
+    judge_model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash-latest", 
+        temperature=0.0,
+        google_api_key=GEMINI_API_KEY
+    )
     
     judge_prompt = f"""เปรียบเทียบ 'คำตอบของ AI' กับ 'เฉลยที่ถูกต้อง' อย่างเป็นเหตุเป็นผล
 
@@ -38,18 +47,15 @@ def llm_judge(question, answer, context, ground_truth):
 ให้ Accuracy: 1 เฉพาะเมื่อ (ข้อ 1=มี, ข้อ 2=ไม่ตกหล่น, ข้อ 3=ไม่มี) เท่านั้น นอกนั้นให้ Accuracy: 0
 
 ตอบตามรูปแบบนี้เท่านั้น:
-การวิเคราะห์: [ตอบผลลัพธ์ของข้อ 1, 2 และ 3 สั้นๆ]
+การวิเคราะห์: [ตอบผลลัพธ์ของข้อ 1, 2 และ 3 สั้นๆ พร้อมเหตุผลประกอบการตัดสินใจ]
 Accuracy: [0 หรือ 1]"""
 
+    # ให้กรรมการ Gemini ทำการตรวจ
     try:
-        response = ollama.chat(
-            model=MODEL_NAME, 
-            messages=[{"role": "user", "content": judge_prompt}],
-            options={"temperature": 0.0} # ให้กรรมการใช้เหตุผลตรงไปตรงมาที่สุด
-        )
-        return response["message"]["content"].strip()
+        response = judge_model.invoke(judge_prompt)
+        return response.content
     except Exception as e:
-        return f"เกิดข้อผิดพลาดในการตรวจ: {e}"
+        return f"การวิเคราะห์: เกิดข้อผิดพลาดในการเชื่อมต่อ API ({e})\nAccuracy: 0"
 
 def run_evaluation():
     print("🚀 เริ่มระบบตรวจข้อสอบ Scopebot แบบอัตโนมัติ...\n")
