@@ -12,8 +12,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# สร้าง table ทั้งหมดอัตโนมัติตอน startup
-Base.metadata.create_all(bind=engine)
+# Dev only: สร้างตารางอัตโนมัติ (production ใช้ alembic upgrade head)
+if os.getenv("AUTO_CREATE_TABLES", "false").lower() == "true":
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Scope Bot API",

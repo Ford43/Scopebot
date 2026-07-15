@@ -1,0 +1,15 @@
+.venv/
+venv/
+node_modules/
+dist/
+.git/
+.env
+*.db
+*.sqlite
+vector_db/
+data/
+__pycache__/
+*.pyc
+debug-*.log
+ngrok
+ngrok.exe

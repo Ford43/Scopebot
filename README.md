@@ -53,17 +53,20 @@ cp .env.example .env
 
 ### 2) Database + Admin
 
-สร้าง database ใน PostgreSQL:
-
-```sql
-CREATE DATABASE scopebot;
-```
-
-แล้วสร้างตาราง + admin เริ่มต้น:
+**Database ใหม่ (แนะนำ production):**
 
 ```bash
+alembic upgrade head
 python create_admin.py
 ```
+
+**Database ที่มีตารางอยู่แล้ว (จาก create_all ก่อนหน้า):**
+
+```bash
+alembic stamp head
+```
+
+**Development แบบง่าย:** ตั้ง `AUTO_CREATE_TABLES=true` ใน `.env` แล้วรัน `python create_admin.py`
 
 | Field | Value |
 |-------|-------|
@@ -103,10 +106,23 @@ Vite จะ proxy `/api` ไปที่ `http://127.0.0.1:8000` — **ต้อ
 
 1. เปลี่ยน `SECRET_KEY` เป็นค่าสุ่มใหม่
 2. ตั้ง `CORS_ORIGINS` เป็น domain ของ frontend จริงเท่านั้น
-3. ใช้ PostgreSQL ที่ managed (ไม่เปิดพอร์ตสาธารณะโดยไม่จำเป็น)
-4. เปลี่ยนรหัส admin เริ่มต้น
+3. ตั้ง `AUTO_CREATE_TABLES=false` แล้วใช้ `alembic upgrade head`
+4. เปลี่ยนรหัส admin เริ่มต้น (`admin1234`)
 5. Serve frontend + API ผ่าน HTTPS
-6. (ถัดไป) จัด Alembic migrations ให้ตรง schema ปัจจุบัน
+6. รัน smoke test: `python scripts/smoke_test.py`
+
+## Deploy ด้วย Docker
+
+```bash
+# สร้าง .env สำหรับ production (อย่างน้อย SECRET_KEY, POSTGRES_PASSWORD, CORS_ORIGINS)
+docker compose up --build -d
+```
+
+- Frontend: http://localhost (พอร์ต 80)
+- API: http://localhost:8000
+- PostgreSQL: พอร์ต 5432
+
+**หมายเหตุ:** Ollama ต้องรันบน host (`host.docker.internal:11434`) หรือเพิ่ม service แยก — RAG จะใช้งานไม่ได้ถ้าไม่มี Ollama
 
 ## หมายเหตุเรื่อง venv
 
