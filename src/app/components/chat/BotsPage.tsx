@@ -5,28 +5,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
+import type { BotDocument, BotItem } from "../../types/bot";
 
-/* ─── Types & Interfaces ─── */
-interface Doc {
-  id: number;
-  filename: string;
-  file_size: number;
-  category: string;
-  uploaded_at: string;
-  // เพิ่ม field จำลองสถานะสำหรับ UI (เนื่องจากหลังบ้านใช้สถานะที่ตัวบอท)
-  status?: "ready" | "processing" | "error"; 
-}
-
-export interface BotItem {
-  id: number;
-  bot_id: string; // ใช้ bot_id (string) สำหรับอ้างอิง API
-  name: string;
-  description: string;
-  status: string;
-  system_prompt?: string;
-  created_at: string;
-  documents?: Doc[];
-}
+export type { BotItem } from "../../types/bot";
 
 const AVATAR_COLOURS = [
   "bg-amber-400",
@@ -109,7 +90,7 @@ function BotForm({ existing, onBack, onSaveSuccess }: BotFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   
   // Knowledge States
-  const [docs, setDocs] = useState<Doc[]>([]);
+  const [docs, setDocs] = useState<BotDocument[]>([]);
   const [docSearch, setDocSearch] = useState("");
   const [docCategory, setDocCategory] = useState("ทั้งหมด");
   const [dragging, setDragging] = useState(false);
