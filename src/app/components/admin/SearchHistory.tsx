@@ -23,15 +23,19 @@ function timeAgo(dateStr: string): string {
   return days === 1 ? "เมื่อวาน" : `${days} วันที่แล้ว`;
 }
 
-export default function SearchHistory() {
+export default function SearchHistory({ initialQuery = "" }: { initialQuery?: string }) {
   const [bots, setBots] = useState<BotItem[]>([]);
   const [selectedBot, setSelectedBot] = useState("all");
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 20;
+
+  useEffect(() => {
+    setSearchQuery(initialQuery);
+  }, [initialQuery]);
 
   // โหลด Bot list
   useEffect(() => {

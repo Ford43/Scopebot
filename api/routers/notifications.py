@@ -29,7 +29,7 @@ def unread_count(
         models.Notification.user_id == current_user.id,
         models.Notification.is_read == False
     ).count()
-    return {"unread_count": count}
+    return {"unread_count": count, "count": count}
 
 
 @router.patch("/{notif_id}/read")

@@ -149,6 +149,25 @@ def main():
     )
     check("login_reject_bad_password", code in (401, 400, 422), f"status={code}")
 
+    code, data, err = req(
+        "POST",
+        "/api/auth/forgot-password",
+        {"email": "admin@scopebot.com"},
+    )
+    check(
+        "forgot_password",
+        code == 200 and isinstance(data, dict) and bool((data or {}).get("message")),
+        err or str(data)[:120],
+    )
+
+    code, data, err = req("GET", "/api/notifications/unread-count", token=token)
+    count_ok = (
+        code == 200
+        and isinstance(data, dict)
+        and ("unread_count" in data or "count" in data)
+    )
+    check("notifications_unread_count", count_ok, err or str(data))
+
     failed = sum(1 for _, ok, _ in results if not ok)
     print(f"\nSummary: {len(results) - failed}/{len(results)} passed")
     return 1 if failed else 0

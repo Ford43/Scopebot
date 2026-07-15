@@ -28,7 +28,14 @@ export default function ChatInterface() {
   const navigate = useNavigate();
   const role = user?.role ?? "guest";
 
-  const unreadNotifs = useNotifications(isAuthenticated);
+  const {
+    unreadCount: unreadNotifs,
+    notifications,
+    markRead,
+    markAllRead,
+  } = useNotifications(isAuthenticated);
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const [globalSearchQuery, setGlobalSearchQuery] = useState("");
 
   const {
     messages,
@@ -96,17 +103,18 @@ export default function ChatInterface() {
       case "unified-chat":
         return <UnifiedChat />;
       case "search-history":
-        return <SearchHistory />;
+        return <SearchHistory initialQuery={globalSearchQuery} />;
       case "integration":
         return <Integration />;
       case "user-management":
-        return <UserManagement />;
+        return <UserManagement initialQuery={globalSearchQuery} />;
       case "bots":
         return (
           <BotsPage
             onSelectBot={handleSelectBot}
             forceEditBotId={forceEditBot}
             onClearForceEdit={() => setForceEditBot(null)}
+            initialSearch={globalSearchQuery}
           />
         );
       case "chat":
@@ -165,6 +173,24 @@ export default function ChatInterface() {
             isAdmin={isAdmin}
             isSupport={isSupport}
             unreadNotifs={unreadNotifs}
+            notifications={notifications}
+            onMarkRead={markRead}
+            onMarkAllRead={markAllRead}
+            onSearch={(query) => {
+              setGlobalSearchQuery(query);
+              if (isAdmin || isSupport) {
+                if (activeView === "user-management") {
+                  setActiveView("user-management");
+                } else if (activeView === "bots") {
+                  setActiveView("bots");
+                } else {
+                  setActiveView("search-history");
+                }
+              } else {
+                setHistorySearchQuery(query);
+                setShowHistoryDrawer(true);
+              }
+            }}
             onNavigateBots={() => setActiveView("bots")}
             onLogout={handleLogout}
           />
@@ -179,6 +205,7 @@ export default function ChatInterface() {
       <HistoryDrawer
         open={showHistoryDrawer}
         historyItems={historyItems}
+        initialSearch={historySearchQuery}
         onClose={() => setShowHistoryDrawer(false)}
         onSelect={handleHistoryClick}
         onClearAll={() => setHistoryItems([])}

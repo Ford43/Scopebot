@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { History, Search, Trash2, X, Clock, ChevronRight } from "lucide-react";
 import type { HistoryItem } from "../../types/chat";
 import { CATEGORY_COLORS } from "../../constants/chat";
@@ -7,6 +7,7 @@ import { groupByDate } from "../../utils/date";
 interface HistoryDrawerProps {
   open: boolean;
   historyItems: HistoryItem[];
+  initialSearch?: string;
   onClose: () => void;
   onSelect: (query: string) => void;
   onClearAll: () => void;
@@ -16,12 +17,17 @@ interface HistoryDrawerProps {
 export default function HistoryDrawer({
   open,
   historyItems,
+  initialSearch = "",
   onClose,
   onSelect,
   onClearAll,
   onRemoveItem,
 }: HistoryDrawerProps) {
-  const [historySearch, setHistorySearch] = useState("");
+  const [historySearch, setHistorySearch] = useState(initialSearch);
+
+  useEffect(() => {
+    if (open) setHistorySearch(initialSearch);
+  }, [open, initialSearch]);
 
   const filteredHistory = historyItems.filter((h) =>
     h.query.toLowerCase().includes(historySearch.toLowerCase())

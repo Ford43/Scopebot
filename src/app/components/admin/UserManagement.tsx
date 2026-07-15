@@ -28,12 +28,12 @@ function determineStatus(user: any) {
 }
 
 // 2. React Component หลัก
-export default function UserManagement() {
+export default function UserManagement({ initialQuery = "" }: { initialQuery?: string }) {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // States สำหรับ UI
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -79,6 +79,10 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    setSearchQuery(initialQuery);
+  }, [initialQuery]);
 
   // ฟังก์ชันอนุมัติผู้ใช้งาน (Approve)
   const handleApproveUser = async (userId: string | number) => {

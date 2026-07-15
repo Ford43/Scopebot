@@ -3,6 +3,8 @@ import ChatInterface from "./components/chat/ChatInterface";
 import LoginPage from "./components/auth/LoginPage";
 import SignupPage from "./components/auth/SignupPage";
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./components/auth/ResetPasswordPage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -11,7 +13,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/chat",
-    Component: ChatInterface,
+    element: (
+      <ProtectedRoute>
+        <ChatInterface />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/login",
@@ -24,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: "/forgot-password",
     Component: ForgotPasswordPage,
+  },
+  {
+    path: "/reset-password",
+    Component: ResetPasswordPage,
   },
   // Legacy admin redirects → chat
   {

@@ -13,15 +13,17 @@ interface BotsPageProps {
   onSelectBot?: (bot: BotItem) => void;
   forceEditBotId?: string | null;
   onClearForceEdit?: () => void;
+  initialSearch?: string;
 }
 
 export default function BotsPage({
   onSelectBot,
   forceEditBotId,
   onClearForceEdit,
+  initialSearch = "",
 }: BotsPageProps = {}) {
   const [bots, setBots] = useState<BotItem[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingBot, setEditingBot] = useState<BotItem | undefined>();
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +47,10 @@ export default function BotsPage({
   useEffect(() => {
     loadBots();
   }, [loadBots]);
+
+  useEffect(() => {
+    if (initialSearch !== undefined) setSearch(initialSearch);
+  }, [initialSearch]);
 
   useEffect(() => {
     if (forceEditBotId && bots.length > 0) {

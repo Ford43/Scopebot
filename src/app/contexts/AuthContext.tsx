@@ -14,18 +14,20 @@ import {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSupport: boolean;
+  authReady: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   const fetchMe = async (token: string) => {
     try {
@@ -47,10 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = getAuthToken();
-    if (token) fetchMe(token);
+    if (!token) {
+      setAuthReady(true);
+      return;
+    }
+    fetchMe(token).finally(() => setAuthReady(true));
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ ok: boolean; error?: string }> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -58,16 +67,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        const data = await res.json();
         setAuthToken(data.access_token);
         await fetchMe(data.access_token);
-        return true;
+        return { ok: true };
       }
-      return false;
+
+      const detail = data?.detail;
+      const message =
+        typeof detail === "string"
+          ? detail
+          : "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+      return { ok: false, error: message };
     } catch (error) {
       console.error("Login error:", error);
-      return false;
+      return { ok: false, error: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" };
     }
   };
 
@@ -104,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isAdmin: user?.role === "admin",
         isSupport: user?.role === "support",
+        authReady,
       }}
     >
       {children}
@@ -117,5 +134,4 @@ export function useAuth() {
   return ctx;
 }
 
-// Re-export for convenience
 export type { User };

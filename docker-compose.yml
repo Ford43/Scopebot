@@ -24,10 +24,21 @@ services:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-123456789}@db:5432/scopebot
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       MODEL_NAME: ${MODEL_NAME:-qwen2.5:1.5b}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-BAAI/bge-m3}
       VECTOR_DB_PATH: /app/vector_db
       DEBUG: ${DEBUG:-false}
+      AUTO_CREATE_TABLES: "false"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@scopebot.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
     volumes:
       - uploads:/app/data
       - vectordb:/app/vector_db

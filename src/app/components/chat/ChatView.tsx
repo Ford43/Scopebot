@@ -2,9 +2,6 @@ import { Link } from "react-router";
 import {
   Sparkles,
   Zap,
-  Plus,
-  Mic,
-  ImageIcon,
   Send,
   Bot,
   AlertTriangle,
@@ -374,33 +371,21 @@ function ChatInput({
         className={`w-full resize-none outline-none text-sm text-gray-700 placeholder-gray-400 ${minHeight ? `min-h-[${minHeight}]` : ""} max-h-40`}
         style={minHeight ? { minHeight } : undefined}
       />
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-3">
-          <button className="text-gray-400 hover:text-gray-600 transition-colors">
-            <Plus className="w-4 h-4" />
-          </button>
-          <button className="text-gray-400 hover:text-gray-600 transition-colors">
-            <ImageIcon className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="text-gray-400 hover:text-amber-500 transition-colors">
-            <Mic className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onSend}
-            disabled={!inputValue.trim() || isTyping}
-            className={
-              showSendLabel
-                ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs transition-colors disabled:opacity-40"
-                : "w-8 h-8 rounded-lg bg-amber-400 hover:bg-amber-500 flex items-center justify-center text-gray-900 transition-colors disabled:opacity-40"
-            }
-            style={showSendLabel ? { fontWeight: 600 } : undefined}
-          >
-            <Send className="w-3.5 h-3.5" />
-            {showSendLabel && "ส่ง"}
-          </button>
-        </div>
+      <div className="flex items-center justify-end pt-2">
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={!inputValue.trim() || isTyping}
+          className={
+            showSendLabel
+              ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs transition-colors disabled:opacity-40"
+              : "w-8 h-8 rounded-lg bg-amber-400 hover:bg-amber-500 flex items-center justify-center text-gray-900 transition-colors disabled:opacity-40"
+          }
+          style={showSendLabel ? { fontWeight: 600 } : undefined}
+        >
+          <Send className="w-3.5 h-3.5" />
+          {showSendLabel && "ส่ง"}
+        </button>
       </div>
     </div>
   );

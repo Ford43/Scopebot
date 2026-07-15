@@ -97,19 +97,37 @@ Vite จะ proxy `/api` ไปที่ `http://127.0.0.1:8000` — **ต้อ
 ## Features
 
 - Multi-bot management + อัปโหลดเอกสาร (RAG)
-- Role-based access: admin, support, user
+- Role-based access: admin, support, user (สมัครแล้วรออนุมัติ)
 - Human handoff เมื่อบอทตอบไม่ได้ / ขอคุยเจ้าหน้าที่
 - LINE webhook integration
 - Admin dashboard + analytics
+- ลืมรหัสผ่าน / รีเซ็ตผ่านอีเมล (หรือแจ้ง admin หากยังไม่มี SMTP)
+- แผงการแจ้งเตือนใน top bar
 
-## Production checklist (ก่อน deploy สาธารณะ)
+## Company pilot checklist
 
-1. เปลี่ยน `SECRET_KEY` เป็นค่าสุ่มใหม่
-2. ตั้ง `CORS_ORIGINS` เป็น domain ของ frontend จริงเท่านั้น
-3. ตั้ง `AUTO_CREATE_TABLES=false` แล้วใช้ `alembic upgrade head`
-4. เปลี่ยนรหัส admin เริ่มต้น (`admin1234`)
-5. Serve frontend + API ผ่าน HTTPS
-6. รัน smoke test: `python scripts/smoke_test.py`
+1. คัดลอก `.env.example` → `.env` แล้วตั้งค่าอย่างน้อย:
+   - `SECRET_KEY` (สุ่มใหม่)
+   - `DATABASE_URL` / `POSTGRES_PASSWORD`
+   - `CORS_ORIGINS` + `FRONTEND_URL` ให้ตรง URL ที่ผู้ใช้เปิดจริง
+   - `ADMIN_EMAIL` / `ADMIN_PASSWORD` (รหัสแข็งแรง — อย่าใช้ค่า default)
+2. `AUTO_CREATE_TABLES=false` แล้วรัน `alembic upgrade head` และ `python create_admin.py`
+3. (แนะนำ) ตั้ง SMTP เพื่อให้ลืมรหัสผ่านส่งอีเมลได้ — ถ้ายังไม่มี SMTP:
+   - ระบบจะแจ้ง admin ในกระดิ่งแจ้งเตือน
+   - หรือตั้ง `DEBUG=true` ชั่วคราวเพื่อได้ `dev_reset_url` ตอนทดสอบ
+4. เปลี่ยนรหัส admin ทันทีหลังสร้าง (`ADMIN_UPDATE_PASSWORD=true` ได้ครั้งเดียว)
+5. รัน smoke test: `python scripts/smoke_test.py`
+6. Serve ผ่าน HTTPS (หรือ VPN ภายในบริษัท)
+7. Ollama ต้องเข้าถึงได้จาก API (host หรือ service แยก)
+8. สร้างบัญชี support แล้วอนุมัติ user ของแผนกก่อนเปิดใช้
+
+## Production checklist (ก่อนเปิดสาธารณะนอก pilot)
+
+1. `DEBUG=false` และอย่าเปิด `VITE_SHOW_DEMO_ACCOUNTS`
+2. ตั้ง SMTP จริง + ตรวจ flow ลืมรหัสผ่าน end-to-end
+3. Serve frontend + API ผ่าน HTTPS
+4. จำกัด CORS เฉพาะ domain ที่ใช้
+5. รัน smoke test อีกครั้งหลัง deploy
 
 ## Deploy ด้วย Docker
 

@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Zap, ChevronRight } from "lucide-react";
 
+const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
+
 const DEMO_ACCOUNTS = [
-  { role: "admin",   label: "👑 Admin",   email: "admin@scopebot.com",   password: "admin123"   },
-  { role: "support", label: "🎧 Support", email: "support@scopebot.com", password: "support123" },
-  { role: "user",    label: "👤 User",    email: "user@example.com",    password: "user123"    },
+  { role: "admin", label: "Admin", email: "admin@scopebot.com", password: "admin1234" },
 ];
 
 export default function LoginPage() {
@@ -25,9 +25,9 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
     try {
-      const ok = await login(email, password);
-      if (ok) navigate("/chat");
-      else setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      const result = await login(email, password);
+      if (result.ok) navigate("/chat");
+      else setError(result.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     } catch {
       setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -74,41 +74,42 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Demo accounts */}
-        <div className="mb-5">
-          <button
-            type="button"
-            onClick={() => setShowDemo(!showDemo)}
-            className="w-full flex items-center justify-between text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl px-3.5 py-2.5 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              <span>🔑</span>
-              <span style={{ fontWeight: 600 }}>ข้อมูลทดสอบ (Demo)</span>
-            </span>
-            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDemo ? "rotate-90" : ""}`} />
-          </button>
+        {SHOW_DEMO && (
+          <div className="mb-5">
+            <button
+              type="button"
+              onClick={() => setShowDemo(!showDemo)}
+              className="w-full flex items-center justify-between text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl px-3.5 py-2.5 transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <span>🔑</span>
+                <span style={{ fontWeight: 600 }}>ข้อมูลทดสอบ (Demo)</span>
+              </span>
+              <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDemo ? "rotate-90" : ""}`} />
+            </button>
 
-          {showDemo && (
-            <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
-              {DEMO_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.role}
-                  type="button"
-                  onClick={() => fillDemo(acc)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-100 transition-colors border-b border-amber-100 last:border-0 text-left"
-                >
-                  <div>
-                    <p className="text-xs text-amber-900" style={{ fontWeight: 600 }}>{acc.label}</p>
-                    <p className="text-[11px] text-amber-600">{acc.email}</p>
-                  </div>
-                  <span className="text-[10px] text-amber-500 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-                    กดเพื่อใช้
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            {showDemo && (
+              <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.role}
+                    type="button"
+                    onClick={() => fillDemo(acc)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-100 transition-colors border-b border-amber-100 last:border-0 text-left"
+                  >
+                    <div>
+                      <p className="text-xs text-amber-900" style={{ fontWeight: 600 }}>{acc.label}</p>
+                      <p className="text-[11px] text-amber-600">{acc.email}</p>
+                    </div>
+                    <span className="text-[10px] text-amber-500 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                      กดเพื่อใช้
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
