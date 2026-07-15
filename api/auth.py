@@ -13,6 +13,14 @@ SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
 
+if SECRET_KEY in ("change-this-secret", "scope-bot-super-secret-key-change-this-in-production", "CHANGE_ME_WITH_A_RANDOM_HEX_STRING"):
+    import warnings
+    warnings.warn(
+        "SECRET_KEY ยังเป็นค่า default — เปลี่ยนใน .env ก่อน deploy จริง",
+        UserWarning,
+        stacklevel=1,
+    )
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = HTTPBearer()
 

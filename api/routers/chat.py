@@ -90,7 +90,7 @@ def chat(
 
         return {
             "answer": "รับทราบครับ/ค่ะ 🙏 กรุณารอสักครู่ เจ้าหน้าที่กำลังเข้ามาช่วยเหลือ",
-            "is_answered_by_bot": True,
+            "is_answered_by_bot": False,
             "conversation_id": 0
         }
 
