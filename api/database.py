@@ -6,22 +6,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./scopebot.db")
-
-# สร้าง engine เชื่อมต่อ database
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # จำเป็นสำหรับ SQLite
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/scopebot",
 )
 
-# SessionLocal ใช้สำหรับสร้าง session ในแต่ละ request
+# SQLite ต้องการ check_same_thread — PostgreSQL ไม่ใช้
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class สำหรับ models ทั้งหมด
 Base = declarative_base()
 
 
-# Dependency — ใช้ใน router เพื่อรับ db session
 def get_db():
     db = SessionLocal()
     try:
