@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Clock, MessageSquare, ChevronDown, ChevronUp, Smartphone, Globe, Bot } from "lucide-react";
+import { authHeaders } from "../../lib/api";
 
 interface ChatMessage { id: number; question: string; answer: string; is_answered_by_bot: boolean; created_at: string; }
 interface ChatSession {
@@ -34,20 +35,17 @@ export default function SearchHistory() {
 
   // โหลด Bot list
   useEffect(() => {
-    const token = localStorage.getItem("scopebot_token");
-    fetch("/api/bots/", { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => setBots(Array.isArray(data) ? data : []));
+    fetch("/api/bots/", { headers: authHeaders() })
+      .then((r) => r.json())
+      .then((data) => setBots(Array.isArray(data) ? data : []));
   }, []);
 
-  // โหลด Sessions
   useEffect(() => {
     setLoading(true);
-    const token = localStorage.getItem("scopebot_token");
     let url = `/api/chat/sessions/all?page=${page}&limit=${LIMIT}`;
     if (selectedBot !== "all") url += `&bot_id_filter=${selectedBot}`;
 
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(url, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { setSessions(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

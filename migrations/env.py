@@ -12,13 +12,13 @@ from alembic import context
 # 1. เพิ่ม Path ของโปรเจกต์ (Scopebot) เข้าไปให้ Python รู้จักก่อน
 # --------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, "src"))
+sys.path.insert(0, BASE_DIR)
 
 # --------------------------------------------------------
-# 2. หลังจากเพิ่ม Path แล้ว ค่อย Import Models ของเรา
+# 2. Import Models จาก api package (backend หลัก)
 # --------------------------------------------------------
-from app.database import Base 
-from app.models import User, Bot, LineChannel, Document, ChatSession, Message 
+from api.database import Base
+from api import models  # noqa: F401 — register all models for autogenerate
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

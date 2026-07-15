@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Send, CheckCircle, Clock, User, Bot, Headphones, AlertTriangle } from "lucide-react";
+import { authHeaders } from "../../lib/api";
 
 // Types อ้างอิงตามโครงสร้าง DB ใน README
 interface LiveSession {
@@ -25,15 +26,13 @@ export default function UnifiedChat() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const token = localStorage.getItem("scopebot_token");
-
   // 1. ดึงรายการ Session ที่กำลังรอเจ้าหน้าที่หรือคุยอยู่ (Polling ทุก 5 วินาที)
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         // ดึง session ทั้งหมดที่ยัง active อยู่ 
         const res = await fetch("/api/live/sessions", {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: authHeaders(),
         });
         if (res.ok) {
           const data = await res.json();
@@ -48,7 +47,7 @@ export default function UnifiedChat() {
     fetchSessions(); // ดึงครั้งแรก
     const interval = setInterval(fetchSessions, 5000); // อัปเดตทุก 5 วินาที
     return () => clearInterval(interval);
-  }, [token]);
+  }, []);
 
   // 2. ดึงประวัติแชทเมื่อคลิกเลือก Session
   useEffect(() => {
@@ -56,7 +55,7 @@ export default function UnifiedChat() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(`/api/live/sessions/${activeSession.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: authHeaders(),
         });
         if (res.ok) {
           const data = await res.json();
@@ -71,7 +70,7 @@ export default function UnifiedChat() {
     fetchMessages();
     const interval = setInterval(fetchMessages, 3000); // ดึงข้อความใหม่ทุก 3 วินาที
     return () => clearInterval(interval);
-  }, [activeSession, token]);
+  }, [activeSession]);
 
   // 3. ฟังก์ชันส่งข้อความ
   const handleSendReply = async () => {
@@ -83,16 +82,15 @@ export default function UnifiedChat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          ...authHeaders(),
         },
-        body: JSON.stringify({ message: replyText })
+        body: JSON.stringify({ message: replyText }),
       });
 
       if (res.ok) {
         setReplyText("");
-        // ดึงข้อความใหม่ทันทีหลังส่งเสร็จ
         const updatedRes = await fetch(`/api/live/sessions/${activeSession.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: authHeaders(),
         });
         if (updatedRes.ok) {
           const data = await updatedRes.json();
@@ -115,7 +113,7 @@ export default function UnifiedChat() {
     try {
       const res = await fetch(`/api/live/sessions/${activeSession.id}/end`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: authHeaders(),
       });
 
       if (res.ok) {

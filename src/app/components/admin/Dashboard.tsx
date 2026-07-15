@@ -5,6 +5,7 @@ import {
   AlertTriangle, ArrowRight,
 } from "lucide-react";
 import { Card } from "../ui/card";
+import { authHeaders } from "../../lib/api";
 
 /* ─────────────── Types ─────────────── */
 interface DailyStats { date: string; total: number; line: number; web: number; }
@@ -145,8 +146,7 @@ export default function Dashboard() {
   const fetchAll = async (d: number) => {
     setLoading(true);
     setError(false);
-    const token = localStorage.getItem("scopebot_token");
-    const headers = { Authorization: `Bearer ${token}` };
+    const headers = authHeaders();
     try {
       const [statsRes, botsRes, topRes] = await Promise.all([
         fetch(`/api/dashboard/stats?days=${d}`, { headers }),

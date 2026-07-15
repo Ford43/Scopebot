@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, ChevronDown, Hourglass, Eye, Trash2, CheckCircle } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
 import { useAuth } from "../../contexts/AuthContext";
+import { authHeaders } from "../../lib/api";
 import { 
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, 
@@ -58,14 +59,11 @@ export default function UserManagement() {
   //State สำหรับเปิด/ปิด Popup Pending
   const [showPendingModal, setShowPendingModal] = useState(false);
 
-  const token = localStorage.getItem("scopebot_token");
-
-  // 🟢 2.1 ดึงข้อมูลผู้ใช้ทั้งหมดจาก API
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/users", {
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: authHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -80,7 +78,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
-  }, [token]);
+  }, []);
 
   // ฟังก์ชันอนุมัติผู้ใช้งาน (Approve)
   const handleApproveUser = async (userId: string | number) => {
@@ -88,7 +86,7 @@ export default function UserManagement() {
       const res = await fetch(`/api/auth/users/${userId}/approve`, {
         method: "PATCH",
         headers: { 
-          "Authorization": `Bearer ${token}`,
+          ...authHeaders(),
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ is_approved: true, is_active: true })
@@ -110,7 +108,7 @@ export default function UserManagement() {
       // ตรงนี้สมมติว่าเป็น endpoint ลบ user ของคุณ (ปรับใช้ตาม Backend ที่มีจริง)
       const res = await fetch(`/api/auth/users/${userId}`, { 
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: authHeaders(),
       });
       if (res.ok) {
         fetchUsers();
@@ -404,7 +402,7 @@ export default function UserManagement() {
                       const res = await fetch(`/api/auth/users/${editModalUser.id}/approve`, {
                         method: "PATCH",
                         headers: { 
-                          "Authorization": `Bearer ${token}`,
+                          ...authHeaders(),
                           "Content-Type": "application/json"
                         },
                         body: JSON.stringify({ 
@@ -510,7 +508,7 @@ export default function UserManagement() {
                         onClick={async () => {
                           await fetch(`/api/auth/users/${user.id}/approve`, {
                             method: "PATCH",
-                            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                            headers: { ...authHeaders(), "Content-Type": "application/json" },
                             body: JSON.stringify({ is_approved: true, is_active: true })
                           });
                           fetchUsers();
@@ -522,7 +520,7 @@ export default function UserManagement() {
                       <button 
                         onClick={async () => {
                           if(window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้อย่างถาวร?")) {
-                            await fetch(`/api/auth/users/${user.id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+                            await fetch(`/api/auth/users/${user.id}`, { method: "DELETE", headers: authHeaders() });
                             fetchUsers();
                           }
                         }}
