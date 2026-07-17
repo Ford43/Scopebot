@@ -218,6 +218,9 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบ User")
 
+    if body.is_active is False and user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="ไม่สามารถระงับบัญชีของตัวเองได้")
+
     if body.is_approved is not None:
         user.is_approved = body.is_approved
     if body.is_active is not None:
@@ -230,6 +233,97 @@ def approve_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_role("support", "admin")),
+):
+    """ลบผู้ใช้ถาวร พร้อมบอท / เอกสาร / คิว live ที่เกี่ยวข้อง"""
+    import os
+    import shutil
+    import time
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="ไม่พบ User")
+
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="ไม่สามารถลบบัญชีของตัวเองได้")
+
+    # บัญชีที่อนุมัติแล้วต้องระงับก่อน จึงจะลบถาวรได้ (คำขอ Pending ยังปฏิเสธ/ลบได้)
+    if user.is_approved and user.is_active:
+        raise HTTPException(
+            status_code=400,
+            detail="ต้องระงับบัญชีก่อน จึงจะลบผู้ใช้ได้",
+        )
+
+    if user.role == models.UserRole.admin:
+        admin_count = (
+            db.query(models.User)
+            .filter(models.User.role == models.UserRole.admin)
+            .count()
+        )
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="ไม่สามารถลบ Admin คนสุดท้ายในระบบได้",
+            )
+
+    def force_delete_folder(folder_path: str) -> None:
+        if not os.path.exists(folder_path):
+            return
+        for _ in range(3):
+            try:
+                shutil.rmtree(folder_path)
+                return
+            except PermissionError:
+                time.sleep(0.5)
+            except Exception:
+                return
+
+    try:
+        bots = list(user.bots or [])
+        for bot in bots:
+            # ลบ live sessions (+ messages) ก่อน เพื่อไม่ชน FK
+            sessions = (
+                db.query(models.LiveSession)
+                .filter(models.LiveSession.bot_id == bot.id)
+                .all()
+            )
+            for session in sessions:
+                db.delete(session)
+
+            bot.documents.clear()
+            force_delete_folder(os.path.join("data", bot.bot_id))
+            force_delete_folder(os.path.join("vector_db", bot.bot_id))
+            db.delete(bot)
+
+        # ลบเอกสารใน library + ไฟล์จริง
+        for doc in list(user.documents or []):
+            if doc.file_path and os.path.exists(doc.file_path):
+                try:
+                    os.remove(doc.file_path)
+                except OSError:
+                    pass
+            db.delete(doc)
+
+        # ลบ token reset password
+        db.query(models.PasswordResetToken).filter(
+            models.PasswordResetToken.user_id == user.id
+        ).delete(synchronize_session=False)
+
+        username = user.username
+        db.delete(user)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.exception("delete_user failed for user_id=%s", user_id)
+        raise HTTPException(status_code=500, detail=f"ลบผู้ใช้ไม่สำเร็จ: {e}")
+
+    return {"message": f"ลบผู้ใช้ '{username}' สำเร็จ"}
 
 
 class ChangePassword(PydanticBaseModel):
