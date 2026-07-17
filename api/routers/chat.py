@@ -95,7 +95,7 @@ def chat(
         }
 
     # ---- RAG ปกติ ----
-    answer = ask_rag(body.question, bot_id)
+    answer = ask_rag(body.question, bot_id, user_system_prompt=bot.system_prompt)
     # 🟢 เพิ่มโค้ดดักจับตรงนี้
     if answer == "REQUIRE_HUMAN_HANDOFF":
         answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"

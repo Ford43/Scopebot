@@ -248,7 +248,11 @@ async def line_webhook(bot_id: str, request: Request):
                     continue
 
                 # ---- RAG ----
-                answer = ask_rag(user_message, bot_id)
+                answer = ask_rag(
+                    user_message,
+                    bot_id,
+                    user_system_prompt=bot.system_prompt,
+                )
                 is_bot_answered = answer != "ไม่พบข้อมูล"
 
                 db.add(models.Conversation(

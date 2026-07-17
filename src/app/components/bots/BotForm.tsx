@@ -21,6 +21,11 @@ import {
   deleteDocument,
   uploadDocument,
 } from "../../lib/documents";
+import {
+  ALLOWED_DOC_ACCEPT,
+  ALLOWED_DOC_LABEL,
+  isAllowedDocFile,
+} from "../../constants/bots";
 import { formatBytes } from "../../utils/format";
 import { BotStatusBadge } from "./BotStatusBadge";
 import { BotFileIcon } from "./BotFileIcon";
@@ -29,6 +34,9 @@ interface BotFormProps {
   existing?: BotItem;
   onBack: () => void;
   onSaveSuccess: () => void;
+  /** Inline notice when redirected here (e.g. inactive bot can't chat yet) */
+  statusNotice?: string | null;
+  onDismissNotice?: () => void;
 }
 
 function docBadgeStatus(
@@ -45,6 +53,8 @@ export default function BotForm({
   existing,
   onBack,
   onSaveSuccess,
+  statusNotice,
+  onDismissNotice,
 }: BotFormProps) {
   const [activeTab, setActiveTab] = useState<"general" | "knowledge">(
     existing ? "general" : "knowledge"
@@ -183,18 +193,9 @@ export default function BotForm({
       return;
 
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot',message:'frontend deleteBot calling',data:{botId:existing.bot_id},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       await deleteBot(existing.bot_id);
-      // #region agent log
-      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot:success',message:'frontend deleteBot succeeded',data:{botId:existing.bot_id},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       onSaveSuccess();
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot:error',message:'frontend deleteBot failed',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       console.error("Delete bot error:", error);
       alert(error instanceof Error ? error.message : "ลบบอทไม่สำเร็จ");
     }
@@ -209,6 +210,12 @@ export default function BotForm({
     let assignedAny = false;
 
     for (const file of Array.from(files)) {
+      const validationError = isAllowedDocFile(file);
+      if (validationError) {
+        alert(validationError);
+        continue;
+      }
+
       try {
         const docData = await uploadDocument(file);
 
@@ -283,6 +290,21 @@ export default function BotForm({
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-white">
+      {statusNotice && (
+        <div className="mx-8 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="flex-1 leading-relaxed">{statusNotice}</span>
+          {onDismissNotice && (
+            <button
+              type="button"
+              onClick={onDismissNotice}
+              className="text-amber-700/70 hover:text-amber-900 flex-shrink-0"
+              aria-label="ปิดการแจ้งเตือน"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
       <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-20">
         <button
           onClick={onBack}
@@ -523,13 +545,13 @@ export default function BotForm({
                       : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
               </p>
               <p className="text-xs text-gray-400">
-                รองรับ PDF, DOC, DOCX, XLSX, CSV, TXT (สูงสุด 10 MB / ไฟล์)
+                รองรับ {ALLOWED_DOC_LABEL}
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".pdf,.doc,.docx,.xlsx,.csv,.txt"
+                accept={ALLOWED_DOC_ACCEPT}
                 className="hidden"
                 onChange={(e) => addFiles(e.target.files)}
                 disabled={isUploading || isProcessing}

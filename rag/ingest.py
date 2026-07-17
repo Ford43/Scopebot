@@ -18,7 +18,8 @@ except:
     from langchain_community.vectorstores import Chroma
 
 
-def ingest(bot_id):
+def ingest(bot_id) -> bool:
+    """Ingest documents for a bot. Returns True only when chunks were written."""
     print(f"Ingest for bot: {bot_id}")
 
     embedding = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
@@ -45,7 +46,7 @@ def ingest(bot_id):
     # guard — ถ้าไม่มีเอกสารให้หยุดเลย
     if not docs:
         print(f"❌ ไม่พบเอกสารสำหรับ bot: {bot_id} — กรุณาตรวจสอบโฟลเดอร์ data/{bot_id}/")
-        return
+        return False
 
     print("Splitting documents...")
     chunks = split_documents(docs)
@@ -53,19 +54,20 @@ def ingest(bot_id):
     # guard — ถ้าไม่มี chunks ให้หยุดเลย
     if not chunks:
         print(f"ไม่มี chunks สำหรับ bot: {bot_id} — ข้ามการบันทึก DB")
-        return
+        return False
 
     for chunk in chunks:
         chunk.metadata["bot_id"] = bot_id
 
     print("Creating embeddings & saving to DB...")
-    db = Chroma.from_documents(
+    Chroma.from_documents(
         documents=chunks,
         embedding=embedding,
         persist_directory=persist_path
     )
 
     print(f"Ingestion complete for {bot_id}!")
+    return True
 
 if __name__ == "__main__":
     print("🔥 INGEST START")

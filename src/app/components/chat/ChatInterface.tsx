@@ -22,6 +22,7 @@ export default function ChatInterface() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeBot, setActiveBot] = useState<BotItem | null>(null);
   const [forceEditBot, setForceEditBot] = useState<string | null>(null);
+  const [forceEditReason, setForceEditReason] = useState<string | null>(null);
 
   const prevRoleRef = useRef<string | undefined>(undefined);
   const { user, logout, isAuthenticated, isAdmin, isSupport } = useAuth();
@@ -77,12 +78,12 @@ export default function ChatInterface() {
 
   const handleSelectBot = (bot: BotItem) => {
     if (bot.status === "inactive" || bot.status === "processing") {
-      alert(
-        bot.status === "processing"
-          ? "บอทกำลังประมวลผลเอกสารอยู่ กรุณารอให้สถานะเป็นพร้อมใช้งานก่อนเข้าแชท"
-          : "ไม่สามารถเข้าหน้าแชทได้: บอทตัวนี้ยังไม่มีฐานความรู้ หรือยังไม่ได้ตั้งค่าเอกสาร"
-      );
       setForceEditBot(bot.bot_id);
+      setForceEditReason(
+        bot.status === "processing"
+          ? "บอทกำลังประมวลผลเอกสารอยู่ — รอให้สถานะเป็นพร้อมใช้งานก่อนเข้าแชท หรือตรวจสอบเอกสารด้านล่าง"
+          : "บอทยังไม่พร้อมใช้งาน — อัปโหลดหรือตรวจสอบเอกสารฐานความรู้ก่อนเข้าแชท"
+      );
       setActiveView("bots");
       return;
     }
@@ -115,7 +116,11 @@ export default function ChatInterface() {
           <BotsPage
             onSelectBot={handleSelectBot}
             forceEditBotId={forceEditBot}
-            onClearForceEdit={() => setForceEditBot(null)}
+            forceEditReason={forceEditReason}
+            onClearForceEdit={() => {
+              setForceEditBot(null);
+              setForceEditReason(null);
+            }}
             initialSearch={globalSearchQuery}
           />
         );

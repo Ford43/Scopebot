@@ -12,6 +12,7 @@ export type { BotItem } from "../../types/bot";
 interface BotsPageProps {
   onSelectBot?: (bot: BotItem) => void;
   forceEditBotId?: string | null;
+  forceEditReason?: string | null;
   onClearForceEdit?: () => void;
   initialSearch?: string;
 }
@@ -19,6 +20,7 @@ interface BotsPageProps {
 export default function BotsPage({
   onSelectBot,
   forceEditBotId,
+  forceEditReason,
   onClearForceEdit,
   initialSearch = "",
 }: BotsPageProps = {}) {
@@ -26,6 +28,7 @@ export default function BotsPage({
   const [search, setSearch] = useState(initialSearch);
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingBot, setEditingBot] = useState<BotItem | undefined>();
+  const [editNotice, setEditNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -58,10 +61,11 @@ export default function BotsPage({
       if (bot) {
         setEditingBot(bot);
         setView("edit");
+        if (forceEditReason) setEditNotice(forceEditReason);
       }
       onClearForceEdit?.();
     }
-  }, [forceEditBotId, bots, onClearForceEdit]);
+  }, [forceEditBotId, forceEditReason, bots, onClearForceEdit]);
 
   const filtered = bots.filter(
     (b) =>
@@ -76,6 +80,7 @@ export default function BotsPage({
   };
 
   const handleEdit = (bot: BotItem) => {
+    setEditNotice(null);
     setEditingBot(bot);
     setView("edit");
   };
@@ -83,6 +88,7 @@ export default function BotsPage({
   const backToList = () => {
     setView("list");
     setEditingBot(undefined);
+    setEditNotice(null);
   };
 
   if (view === "create" || view === "edit") {
@@ -94,6 +100,8 @@ export default function BotsPage({
           backToList();
           loadBots();
         }}
+        statusNotice={view === "edit" ? editNotice : null}
+        onDismissNotice={() => setEditNotice(null)}
       />
     );
   }

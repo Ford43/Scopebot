@@ -2,7 +2,7 @@ import os
 import shutil
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
-from api.database import get_db
+from api.database import get_db, SessionLocal
 from api import models, schemas, auth
 from rag.ingest import ingest
 
@@ -10,6 +10,7 @@ router = APIRouter(prefix="/api/documents", tags=["Documents"])
 
 UPLOAD_BASE = "data/library"
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 def _create_notification(db: Session, user_id: int, title: str, message: str, type: str = "info"):
@@ -36,9 +37,13 @@ async def upload_document(
     current_user: models.User = Depends(auth.get_approved_user)
 ):
     # เช็คนามสกุลไฟล์
-    ext = os.path.splitext(file.filename)[1].lower()
+    ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"ไฟล์ประเภท {ext} ไม่รองรับ")
+        allowed = ", ".join(sorted(ALLOWED_EXTENSIONS))
+        raise HTTPException(
+            status_code=400,
+            detail=f"ไฟล์ประเภท {ext or '(ไม่มีนามสกุล)'} ไม่รองรับ (รองรับ: {allowed})",
+        )
 
     # เช็คชื่อไฟล์ซ้ำ
     existing = db.query(models.Document).filter(
@@ -56,8 +61,14 @@ async def upload_document(
     os.makedirs(folder, exist_ok=True)
     file_path = os.path.join(folder, file.filename)
 
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"ไฟล์ใหญ่เกิน 10 MB (ขนาดปัจจุบัน {len(content) / (1024 * 1024):.1f} MB)",
+        )
+
     with open(file_path, "wb") as f:
-        content = await file.read()
         f.write(content)
 
     # บันทึก metadata
@@ -228,8 +239,10 @@ def assign_to_bot(
     bot.status = models.BotStatus.processing
     db.commit()
 
-    # รัน ingest ใน background
-    background_tasks.add_task(_run_ingest_and_notify, bot_id, bot.id, doc.filename, current_user.id, db)
+    # รัน ingest ใน background (ใช้ Session ใหม่ — อย่าใช้ request session)
+    background_tasks.add_task(
+        _run_ingest_and_notify, bot_id, bot.id, doc.filename, current_user.id
+    )
 
     return {"message": f"กำหนด '{doc.filename}' ให้ Bot '{bot.name}' เรียบร้อย กำลัง ingest..."}
 
@@ -281,34 +294,51 @@ def unassign_from_bot(
     return {"message": f"ถอด '{doc.filename}' ออกจาก Bot '{bot.name}' สำเร็จ"}
 
 
-def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int, db: Session):
+def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int):
+    db = SessionLocal()
     try:
-        ingest(bot_id_str)
+        ok = ingest(bot_id_str)
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
-        if bot:
+        if not bot:
+            return
+
+        if ok:
             bot.status = models.BotStatus.active
             db.commit()
-        _create_notification(
-            db, user_id,
-            "เพิ่มเอกสารให้ Bot สำเร็จ",
-            f"ไฟล์ '{filename}' พร้อมใช้งานใน Bot แล้ว",
-            "success"
-        )
+            _create_notification(
+                db, user_id,
+                "เพิ่มเอกสารให้ Bot สำเร็จ",
+                f"ไฟล์ '{filename}' พร้อมใช้งานใน Bot แล้ว",
+                "success",
+            )
+        else:
+            bot.status = models.BotStatus.inactive
+            db.commit()
+            _create_notification(
+                db, user_id,
+                "ประมวลผลเอกสารไม่สำเร็จ",
+                f"ไฟล์ '{filename}' ไม่สามารถสร้างฐานความรู้ได้ (ไม่มีเนื้อหาที่อ่านได้) — บอทยังไม่พร้อมใช้งาน",
+                "warning",
+            )
     except Exception as e:
-        # 🔴 เพิ่มโค้ดส่วนนี้เพื่อให้มันปริ้นท์ Error สีแดงๆ ออกมาที่หน้า Terminal
         import traceback
         print(f"\n{'='*50}")
         print(f"❌ ERROR INGESTING FILE: {filename}")
         traceback.print_exc()
         print(f"{'='*50}\n")
 
-        bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
-        if bot:
-            bot.status = models.BotStatus.inactive
-            db.commit()
-        _create_notification(
-            db, user_id,
-            "เกิดข้อผิดพลาด",
-            f"ไม่สามารถประมวลผลไฟล์ '{filename}' ได้: {str(e)}",
-            "danger"
-        )
+        try:
+            bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
+            if bot:
+                bot.status = models.BotStatus.inactive
+                db.commit()
+            _create_notification(
+                db, user_id,
+                "เกิดข้อผิดพลาด",
+                f"ไม่สามารถประมวลผลไฟล์ '{filename}' ได้: {str(e)}",
+                "danger",
+            )
+        except Exception:
+            db.rollback()
+    finally:
+        db.close()
