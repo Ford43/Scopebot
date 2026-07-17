@@ -20,8 +20,8 @@ def get_vector_db(bot_id):
     )
 
 
-def retrieve_docs(query, bot_id, score_threshold=1.5):
-
+def retrieve_docs(query, bot_id, score_threshold=1.05):
+    """Return docs whose distance score is at or below threshold (lower = closer)."""
     db = get_vector_db(bot_id)
 
     results = db.similarity_search_with_score(query, k=TOP_K)
@@ -31,6 +31,8 @@ def retrieve_docs(query, bot_id, score_threshold=1.5):
     filtered_docs = []
 
     for doc, score in results:
+        if DEBUG:
+            print(f"[DEBUG] retrieve score={score:.4f} source={doc.metadata.get('source')}")
         if score <= score_threshold:
             filtered_docs.append(doc)
 

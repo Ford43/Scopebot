@@ -1,9 +1,32 @@
 import os
+import re
 from typing import Dict, List, Optional, Tuple
 
 import ollama
 from rag.retriever import retrieve_docs
 from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG
+
+# คำถามวัน/ปฏิทินปัจจุบัน — มักไม่มีในเอกสารองค์กร
+_CALENDAR_ASK = re.compile(
+    r"(พรุ่งนี้\s*วันอะไร|เมื่อวาน\s*วันอะไร|วันนี้\s*วันอะไร|"
+    r"พรุ่งนี้เป็นวัน|เมื่อวานเป็นวัน|วันนี้เป็นวัน|"
+    r"วันนี้อะไร|พรุ้งนี้อะไร|วันที่เท่าไหร่)",
+    re.IGNORECASE,
+)
+
+
+def _calendar_context_mismatch(question: str, context: str) -> bool:
+    """True when question asks about a relative day that context never mentions."""
+    if not _CALENDAR_ASK.search(question):
+        return False
+    if "พรุ่งนี้" in question and "พรุ่งนี้" not in context:
+        return True
+    if "เมื่อวาน" in question and "เมื่อวาน" not in context:
+        return True
+    if re.search(r"วันนี้\s*วันอะไร|วันนี้เป็นวัน|วันนี้อะไร", question):
+        if "วันนี้" not in context and "ปฏิทิน" not in context:
+            return True
+    return False
 
 
 def build_context(docs):
@@ -56,6 +79,12 @@ def ask_rag(
     context = build_context(docs)
     sources = extract_sources(docs)
 
+    # กันเคส: ดึงเอกสาร "จันทร์-ศุกร์" แล้ว LLM มั่วว่าพรุ่งนี้อะไร
+    if _calendar_context_mismatch(question, context):
+        if DEBUG:
+            print(f"[DEBUG] Calendar mismatch — skip LLM for: {question}")
+        return "REQUIRE_HUMAN_HANDOFF", []
+
     if DEBUG:
         print(f"\n[DEBUG] Question: {question}")
         print(f"[DEBUG] Context:\n {context[:500]}...")
@@ -64,6 +93,10 @@ def ask_rag(
 {context}
 
 คำถาม: {question}
+
+คำสั่ง: ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น
+- ถ้าข้อมูลอ้างอิงไม่ได้ตอบคำถามนี้โดยตรง ให้ตอบว่า ไม่พบข้อมูล
+- ห้ามเดาวัน/วันที่/เวลาปัจจุบันจากตารางเวลาทำงานหรือคำที่คล้ายกันในเอกสาร
 
 คำตอบ:"""
 

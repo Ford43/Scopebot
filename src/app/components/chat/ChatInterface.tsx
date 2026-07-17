@@ -6,6 +6,7 @@ import {
   resolveNotificationView,
   useNotifications,
 } from "../../hooks/useNotifications";
+import { useWaitingQueueCount } from "../../hooks/useWaitingQueueCount";
 import type { ActiveView, HistoryItem } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
 import Dashboard from "../admin/Dashboard";
@@ -38,6 +39,9 @@ export default function ChatInterface() {
     markRead,
     markAllRead,
   } = useNotifications(isAuthenticated);
+  const waitingQueueCount = useWaitingQueueCount(
+    isAuthenticated && (isAdmin || isSupport)
+  );
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
 
@@ -167,7 +171,7 @@ export default function ChatInterface() {
           role={role}
           userName={user?.name}
           historyItems={historyItems}
-          unreadCount={unreadNotifs}
+          unreadCount={waitingQueueCount}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           onViewChange={setActiveView}
           onShowHistory={() => setShowHistoryDrawer(true)}
