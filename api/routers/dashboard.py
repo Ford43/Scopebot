@@ -5,7 +5,36 @@ from api.database import get_db
 from api import models, auth
 from datetime import datetime, timedelta
 
+try:
+    from zoneinfo import ZoneInfo
+    _TZ = ZoneInfo("Asia/Bangkok")
+except Exception:
+    _TZ = None
+
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
+
+
+def _today():
+    if _TZ is not None:
+        return datetime.now(_TZ).date()
+    return datetime.utcnow().date()
+
+
+def _waiting_queue_count(db: Session, bot_ids: list) -> int:
+    """นับคิวรอเจ้าหน้าที่จริง (LiveSession) — ให้ตรงกับหน้าแชทรวม / badge"""
+    if not bot_ids:
+        return 0
+    return (
+        db.query(models.LiveSession)
+        .filter(
+            models.LiveSession.is_active == True,
+            models.LiveSession.bot_id.in_(bot_ids),
+            models.LiveSession.mode.in_(
+                [models.SessionMode.waiting, models.SessionMode.human]
+            ),
+        )
+        .count()
+    )
 
 
 @router.get("/stats")
@@ -40,7 +69,7 @@ def get_stats(
         models.Conversation.bot_id.in_(bot_ids)
     ).scalar() or 0 if bot_ids else 0
 
-    today = datetime.utcnow().date()
+    today = _today()
     today_sessions = db.query(
         func.count(distinct(models.Conversation.session_id))
     ).filter(
@@ -48,10 +77,8 @@ def get_stats(
         func.date(models.Conversation.created_at) == today
     ).scalar() or 0 if bot_ids else 0
 
-    unanswered = base_query.filter(
-        models.Conversation.is_answered_by_bot == False,
-        models.Conversation.is_resolved == False
-    ).count()
+    # รอเจ้าหน้าที่ = คิว LiveSession (ไม่ใช่ Conversation ที่ค้าง resolve)
+    unanswered = _waiting_queue_count(db, bot_ids)
 
     bot_answered = base_query.filter(
         models.Conversation.is_answered_by_bot == True
@@ -62,9 +89,12 @@ def get_stats(
         if total_conversations > 0 else 0, 1
     )
 
-    total_documents = db.query(models.Document).filter(
-        models.Document.owner_id == current_user.id
-    ).count()
+    if current_user.role == models.UserRole.admin:
+        total_documents = db.query(models.Document).count()
+    else:
+        total_documents = db.query(models.Document).filter(
+            models.Document.owner_id == current_user.id
+        ).count()
 
     unread_notifications = db.query(models.Notification).filter(
         models.Notification.user_id == current_user.id,
@@ -114,7 +144,7 @@ def get_stats(
     # ---- Daily stats ตาม range ที่เลือก ----
     daily_stats = []
     for i in range(days - 1, -1, -1):
-        day = datetime.utcnow().date() - timedelta(days=i)
+        day = _today() - timedelta(days=i)
         sessions = db.query(
             func.count(distinct(models.Conversation.session_id))
         ).filter(
@@ -151,7 +181,9 @@ def get_stats(
         "active_bots": active_bots,
         "total_sessions": total_sessions,
         "today_sessions": today_sessions,
+        # waiting/human LiveSessions — ตรงกับแชทรวม
         "unanswered": unanswered,
+        "waiting_queue": unanswered,
         "success_rate": success_rate,
         "total_documents": total_documents,
         "unread_notifications": unread_notifications,
