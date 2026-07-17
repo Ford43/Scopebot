@@ -1,4 +1,5 @@
-from typing import Optional
+import os
+from typing import Dict, List, Optional, Tuple
 
 import ollama
 from rag.retriever import retrieve_docs
@@ -14,22 +15,46 @@ def build_context(docs):
     return "\n\n".join(parts)
 
 
+def extract_sources(docs, limit: int = 3) -> List[Dict]:
+    sources = []
+    seen = set()
+    for doc in docs:
+        raw = (
+            doc.metadata.get("source")
+            or doc.metadata.get("filename")
+            or "เอกสาร"
+        )
+        filename = os.path.basename(str(raw))
+        if filename in seen:
+            continue
+        seen.add(filename)
+        snippet = (doc.page_content or "").strip().replace("\n", " ")
+        if len(snippet) > 140:
+            snippet = snippet[:140] + "…"
+        sources.append({"filename": filename, "snippet": snippet})
+        if len(sources) >= limit:
+            break
+    return sources
+
+
 def ask_rag(
     question: str,
     bot_id: str,
     user_system_prompt: str = None,
     history: Optional[list] = None,
-) -> str:
+) -> Tuple[str, List]:
     """
-    history: optional list of prior turns
-    [{"question": "...", "answer": "..."}, ...] oldest → newest
+    Returns (answer, sources).
+    sources: [{"filename": "...", "snippet": "..."}, ...]
+    history: optional prior turns [{"question","answer"}, ...] oldest → newest
     """
     docs = retrieve_docs(question, bot_id)
 
     if not docs:
-        return "REQUIRE_HUMAN_HANDOFF"
+        return "REQUIRE_HUMAN_HANDOFF", []
 
     context = build_context(docs)
+    sources = extract_sources(docs)
 
     if DEBUG:
         print(f"\n[DEBUG] Question: {question}")
@@ -81,10 +106,10 @@ def ask_rag(
             print(f"[DEBUG] Answer:\n {answer}")
 
         if not answer or "ไม่พบข้อมูล" in answer:
-            return "REQUIRE_HUMAN_HANDOFF"
+            return "REQUIRE_HUMAN_HANDOFF", sources
 
-        return answer
+        return answer, sources
 
     except Exception as e:
         print(f"LLM error: {e}")
-        return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"
+        return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง", []

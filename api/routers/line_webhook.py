@@ -263,7 +263,7 @@ async def line_webhook(bot_id: str, request: Request):
                     for row in reversed(prior_rows)
                     if row.question and row.answer
                 ]
-                answer = ask_rag(
+                answer, _sources = ask_rag(
                     user_message,
                     bot_id,
                     user_system_prompt=bot.system_prompt,

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   Sparkles,
@@ -7,10 +8,16 @@ import {
   AlertTriangle,
   Settings,
   PenSquare,
+  FileText,
 } from "lucide-react";
 import type { ChatMessage } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
-import { SUGGESTED_PROMPTS, CATEGORY_COLORS } from "../../constants/chat";
+import {
+  SUGGESTED_PROMPTS,
+  CATEGORY_COLORS,
+  promptsFromDescription,
+} from "../../constants/chat";
+import { authHeaders } from "../../lib/api";
 
 interface ChatViewProps {
   activeBot: BotItem | null;
@@ -166,8 +173,49 @@ function WelcomeScreen({
   onSend: (text?: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }) {
+  const [suggested, setSuggested] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const buildFallback = () => {
+      const fromDesc = promptsFromDescription(activeBot?.description);
+      if (fromDesc.length > 0) return fromDesc;
+      return SUGGESTED_PROMPTS.map((p) =>
+        p.text.replace(/[📄💰🏢🖥️⏰🙋]/g, "").trim()
+      );
+    };
+
+    setSuggested(buildFallback());
+
+    if (!activeBot?.bot_id || !isAuthenticated) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/dashboard/top-questions?days=30&limit=6&bot_id=${encodeURIComponent(activeBot.bot_id)}`,
+          { headers: authHeaders() }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !Array.isArray(data) || data.length === 0) return;
+        const qs = data
+          .map((d: { question?: string }) => (d.question || "").trim())
+          .filter(Boolean)
+          .slice(0, 6);
+        if (qs.length > 0) setSuggested(qs);
+      } catch {
+        /* keep fallback */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeBot?.bot_id, activeBot?.description, isAuthenticated]);
+
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 pb-8">
+    <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6 pb-8">
       <div className="w-20 h-20 bg-amber-400 rounded-3xl flex items-center justify-center mb-5 shadow-lg shadow-amber-200">
         {activeBot ? (
           <Bot className="w-10 h-10 text-gray-900" />
@@ -211,25 +259,24 @@ function WelcomeScreen({
           onInputChange={onInputChange}
           onSend={onSend}
           onKeyDown={onKeyDown}
-          placeholder="How can I help today? ..."
+          placeholder="พิมพ์คำถามของคุณ..."
           rows={2}
           minHeight="56px"
         />
         <div className="mt-5">
           <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            Suggested
+            คำถามแนะนำ
           </div>
           <div className="flex flex-wrap gap-2">
-            {SUGGESTED_PROMPTS.map((p) => (
+            {suggested.map((text) => (
               <button
-                key={p.id}
-                onClick={() =>
-                  onSend(p.text.replace(/[📄💰🏢🖥️⏰🙋]/g, "").trim())
-                }
-                className="text-xs bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-full hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 transition-colors shadow-sm"
+                key={text}
+                type="button"
+                onClick={() => onSend(text)}
+                className="text-xs bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-full hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 transition-colors shadow-sm text-left max-w-full"
               >
-                {p.text}
+                <span className="line-clamp-2">{text}</span>
               </button>
             ))}
           </div>
@@ -286,6 +333,32 @@ function MessageList({
                 >
                   {message.text}
                 </div>
+                {message.sources && message.sources.length > 0 && (
+                  <div className="mt-2 max-w-[85%] space-y-1.5">
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
+                      <FileText className="w-3 h-3" />
+                      อ้างอิงจากเอกสาร
+                    </p>
+                    {message.sources.map((s) => (
+                      <div
+                        key={s.filename + (s.snippet || "")}
+                        className="rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2"
+                      >
+                        <p
+                          className="text-[11px] text-amber-800 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {s.filename}
+                        </p>
+                        {s.snippet && (
+                          <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">
+                            {s.snippet}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {message.confidence && (
                   <p className="mt-1 text-[10px] text-gray-400 ml-1">
                     ความมั่นใจ: {Math.round(message.confidence * 100)}%

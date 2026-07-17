@@ -9,6 +9,11 @@ export type ActiveView =
   | "bots"
   | "user-management";
 
+export interface ChatSource {
+  filename: string;
+  snippet?: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: "bot" | "user";
@@ -16,6 +21,7 @@ export interface ChatMessage {
   time: string;
   confidence?: number;
   category?: string;
+  sources?: ChatSource[];
 }
 
 export interface HistoryItem {
@@ -24,11 +30,15 @@ export interface HistoryItem {
   category?: string;
   time: string;
   timestamp: number;
+  sessionId?: string;
+  botId?: string;
+  messages?: ChatMessage[];
 }
 
 export interface MenuItem {
   id: ActiveView;
   label: string;
   icon: ComponentType<{ className?: string }>;
-  badge?: boolean;
+  /** Show unread badge when count > 0 (wired from notifications) */
+  showUnreadBadge?: boolean;
 }

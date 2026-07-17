@@ -40,12 +40,32 @@ export const VIEW_LABELS: Record<ActiveView, string> = {
 export const ADMIN_MENU_ITEMS: MenuItem[] = [
   { id: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard },
   { id: "bots", label: "บอท", icon: Bot },
-  { id: "unified-chat", label: "แชทรวม", icon: MessageSquare, badge: true },
+  {
+    id: "unified-chat",
+    label: "แชทรวม",
+    icon: MessageSquare,
+    showUnreadBadge: true,
+  },
   { id: "user-management", label: "จัดการผู้ใช้งาน", icon: User },
   { id: "search-history", label: "ประวัติการสนทนา", icon: History },
   { id: "integration", label: "การเชื่อมต่อ", icon: Puzzle },
 ];
 
 export const SUPPORT_MENU_ITEMS: MenuItem[] = [
-  { id: "unified-chat", label: "แชทรวม", icon: MessageSquare, badge: true },
+  {
+    id: "unified-chat",
+    label: "แชทรวม",
+    icon: MessageSquare,
+    showUnreadBadge: true,
+  },
 ];
+
+/** Build suggested prompt chips from bot description when no top-questions yet */
+export function promptsFromDescription(description?: string): string[] {
+  if (!description?.trim()) return [];
+  return description
+    .split(/[。.!?！？\n;；|]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 6 && s.length <= 60)
+    .slice(0, 4);
+}

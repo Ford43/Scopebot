@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct
 from api.database import get_db
@@ -222,17 +222,29 @@ def get_bot_stats(
 def get_top_questions(
     days: int = 7,
     limit: int = 5,
+    bot_id: str = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
-    if current_user.role == models.UserRole.admin:
+    if bot_id:
+        bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
+        if not bot:
+            return []
+        if (
+            current_user.role == models.UserRole.user
+            and bot.owner_id != current_user.id
+        ):
+            raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
+        bot_ids = [bot.id]
+    elif current_user.role == models.UserRole.admin:
         bots = db.query(models.Bot).all()
+        bot_ids = [b.id for b in bots]
     else:
         bots = db.query(models.Bot).filter(
             models.Bot.owner_id == current_user.id
         ).all()
+        bot_ids = [b.id for b in bots]
 
-    bot_ids = [b.id for b in bots]
     if not bot_ids:
         return []
 
@@ -251,7 +263,7 @@ def get_top_questions(
             "contact_staff",
             "string"
         ]),
-        func.length(models.Conversation.question) > 3  
+        func.length(models.Conversation.question) > 3
     ).group_by(
         models.Conversation.question
     ).order_by(

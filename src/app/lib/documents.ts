@@ -34,3 +34,12 @@ export async function assignDocumentToBot(
 export async function deleteDocument(docId: number): Promise<void> {
   await apiFetch(`/api/documents/${docId}`, { method: "DELETE" });
 }
+
+export async function unassignDocumentFromBot(
+  docId: number,
+  botId: string
+): Promise<void> {
+  await apiFetch(`/api/documents/${docId}/unassign/${botId}`, {
+    method: "DELETE",
+  });
+}

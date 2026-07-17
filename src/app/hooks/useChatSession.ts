@@ -11,6 +11,41 @@ interface UseChatSessionOptions {
   isChatActive: boolean;
 }
 
+function formatTime(iso?: string): string {
+  const d = iso ? new Date(iso) : new Date();
+  return d.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function messagesFromSession(session: {
+  session_id: string;
+  messages?: Array<{
+    id: number;
+    question: string;
+    answer: string;
+    created_at: string;
+  }>;
+}): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const m of session.messages || []) {
+    out.push({
+      id: `u-${m.id}`,
+      sender: "user",
+      text: m.question,
+      time: formatTime(m.created_at),
+    });
+    out.push({
+      id: `b-${m.id}`,
+      sender: "bot",
+      text: m.answer,
+      time: formatTime(m.created_at),
+    });
+  }
+  return out;
+}
+
 export function useChatSession({
   isAuthenticated,
   activeBot,
@@ -36,13 +71,67 @@ export function useChatSession({
     }
   }, [inputValue]);
 
+  const loadHistory = useCallback(async () => {
+    if (!isAuthenticated) {
+      setHistoryItems([]);
+      return;
+    }
+    try {
+      const qs = activeBot?.bot_id
+        ? `?bot_id_filter=${encodeURIComponent(activeBot.bot_id)}&limit=30`
+        : "?limit=30";
+      const res = await fetch(`/api/chat/sessions/all${qs}`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) return;
+      const sessions = await res.json();
+      if (!Array.isArray(sessions)) return;
+
+      setHistoryItems(
+        sessions.map(
+          (s: {
+            session_id: string;
+            bot_id?: string;
+            title?: string;
+            last_at?: string;
+            started_at?: string;
+            messages?: Array<{
+              id: number;
+              question: string;
+              answer: string;
+              created_at: string;
+            }>;
+          }) => {
+            const ts = new Date(s.last_at || s.started_at || Date.now()).getTime();
+            return {
+              id: s.session_id,
+              sessionId: s.session_id,
+              botId: s.bot_id,
+              query: s.title || s.messages?.[0]?.question || "การสนทนา",
+              time: formatTime(s.last_at || s.started_at),
+              timestamp: Number.isNaN(ts) ? Date.now() : ts,
+              messages: messagesFromSession(s),
+            } satisfies HistoryItem;
+          }
+        )
+      );
+    } catch (error) {
+      console.error("Failed to load chat history", error);
+    }
+  }, [isAuthenticated, activeBot?.bot_id]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
   useEffect(() => {
     if (!activeBot || !isChatActive) return;
 
     const pollAdminReply = async () => {
       try {
         const res = await fetch(
-          `/api/chat/${activeBot.bot_id}/session/${currentSessionId.current}/updates`
+          `/api/chat/${activeBot.bot_id}/session/${currentSessionId.current}/updates`,
+          { headers: authHeaders() }
         );
         if (!res.ok) return;
 
@@ -77,6 +166,18 @@ export function useChatSession({
     return () => clearInterval(interval);
   }, [activeBot, isChatActive]);
 
+  const restoreSession = useCallback((item: HistoryItem) => {
+    if (item.sessionId) {
+      currentSessionId.current = item.sessionId;
+    }
+    if (item.messages && item.messages.length > 0) {
+      setMessages(item.messages);
+    } else {
+      setMessages([]);
+    }
+    setInputValue("");
+  }, []);
+
   const handleSend = useCallback(
     async (overrideText?: string) => {
       const text = (overrideText ?? inputValue).trim();
@@ -99,18 +200,6 @@ export function useChatSession({
       ]);
       setInputValue("");
       setIsTyping(true);
-
-      if (isAuthenticated) {
-        setHistoryItems((prev) => [
-          {
-            id: Date.now().toString(),
-            query: text,
-            time: timeStr,
-            timestamp: now.getTime(),
-          },
-          ...prev,
-        ]);
-      }
 
       try {
         const res = await fetch(`/api/chat/${activeBot.bot_id}`, {
@@ -139,8 +228,13 @@ export function useChatSession({
             sender: "bot",
             text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
             time: timeNow(),
+            sources: Array.isArray(data.sources) ? data.sources : undefined,
           },
         ]);
+        // Refresh persisted history after a successful turn
+        if (isAuthenticated) {
+          void loadHistory();
+        }
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
@@ -159,7 +253,7 @@ export function useChatSession({
         setIsTyping(false);
       }
     },
-    [inputValue, isTyping, activeBot, isAuthenticated]
+    [inputValue, isTyping, activeBot, isAuthenticated, loadHistory]
   );
 
   const handleNewChat = useCallback(() => {
@@ -186,5 +280,6 @@ export function useChatSession({
     handleSend,
     handleNewChat,
     resetSessionForBot,
+    restoreSession,
   };
 }

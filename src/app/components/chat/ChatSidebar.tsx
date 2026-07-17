@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { Link } from "react-router";
 import {
   LogOut,
@@ -26,10 +27,11 @@ interface ChatSidebarProps {
   role: string;
   userName?: string;
   historyItems: HistoryItem[];
+  unreadCount?: number;
   onToggleCollapse: () => void;
   onViewChange: (view: ActiveView) => void;
   onShowHistory: () => void;
-  onHistoryClick: (query: string) => void;
+  onHistoryClick: (item: HistoryItem) => void;
   onLogout: () => void;
 }
 
@@ -42,6 +44,7 @@ export default function ChatSidebar({
   role,
   userName,
   historyItems,
+  unreadCount = 0,
   onToggleCollapse,
   onViewChange,
   onShowHistory,
@@ -207,7 +210,7 @@ export default function ChatSidebar({
                   historyItems.slice(0, 4).map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => onHistoryClick(item.query)}
+                      onClick={() => onHistoryClick(item)}
                       className="w-full flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-lg text-xs text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"
                     >
                       <Clock className="w-3 h-3 flex-shrink-0 text-gray-600" />
@@ -233,7 +236,11 @@ export default function ChatSidebar({
                     id={item.id}
                     label={item.label}
                     icon={item.icon}
-                    badge={item.badge}
+                    badgeCount={
+                      item.showUnreadBadge && unreadCount > 0
+                        ? unreadCount
+                        : undefined
+                    }
                     activeView={activeView}
                     sidebarCollapsed={sidebarCollapsed}
                     onClick={() => onViewChange(item.id)}
@@ -254,7 +261,11 @@ export default function ChatSidebar({
                   id={item.id}
                   label={item.label}
                   icon={item.icon}
-                  badge={item.badge}
+                  badgeCount={
+                    item.showUnreadBadge && unreadCount > 0
+                      ? unreadCount
+                      : undefined
+                  }
                   activeView={activeView}
                   sidebarCollapsed={sidebarCollapsed}
                   onClick={() => onViewChange(item.id)}
@@ -286,7 +297,7 @@ function NavButton({
   id,
   label,
   icon: Icon,
-  badge,
+  badgeCount,
   activeView,
   sidebarCollapsed,
   onClick,
@@ -294,7 +305,7 @@ function NavButton({
   id: ActiveView;
   label: string;
   icon: ComponentType<{ className?: string }>;
-  badge?: boolean;
+  badgeCount?: number;
   activeView: ActiveView;
   sidebarCollapsed: boolean;
   onClick: () => void;
@@ -303,8 +314,14 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      title={sidebarCollapsed ? label : undefined}
-      className={`w-full flex items-center rounded-lg text-sm transition-colors ${
+      title={
+        sidebarCollapsed
+          ? badgeCount
+            ? `${label} (${badgeCount})`
+            : label
+          : undefined
+      }
+      className={`w-full flex items-center rounded-lg text-sm transition-colors relative ${
         sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
       } ${
         active
@@ -315,11 +332,16 @@ function NavButton({
       <Icon
         className={`w-4 h-4 flex-shrink-0 ${active ? "text-gray-900" : "text-gray-500"}`}
       />
+      {sidebarCollapsed && !!badgeCount && !active && (
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full" />
+      )}
       {!sidebarCollapsed && (
         <>
-          <span className="flex-1">{label}</span>
-          {badge && !active && (
-            <span className="w-2 h-2 bg-amber-400 rounded-full" />
+          <span className="flex-1 text-left">{label}</span>
+          {!!badgeCount && !active && (
+            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-gray-900 text-[10px] flex items-center justify-center">
+              {badgeCount > 9 ? "9+" : badgeCount}
+            </span>
           )}
         </>
       )}

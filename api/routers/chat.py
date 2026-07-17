@@ -13,11 +13,18 @@ router = APIRouter(prefix="/api/chat", tags=["Chat"])
 def chat(
     bot_id: str,
     body: schemas.ChatRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_approved_user),
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     if not bot:
         raise HTTPException(status_code=404, detail="ไม่พบ Bot")
+
+    if (
+        current_user.role == models.UserRole.user
+        and bot.owner_id != current_user.id
+    ):
+        raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
 
     if bot.status != models.BotStatus.active:
         raise HTTPException(status_code=400, detail="Bot ยังไม่พร้อมใช้งาน")
@@ -27,7 +34,8 @@ def chat(
         return {
             "answer": "กรุณาพิมพ์คำถามให้ครบถ้วน",
             "is_answered_by_bot": True,
-            "conversation_id": 0
+            "conversation_id": 0,
+            "sources": [],
         }
 
     # ---- เช็คว่า session นี้อยู่ในโหมด human/waiting อยู่แล้วไหม ----
@@ -51,7 +59,8 @@ def chat(
         return {
             "answer": "เจ้าหน้าที่กำลังดูแลอยู่นะครับ/ค่ะ กรุณารอสักครู่ 🙏",
             "is_answered_by_bot": False,
-            "conversation_id": 0
+            "conversation_id": 0,
+            "sources": [],
         }
 
     # ---- เช็คคำขอติดต่อเจ้าหน้าที่ ----
@@ -91,7 +100,8 @@ def chat(
         return {
             "answer": "รับทราบครับ/ค่ะ 🙏 กรุณารอสักครู่ เจ้าหน้าที่กำลังเข้ามาช่วยเหลือ",
             "is_answered_by_bot": False,
-            "conversation_id": 0
+            "conversation_id": 0,
+            "sources": [],
         }
 
     # ---- RAG ปกติ (ส่งประวัติ N เทิร์นล่าสุดของ session นี้) ----
@@ -114,7 +124,7 @@ def chat(
         if row.question and row.answer
     ]
 
-    answer = ask_rag(
+    answer, sources = ask_rag(
         body.question,
         bot_id,
         user_system_prompt=bot.system_prompt,
@@ -130,6 +140,7 @@ def chat(
                 "หากต้องการคุยกับเจ้าหน้าที่ พิมพ์ว่า \"ขอคุยกับเจ้าหน้าที่\""
             )
             is_bot_answered = True
+            sources = []
         else:
             answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
             is_bot_answered = False
@@ -185,7 +196,8 @@ def chat(
     return {
         "answer": answer,
         "is_answered_by_bot": is_bot_answered,
-        "conversation_id": conversation.id
+        "conversation_id": conversation.id,
+        "sources": sources if is_bot_answered else [],
     }
 
 
@@ -258,7 +270,8 @@ def resolve_conversation(
 def get_session_updates(
     bot_id: str,
     session_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_approved_user),
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     if not bot:

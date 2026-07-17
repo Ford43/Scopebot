@@ -88,10 +88,16 @@ class ChatRequest(BaseModel):
     source_channel: Optional[str] = "web"
 
 
+class ChatSource(BaseModel):
+    filename: str
+    snippet: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
     answer: str
     is_answered_by_bot: bool
     conversation_id: int
+    sources: List[ChatSource] = []
 
 
 # =====================

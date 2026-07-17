@@ -59,7 +59,7 @@ function BarChart({ data, keys, colors, height = 120 }: {
 }
 
 /* ─────────────── Line Chart ─────────────── */
-function LineChart({ data, dataKey, color = "#8b5cf6", height = 100 }: {
+function LineChart({ data, dataKey, color = "#f59e0b", height = 100 }: {
   data: any[]; dataKey: string; color?: string; height?: number;
 }) {
   const values = data.map(d => d[dataKey] || 0);
@@ -135,7 +135,11 @@ function ProgressBar({ value, color = "bg-green-500" }: { value: number; color?:
 }
 
 /* ═══════════════ Main Component ═══════════════ */
-export default function Dashboard() {
+export default function Dashboard({
+  onNavigate,
+}: {
+  onNavigate?: (view: "unified-chat" | "bots" | "search-history") => void;
+} = {}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [botStats, setBotStats] = useState<BotStat[]>([]);
   const [topQuestions, setTopQuestions] = useState<TopQuestion[]>([]);
@@ -224,7 +228,11 @@ export default function Dashboard() {
           <p className="text-sm text-red-700 flex-1">
             มี <span className="font-bold">{stats.unanswered}</span> คำถามที่ Bot ตอบไม่ได้ รอเจ้าหน้าที่ดำเนินการ
           </p>
-          <button className="flex items-center gap-1 text-xs text-red-600 font-semibold hover:underline">
+          <button
+            type="button"
+            onClick={() => onNavigate?.("unified-chat")}
+            className="flex items-center gap-1 text-xs text-red-600 font-semibold hover:underline"
+          >
             ดูเลย <ArrowRight className="w-3 h-3" />
           </button>
         </div>
@@ -250,7 +258,7 @@ export default function Dashboard() {
           {
             label: "เอกสารใน Library", value: stats.total_documents,
             sub: `Bot ${stats.active_bots}/${stats.total_bots} ตัว active`,
-            icon: FileText, iconBg: "bg-purple-100", iconColor: "text-purple-600",
+            icon: FileText, iconBg: "bg-amber-100", iconColor: "text-amber-600",
             badge: null, badgeColor: "",
           },
         ].map((card, i) => {
@@ -277,7 +285,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "อัตราตอบสำเร็จ", value: `${stats.success_rate}%`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", border: "border-green-200", progress: stats.success_rate, pColor: "bg-green-500" },
-          { label: "แชทวันนี้",       value: stats.today_sessions,     icon: TrendingUp,   color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", progress: null, pColor: "" },
+          { label: "แชทวันนี้",       value: stats.today_sessions,     icon: TrendingUp,   color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", progress: null, pColor: "" },
           { label: "Bot พร้อมใช้",    value: `${stats.active_bots}/${stats.total_bots}`, icon: Bot, color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-200", progress: stats.total_bots > 0 ? (stats.active_bots / stats.total_bots * 100) : 0, pColor: "bg-orange-400" },
           { label: "ผู้ใช้วันนี้",    value: stats.users.new + stats.users.returning, icon: Users, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", progress: null, pColor: "" },
         ].map((card, i) => {
@@ -337,7 +345,7 @@ export default function Dashboard() {
           {stats.daily_stats.every(d => d.total === 0)
             ? <div className="flex items-center justify-center h-24 text-gray-400 text-sm">ยังไม่มีข้อมูล</div>
             : <>
-                <LineChart data={stats.daily_stats} dataKey="total" color="#8b5cf6" height={110} />
+                <LineChart data={stats.daily_stats} dataKey="total" color="#f59e0b" height={110} />
                 <div className="flex justify-between mt-2">
                   {stats.daily_stats.map((d, i) => (
                     <span key={i} className="text-[9px] text-gray-400 flex-1 text-center">{d.date}</span>
@@ -351,7 +359,7 @@ export default function Dashboard() {
           <h2 className="font-semibold text-gray-800 mb-5">ผู้ใช้วันนี้</h2>
           <DonutChart segments={[
             { value: stats.users.new,       color: "#f59e0b", label: "ใหม่" },
-            { value: stats.users.returning, color: "#8b5cf6", label: "กลับมา" },
+            { value: stats.users.returning, color: "#d97706", label: "กลับมา" },
           ]} size={110} />
           {stats.users.new === 0 && stats.users.returning === 0 && (
             <p className="text-xs text-gray-400 text-center mt-3">ยังไม่มีผู้ใช้วันนี้</p>

@@ -19,7 +19,7 @@ import {
 } from "../../lib/bots";
 import {
   assignDocumentToBot,
-  deleteDocument,
+  unassignDocumentFromBot,
   uploadDocument,
 } from "../../lib/documents";
 import {
@@ -303,19 +303,19 @@ export default function BotForm({
     if (!currentBot?.bot_id) return;
     if (
       !window.confirm(
-        "คุณต้องการลบเอกสารนี้ออกจากระบบอย่างถาวรใช่หรือไม่?"
+        "ต้องการถอดเอกสารนี้ออกจากบอทใช่หรือไม่? (ไฟล์ยังอยู่ใน Library)"
       )
     )
       return;
 
     try {
-      await deleteDocument(docId);
-      toast.success("ลบเอกสารเรียบร้อย");
+      await unassignDocumentFromBot(docId, currentBot.bot_id);
+      toast.success("ถอดเอกสารออกจากบอทแล้ว");
       fetchDocs();
     } catch (error) {
-      console.error("Delete doc error:", error);
+      console.error("Unassign doc error:", error);
       toast.error(
-        error instanceof Error ? error.message : "ลบเอกสารไม่สำเร็จ"
+        error instanceof Error ? error.message : "ถอดเอกสารไม่สำเร็จ"
       );
     }
   };
@@ -331,7 +331,7 @@ export default function BotForm({
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-white">
       {statusNotice && (
-        <div className="mx-8 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="mx-4 sm:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <span className="flex-1 leading-relaxed">{statusNotice}</span>
           {onDismissNotice && (
             <button
@@ -345,7 +345,7 @@ export default function BotForm({
           )}
         </div>
       )}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-20">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-8 py-4 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-20">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
@@ -369,7 +369,7 @@ export default function BotForm({
                   ? "รอระบบประมวลผลเอกสารให้เสร็จก่อน"
                   : undefined
             }
-            className="px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-400"
+            className="px-4 sm:px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-400"
             style={{ fontWeight: 600 }}
           >
             {saveButtonLabel()}
@@ -377,10 +377,10 @@ export default function BotForm({
         </div>
       </div>
 
-      <div className="flex-1 px-8 py-6 max-w-4xl w-full mx-auto">
-        <div className="flex items-center gap-5 mb-8">
-          <div className="w-20 h-20 rounded-3xl bg-amber-100 flex items-center justify-center shadow-sm flex-shrink-0">
-            <Bot className="w-10 h-10 text-amber-500" />
+      <div className="flex-1 px-4 sm:px-8 py-6 max-w-4xl w-full mx-auto">
+        <div className="flex items-center gap-4 sm:gap-5 mb-8">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-amber-100 flex items-center justify-center shadow-sm flex-shrink-0">
+            <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
           </div>
           <div className="flex-1 min-w-0">
             <h1
@@ -619,36 +619,38 @@ export default function BotForm({
                 {filteredDocs.map((doc) => (
                   <div
                     key={doc.id}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-3.5 flex items-center gap-4 hover:border-amber-300 transition-all"
+                    className="bg-white border border-gray-200 rounded-xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:border-amber-300 transition-all"
                   >
-                    <BotFileIcon filename={doc.filename} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p
-                          className="text-sm text-gray-800 truncate"
-                          style={{ fontWeight: 500 }}
-                        >
-                          {doc.filename}
-                        </p>
-                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                          {doc.category || "ทั่วไป"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <p className="text-[11px] text-gray-400">
-                          {formatBytes(doc.file_size)} •{" "}
-                          {new Date(doc.uploaded_at).toLocaleDateString("th-TH")}
-                        </p>
-                        <BotStatusBadge
-                          status={docBadgeStatus(botStatus, isNewBot)}
-                        />
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <BotFileIcon filename={doc.filename} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p
+                            className="text-sm text-gray-800 truncate"
+                            style={{ fontWeight: 500 }}
+                          >
+                            {doc.filename}
+                          </p>
+                          <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                            {doc.category || "ทั่วไป"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          <p className="text-[11px] text-gray-400">
+                            {formatBytes(doc.file_size)} •{" "}
+                            {new Date(doc.uploaded_at).toLocaleDateString("th-TH")}
+                          </p>
+                          <BotStatusBadge
+                            status={docBadgeStatus(botStatus, isNewBot)}
+                          />
+                        </div>
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteDoc(doc.id)}
                       disabled={isProcessing}
-                      className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      title="นำเอกสารออก"
+                      className="self-end sm:self-auto p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="ถอดเอกสารออกจากบอท"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

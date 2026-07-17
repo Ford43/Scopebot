@@ -6,7 +6,7 @@ import {
   resolveNotificationView,
   useNotifications,
 } from "../../hooks/useNotifications";
-import type { ActiveView } from "../../types/chat";
+import type { ActiveView, HistoryItem } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
 import Dashboard from "../admin/Dashboard";
 import Integration from "../admin/Integration";
@@ -53,6 +53,7 @@ export default function ChatInterface() {
     handleSend,
     handleNewChat,
     resetSessionForBot,
+    restoreSession,
   } = useChatSession({
     isAuthenticated,
     activeBot,
@@ -68,10 +69,10 @@ export default function ChatInterface() {
     }
   }, [user?.role]);
 
-  const handleHistoryClick = (query: string) => {
+  const handleHistorySelect = (item: HistoryItem) => {
     setShowHistoryDrawer(false);
+    restoreSession(item);
     setActiveView("chat");
-    setTimeout(() => handleSend(query), 150);
   };
 
   const handleLogout = () => {
@@ -105,7 +106,7 @@ export default function ChatInterface() {
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard onNavigate={setActiveView} />;
       case "unified-chat":
         return <UnifiedChat />;
       case "search-history":
@@ -166,10 +167,11 @@ export default function ChatInterface() {
           role={role}
           userName={user?.name}
           historyItems={historyItems}
+          unreadCount={unreadNotifs}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           onViewChange={setActiveView}
           onShowHistory={() => setShowHistoryDrawer(true)}
-          onHistoryClick={handleHistoryClick}
+          onHistoryClick={handleHistorySelect}
           onLogout={handleLogout}
         />
       </aside>
@@ -226,7 +228,7 @@ export default function ChatInterface() {
         historyItems={historyItems}
         initialSearch={historySearchQuery}
         onClose={() => setShowHistoryDrawer(false)}
-        onSelect={handleHistoryClick}
+        onSelect={handleHistorySelect}
         onClearAll={() => setHistoryItems([])}
         onRemoveItem={(id) =>
           setHistoryItems((prev) => prev.filter((h) => h.id !== id))

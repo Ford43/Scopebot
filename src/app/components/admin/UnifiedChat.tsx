@@ -131,10 +131,14 @@ export default function UnifiedChat() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       
-      {/* ฝั่งซ้าย: รายการคิวลูกค้า */}
-      <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50/50">
+      {/* ฝั่งซ้าย: รายการคิวลูกค้า — มือถือซ่อนเมื่อเปิดแชทแล้ว */}
+      <div
+        className={`${
+          activeSession ? "hidden md:flex" : "flex"
+        } w-full md:w-1/3 border-r border-gray-200 flex-col bg-gray-50/50 min-h-0`}
+      >
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-bold text-gray-800 flex items-center justify-between">
             รอการติดต่อจากเจ้าหน้าที่
@@ -181,26 +185,38 @@ export default function UnifiedChat() {
       </div>
 
       {/* ฝั่งขวา: หน้าต่างแชท */}
-      <div className="flex-1 flex flex-col bg-white relative">
+      <div
+        className={`${
+          activeSession ? "flex" : "hidden md:flex"
+        } flex-1 flex-col bg-white relative min-h-0 min-w-0`}
+      >
         {activeSession ? (
           <>
             {/* Header ของแชท */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white z-10 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between gap-2 bg-white z-10 shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveSession(null)}
+                  className="md:hidden text-xs text-amber-700 border border-amber-200 bg-amber-50 px-2 py-1 rounded-lg flex-shrink-0"
+                >
+                  ← คิว
+                </button>
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>
-                <div>
-                  <h2 className="font-bold text-gray-800">{activeSession.line_display_name}</h2>
-                  <p className="text-xs text-gray-500">ผ่าน Line OA (Bot ID: {activeSession.bot_id})</p>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-gray-800 truncate">{activeSession.line_display_name}</h2>
+                  <p className="text-xs text-gray-500 truncate">ผ่าน Line OA (Bot ID: {activeSession.bot_id})</p>
                 </div>
               </div>
               <button
                 onClick={handleEndSession}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 text-sm rounded-lg transition-colors border border-gray-200 hover:border-red-200 font-medium"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 text-xs sm:text-sm rounded-lg transition-colors border border-gray-200 hover:border-red-200 font-medium flex-shrink-0"
               >
                 <CheckCircle className="w-4 h-4" />
-                จบการสนทนา (คืนบอท)
+                <span className="hidden sm:inline">จบการสนทนา (คืนบอท)</span>
+                <span className="sm:hidden">จบ</span>
               </button>
             </div>
 
