@@ -133,21 +133,24 @@ def chat(
 
     # Web test chat: ไม่ auto-handoff — ให้พิมพ์ขอเจ้าหน้าที่เอง
     # LINE / ช่องทางอื่น: สร้าง LiveSession เมื่อบอทตอบไม่ได้
+    create_live = False
     if answer == "REQUIRE_HUMAN_HANDOFF":
         if source == "web":
             answer = (
                 "ไม่พบข้อมูลที่เกี่ยวข้องในฐานความรู้ "
                 "หากต้องการคุยกับเจ้าหน้าที่ พิมพ์ว่า \"ขอคุยกับเจ้าหน้าที่\""
             )
-            is_bot_answered = True
+            is_bot_answered = False
             sources = []
         else:
             answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
             is_bot_answered = False
+            create_live = True
     else:
         is_bot_answered = "ไม่พบข้อมูล" not in answer
+        create_live = not is_bot_answered
 
-    if not is_bot_answered:
+    if create_live:
         existing = db.query(models.LiveSession).filter(
             models.LiveSession.line_user_id == session_key,
             models.LiveSession.bot_id == bot.id,
