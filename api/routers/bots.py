@@ -96,45 +96,107 @@ def delete_bot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
+    # #region agent log
+    import json as _json
+    from pathlib import Path as _Path
+    _log_path = _Path(__file__).resolve().parents[2] / "debug-c814d0.log"
+    def _dbg(hypothesis_id, location, message, data=None, run_id="post-fix"):
+        try:
+            with open(_log_path, "a", encoding="utf-8") as _f:
+                _f.write(_json.dumps({
+                    "sessionId": "c814d0",
+                    "runId": run_id,
+                    "hypothesisId": hypothesis_id,
+                    "location": location,
+                    "message": message,
+                    "data": data or {},
+                    "timestamp": int(time.time() * 1000),
+                }, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+    # #endregion
+
     bot = _get_bot_or_404(bot_id, db, current_user)
 
-    # ลบโฟลเดอร์เอกสาร
-    folder = os.path.join(UPLOAD_BASE, bot_id)
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
+    # #region agent log
+    live_count = db.query(models.LiveSession).filter(models.LiveSession.bot_id == bot.id).count()
+    conv_count = db.query(models.Conversation).filter(models.Conversation.bot_id == bot.id).count()
+    doc_count = len(bot.documents) if bot.documents is not None else 0
+    _dbg("B", "bots.py:delete_bot:start", "delete_bot started", {
+        "bot_id": bot_id,
+        "bot_pk": bot.id,
+        "live_sessions": live_count,
+        "conversations": conv_count,
+        "documents": doc_count,
+        "status": str(bot.status),
+    })
+    # #endregion
 
-    # ลบ vector DB
-    vdb = os.path.join("vector_db", bot_id)
-    if os.path.exists(vdb):
-        shutil.rmtree(vdb)
-
-    db.delete(bot)
-    db.commit()
-    # 1. สร้างฟังก์ชันย่อยสำหรับบังคับลบโฟลเดอร์พร้อม retry
-    def force_delete_folder(folder_path):
+    def force_delete_folder(folder_path: str) -> None:
         if not os.path.exists(folder_path):
             return
-            
-        max_retries = 3
-        for attempt in range(max_retries):
+        for attempt in range(3):
             try:
                 shutil.rmtree(folder_path)
-                print(f"Deleted folder: {folder_path}")
-                break # ลบสำเร็จ ออกจาก loop
-            except PermissionError as e:
-                print(f"Attempt {attempt + 1}: Cannot delete {folder_path} yet ({e}). Waiting...")
-                time.sleep(1) # รอ 1 วินาทีแล้วลองใหม่
+                return
+            except PermissionError:
+                time.sleep(1)
             except Exception as e:
-                print(f"Error deleting {folder_path}: {e}")
-                break
+                # #region agent log
+                _dbg("D", "bots.py:force_delete_folder", "folder delete soft-fail", {
+                    "folder": folder_path,
+                    "error": str(e),
+                    "attempt": attempt + 1,
+                })
+                # #endregion
+                return
 
-    # 2. ทำการลบโฟลเดอร์ Data
-    bot_data_dir = os.path.join("data", bot_id)
-    force_delete_folder(bot_data_dir)
+    try:
+        # ลบ live sessions (+ messages ผ่าน cascade) ก่อน เพื่อไม่ชน FK live_sessions_bot_id_fkey
+        sessions = (
+            db.query(models.LiveSession)
+            .filter(models.LiveSession.bot_id == bot.id)
+            .all()
+        )
+        # #region agent log
+        _dbg("B", "bots.py:delete_bot:clear_live", "deleting related live_sessions", {
+            "count": len(sessions),
+        })
+        # #endregion
+        for session in sessions:
+            db.delete(session)
 
-    # 3. ทำการลบโฟลเดอร์ Vector DB
-    vdb = os.path.join("vector_db", bot_id)
-    force_delete_folder(vdb)
+        # ตัดความสัมพันธ์เอกสาร (association) — ไม่ลบไฟล์ใน library กลาง
+        bot.documents.clear()
+
+        # ลบโฟลเดอร์ไฟล์/vector แบบ best-effort (อย่าให้ล็อกไฟล์บล็อกการลบ DB)
+        force_delete_folder(os.path.join(UPLOAD_BASE, bot_id))
+        force_delete_folder(os.path.join("vector_db", bot_id))
+        # #region agent log
+        _dbg("A", "bots.py:delete_bot:after_folders", "folder cleanup attempted", {
+            "data": os.path.join(UPLOAD_BASE, bot_id),
+            "vdb": os.path.join("vector_db", bot_id),
+        })
+        # #endregion
+
+        # #region agent log
+        _dbg("B", "bots.py:delete_bot:before_db_delete", "about to db.delete(bot)", {"bot_pk": bot.id})
+        # #endregion
+        db.delete(bot)
+        db.commit()
+        # #region agent log
+        _dbg("E", "bots.py:delete_bot:after_commit", "db commit ok", {"bot_id": bot_id})
+        # #endregion
+    except Exception as e:
+        # #region agent log
+        _dbg("E", "bots.py:delete_bot:exception", "delete_bot failed", {
+            "error_type": type(e).__name__,
+            "error": str(e),
+            "bot_id": bot_id,
+        })
+        # #endregion
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"ลบบอทไม่สำเร็จ: {e}")
 
     return {"message": "ลบบอทสำเร็จ"}
 

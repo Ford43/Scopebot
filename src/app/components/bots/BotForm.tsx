@@ -183,10 +183,20 @@ export default function BotForm({
       return;
 
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot',message:'frontend deleteBot calling',data:{botId:existing.bot_id},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       await deleteBot(existing.bot_id);
+      // #region agent log
+      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot:success',message:'frontend deleteBot succeeded',data:{botId:existing.bot_id},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       onSaveSuccess();
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7705/ingest/2b624844-b325-4c5f-afa3-2e2538ca14d4',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c814d0'},body:JSON.stringify({sessionId:'c814d0',runId:'pre-fix',hypothesisId:'E',location:'BotForm.tsx:handleDeleteBot:error',message:'frontend deleteBot failed',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       console.error("Delete bot error:", error);
+      alert(error instanceof Error ? error.message : "ลบบอทไม่สำเร็จ");
     }
   };
 
