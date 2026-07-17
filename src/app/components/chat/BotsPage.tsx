@@ -196,11 +196,17 @@ export default function BotsPage({
                         <span
                           className={
                             bot.status === "active"
-                              ? "text-green-500"
-                              : "text-amber-500"
+                              ? "text-green-600"
+                              : bot.status === "processing"
+                                ? "text-amber-600"
+                                : "text-gray-500"
                           }
                         >
-                          {bot.status.toUpperCase()}
+                          {bot.status === "active"
+                            ? "พร้อมใช้งาน"
+                            : bot.status === "processing"
+                              ? "กำลังประมวลผล"
+                              : "ยังไม่พร้อม"}
                         </span>
                       </p>
                     </div>

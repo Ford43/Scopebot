@@ -31,12 +31,24 @@ interface BotFormProps {
   onSaveSuccess: () => void;
 }
 
+function docBadgeStatus(
+  botStatus: string,
+  isNewBot: boolean
+): "pending" | "processing" | "ready" | "inactive" {
+  if (isNewBot) return "pending";
+  if (botStatus === "processing") return "processing";
+  if (botStatus === "active") return "ready";
+  return "inactive";
+}
+
 export default function BotForm({
   existing,
   onBack,
   onSaveSuccess,
 }: BotFormProps) {
-  const [activeTab, setActiveTab] = useState<"general" | "knowledge">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "knowledge">(
+    existing ? "general" : "knowledge"
+  );
   const [name, setName] = useState(existing?.name ?? "");
   const [desc, setDesc] = useState(existing?.description ?? "");
   const [systemPrompt, setSystemPrompt] = useState(existing?.system_prompt ?? "");
@@ -48,8 +60,17 @@ export default function BotForm({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [botStatus, setBotStatus] = useState<string>(
-    existing?.status || "active"
+    existing?.status || "inactive"
   );
+
+  const isNewBot = !existing;
+  const isProcessing = botStatus === "processing";
+  const canCreate = !!name.trim() && docs.length > 0;
+  const canSave =
+    !isSaving &&
+    !isUploading &&
+    !isProcessing &&
+    (isNewBot ? canCreate : !!name.trim());
 
   const fetchDocs = useCallback(async () => {
     if (!existing?.bot_id) return;
@@ -65,16 +86,34 @@ export default function BotForm({
     if (existing) fetchDocs();
   }, [existing, fetchDocs]);
 
+  // Sync status from server on mount / when editing existing bot
   useEffect(() => {
     if (!existing?.bot_id) return;
-    let interval: ReturnType<typeof setInterval>;
+    let cancelled = false;
+
+    const sync = async () => {
+      try {
+        const data = await fetchBot(existing.bot_id);
+        if (!cancelled) setBotStatus(data.status);
+      } catch (error) {
+        console.error("Initial status sync error:", error);
+      }
+    };
+    sync();
+    return () => {
+      cancelled = true;
+    };
+  }, [existing?.bot_id]);
+
+  useEffect(() => {
+    if (!existing?.bot_id) return;
+    if (botStatus !== "processing") return;
 
     const checkBotStatus = async () => {
       try {
         const data = await fetchBot(existing.bot_id);
         setBotStatus(data.status);
         if (data.status !== "processing") {
-          clearInterval(interval);
           fetchDocs();
         }
       } catch (error) {
@@ -82,10 +121,9 @@ export default function BotForm({
       }
     };
 
-    if (botStatus === "processing") {
-      interval = setInterval(checkBotStatus, 3000);
-    }
-
+    // poll immediately once, then every 2s
+    checkBotStatus();
+    const interval = setInterval(checkBotStatus, 2000);
     return () => clearInterval(interval);
   }, [existing?.bot_id, botStatus, fetchDocs]);
 
@@ -96,12 +134,17 @@ export default function BotForm({
   const validate = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = "กรุณากรอกชื่อบอท";
+    if (isNewBot && docs.length === 0) {
+      e.docs = "กรุณาอัปโหลดเอกสารอย่างน้อย 1 ไฟล์ก่อนสร้างบอท";
+    }
     setErrors(e);
-    if (Object.keys(e).length > 0) setActiveTab("general");
+    if (e.name) setActiveTab("general");
+    else if (e.docs) setActiveTab("knowledge");
     return Object.keys(e).length === 0;
   };
 
   const handleSave = async () => {
+    if (isProcessing) return;
     if (!validate()) return;
     setIsSaving(true);
     try {
@@ -119,10 +162,12 @@ export default function BotForm({
         for (const doc of docs) {
           await assignDocumentToBot(doc.id, savedBot.bot_id);
         }
+        setBotStatus("processing");
       }
       onSaveSuccess();
     } catch (error) {
       console.error("Save bot error:", error);
+      alert(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
     } finally {
       setIsSaving(false);
     }
@@ -147,7 +192,11 @@ export default function BotForm({
 
   const addFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    if (isProcessing) return;
     setIsUploading(true);
+    setErrors((p) => ({ ...p, docs: "" }));
+
+    let assignedAny = false;
 
     for (const file of Array.from(files)) {
       try {
@@ -155,21 +204,33 @@ export default function BotForm({
 
         if (existing?.bot_id) {
           await assignDocumentToBot(docData.id, existing.bot_id);
+          assignedAny = true;
         } else {
-          setDocs((prev) => [...prev, docData]);
+          setDocs((prev) => {
+            if (prev.some((d) => d.id === docData.id)) return prev;
+            return [...prev, docData];
+          });
         }
       } catch (error) {
         console.error("File processing error", error);
+        alert(
+          error instanceof Error
+            ? error.message
+            : `อัปโหลดไฟล์ ${file.name} ไม่สำเร็จ`
+        );
       }
     }
 
-    if (existing?.bot_id) await fetchDocs();
+    if (existing?.bot_id && assignedAny) {
+      setBotStatus("processing");
+      await fetchDocs();
+    }
     setIsUploading(false);
   };
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragging(true);
+    if (!isProcessing) setDragging(true);
   };
   const onDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
@@ -178,10 +239,14 @@ export default function BotForm({
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    addFiles(e.dataTransfer.files);
+    if (!isProcessing) addFiles(e.dataTransfer.files);
   };
 
   const handleDeleteDoc = async (docId: number) => {
+    if (isNewBot) {
+      setDocs((prev) => prev.filter((d) => d.id !== docId));
+      return;
+    }
     if (!existing?.bot_id) return;
     if (
       !window.confirm(
@@ -198,6 +263,14 @@ export default function BotForm({
     }
   };
 
+  const saveButtonLabel = () => {
+    if (isSaving) return "กำลังบันทึก...";
+    if (isProcessing) return "กำลังประมวลผลเอกสาร...";
+    if (isUploading) return "กำลังอัปโหลด...";
+    if (existing) return "บันทึกการตั้งค่า";
+    return "สร้างบอท";
+  };
+
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-white">
       <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-20">
@@ -208,18 +281,28 @@ export default function BotForm({
           <ArrowLeft className="w-4 h-4" />
           กลับหน้าหลัก
         </button>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50"
-          style={{ fontWeight: 600 }}
-        >
-          {isSaving
-            ? "กำลังบันทึก..."
-            : existing
-              ? "บันทึกการตั้งค่า"
-              : "สร้างบอท"}
-        </button>
+        <div className="flex items-center gap-3">
+          {isNewBot && docs.length === 0 && (
+            <p className="text-xs text-amber-700 hidden sm:block">
+              อัปโหลดเอกสารอย่างน้อย 1 ไฟล์ก่อนสร้างบอท
+            </p>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            title={
+              isNewBot && docs.length === 0
+                ? "กรุณาอัปโหลดเอกสารอย่างน้อย 1 ไฟล์"
+                : isProcessing
+                  ? "รอระบบประมวลผลเอกสารให้เสร็จก่อน"
+                  : undefined
+            }
+            className="px-6 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-gray-900 text-sm transition-colors shadow-sm shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-400"
+            style={{ fontWeight: 600 }}
+          >
+            {saveButtonLabel()}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 px-8 py-6 max-w-4xl w-full mx-auto">
@@ -237,13 +320,7 @@ export default function BotForm({
             <p className="text-sm text-gray-500 mt-1">
               ID: {existing?.bot_id ?? "จะถูกสร้างอัตโนมัติ"}
             </p>
-            {existing && (
-              <BotStatusBadge
-                status={
-                  botStatus === "processing" ? "processing" : existing.status
-                }
-              />
-            )}
+            {existing && <BotStatusBadge status={botStatus} />}
           </div>
         </div>
 
@@ -260,7 +337,13 @@ export default function BotForm({
             >
               {tab === "general" ? "ตั้งค่าทั่วไป" : "ฐานความรู้ (เอกสาร)"}
               {tab === "knowledge" && (
-                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-[10px]">
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[10px] ${
+                    isNewBot && docs.length === 0
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
                   {docs.length}
                 </span>
               )}
@@ -331,11 +414,26 @@ export default function BotForm({
               />
             </div>
 
+            {isNewBot && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                ขั้นตอนถัดไป: ไปที่แท็บ{" "}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("knowledge")}
+                  className="underline font-semibold"
+                >
+                  ฐานความรู้ (เอกสาร)
+                </button>{" "}
+                แล้วอัปโหลดเอกสารอย่างน้อย 1 ไฟล์ก่อนกดสร้างบอท
+              </div>
+            )}
+
             {existing && (
               <div className="pt-8 mt-6 border-t border-red-100 flex flex-col items-center">
                 <button
                   onClick={handleDeleteBot}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium"
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
                   ลบบอท
@@ -347,17 +445,31 @@ export default function BotForm({
 
         {activeTab === "knowledge" && (
           <div className="space-y-6">
-            {botStatus === "processing" && (
+            {errors.docs && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {errors.docs}
+              </div>
+            )}
+
+            {isProcessing && (
               <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl flex items-center gap-3">
-                <Clock className="w-5 h-5 animate-spin text-amber-500" />
+                <Clock className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">
-                    กำลังเรียนรู้เอกสาร (Processing...)
+                    กำลังประมวลผลเอกสาร...
                   </p>
                   <p className="text-xs opacity-80">
-                    โปรดรอสักครู่ ระบบกำลังแปลงไฟล์เพื่อนำไปสร้างฐานความรู้
+                    ระบบกำลังหั่นเอกสารและสร้างฐานความรู้ — สถานะจะเปลี่ยนเป็น
+                    “พร้อมใช้งาน” เมื่อเสร็จ
                   </p>
                 </div>
+              </div>
+            )}
+
+            {isNewBot && docs.length === 0 && !errors.docs && (
+              <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-sm">
+                อัปโหลดเอกสารอย่างน้อย 1 ไฟล์ จากนั้นกรอกชื่อบอทแล้วกด
+                “สร้างบอท”
               </div>
             )}
 
@@ -365,10 +477,14 @@ export default function BotForm({
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+              onClick={() =>
+                !isUploading &&
+                !isProcessing &&
+                fileInputRef.current?.click()
+              }
               className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all ${
-                isUploading
-                  ? "opacity-50 cursor-wait border-gray-300 bg-gray-50"
+                isUploading || isProcessing
+                  ? "opacity-50 cursor-not-allowed border-gray-300 bg-gray-50"
                   : dragging
                     ? "border-amber-400 bg-amber-50 scale-[1.01] cursor-pointer"
                     : "border-gray-300 hover:border-amber-400 hover:bg-amber-50/40 bg-gray-50 cursor-pointer"
@@ -379,7 +495,7 @@ export default function BotForm({
                   dragging ? "bg-amber-400" : "bg-white border border-gray-200"
                 }`}
               >
-                {isUploading ? (
+                {isUploading || isProcessing ? (
                   <Clock className="w-5 h-5 animate-spin text-amber-500" />
                 ) : (
                   <Upload
@@ -388,11 +504,13 @@ export default function BotForm({
                 )}
               </div>
               <p className="text-gray-700 mb-1" style={{ fontWeight: 600 }}>
-                {isUploading
-                  ? "กำลังประมวลผลไฟล์..."
-                  : dragging
-                    ? "วางไฟล์ที่นี่เลย!"
-                    : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
+                {isProcessing
+                  ? "รอประมวลผลเอกสารให้เสร็จก่อนอัปโหลดเพิ่ม"
+                  : isUploading
+                    ? "กำลังอัปโหลดไฟล์..."
+                    : dragging
+                      ? "วางไฟล์ที่นี่เลย!"
+                      : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
               </p>
               <p className="text-xs text-gray-400">
                 รองรับ PDF, DOC, DOCX, XLSX, CSV, TXT (สูงสุด 10 MB / ไฟล์)
@@ -404,7 +522,7 @@ export default function BotForm({
                 accept=".pdf,.doc,.docx,.xlsx,.csv,.txt"
                 className="hidden"
                 onChange={(e) => addFiles(e.target.files)}
-                disabled={isUploading}
+                disabled={isUploading || isProcessing}
               />
             </div>
 
@@ -450,15 +568,14 @@ export default function BotForm({
                           {new Date(doc.uploaded_at).toLocaleDateString("th-TH")}
                         </p>
                         <BotStatusBadge
-                          status={
-                            botStatus === "processing" ? "processing" : "ready"
-                          }
+                          status={docBadgeStatus(botStatus, isNewBot)}
                         />
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteDoc(doc.id)}
-                      className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      disabled={isProcessing}
+                      className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       title="นำเอกสารออก"
                     >
                       <Trash2 className="w-4 h-4" />

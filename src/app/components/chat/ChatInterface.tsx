@@ -76,9 +76,11 @@ export default function ChatInterface() {
   };
 
   const handleSelectBot = (bot: BotItem) => {
-    if (bot.status === "inactive") {
+    if (bot.status === "inactive" || bot.status === "processing") {
       alert(
-        "ไม่สามารถเข้าหน้าแชทได้: บอทตัวนี้ยังไม่มีฐานความรู้ หรือยังไม่ได้ตั้งค่าเอกสาร"
+        bot.status === "processing"
+          ? "บอทกำลังประมวลผลเอกสารอยู่ กรุณารอให้สถานะเป็นพร้อมใช้งานก่อนเข้าแชท"
+          : "ไม่สามารถเข้าหน้าแชทได้: บอทตัวนี้ยังไม่มีฐานความรู้ หรือยังไม่ได้ตั้งค่าเอกสาร"
       );
       setForceEditBot(bot.bot_id);
       setActiveView("bots");
