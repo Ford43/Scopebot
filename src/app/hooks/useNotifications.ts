@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { authHeaders } from "../lib/api";
 
 export interface AppNotification {
@@ -13,13 +14,17 @@ export interface AppNotification {
 export function useNotifications(isAuthenticated: boolean) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const seenIdsRef = useRef<Set<number>>(new Set());
+  const hydratedRef = useRef(false);
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const [countRes, listRes] = await Promise.all([
         fetch("/api/notifications/unread-count", { headers: authHeaders() }),
-        fetch("/api/notifications/?unread_only=false", { headers: authHeaders() }),
+        fetch("/api/notifications/?unread_only=false", {
+          headers: authHeaders(),
+        }),
       ]);
 
       if (countRes.ok) {
@@ -28,7 +33,28 @@ export function useNotifications(isAuthenticated: boolean) {
       }
       if (listRes.ok) {
         const data = await listRes.json();
-        setNotifications(Array.isArray(data) ? data.slice(0, 30) : []);
+        const list: AppNotification[] = Array.isArray(data)
+          ? data.slice(0, 30)
+          : [];
+
+        if (hydratedRef.current) {
+          for (const n of list) {
+            if (seenIdsRef.current.has(n.id) || n.is_read) continue;
+            const urgent =
+              n.type === "warning" ||
+              n.type === "danger" ||
+              n.title.includes("รอคิว");
+            if (urgent) {
+              toast.warning(n.title, { description: n.message });
+            } else if (n.type === "success") {
+              toast.success(n.title, { description: n.message });
+            }
+          }
+        }
+
+        seenIdsRef.current = new Set(list.map((n) => n.id));
+        hydratedRef.current = true;
+        setNotifications(list);
       }
     } catch (error) {
       console.error("Failed to fetch notifications", error);
@@ -39,6 +65,8 @@ export function useNotifications(isAuthenticated: boolean) {
     if (!isAuthenticated) {
       setUnreadCount(0);
       setNotifications([]);
+      seenIdsRef.current = new Set();
+      hydratedRef.current = false;
       return;
     }
 
@@ -75,4 +103,30 @@ export function useNotifications(isAuthenticated: boolean) {
   }, [refresh]);
 
   return { unreadCount, notifications, refresh, markRead, markAllRead };
+}
+
+/** Map notification content → app view */
+export function resolveNotificationView(
+  n: AppNotification
+): "unified-chat" | "bots" | "dashboard" {
+  const text = `${n.title} ${n.message}`.toLowerCase();
+  if (
+    text.includes("รอคิว") ||
+    text.includes("เจ้าหน้าที่") ||
+    text.includes("ลูกค้า") ||
+    text.includes("live")
+  ) {
+    return "unified-chat";
+  }
+  if (
+    text.includes("เอกสาร") ||
+    text.includes("บอท") ||
+    text.includes("bot") ||
+    text.includes("ประมวลผล") ||
+    text.includes("ingest") ||
+    text.includes("อัปโหลด")
+  ) {
+    return "bots";
+  }
+  return "dashboard";
 }

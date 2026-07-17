@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { toast } from "sonner";
 import type { ChatMessage, HistoryItem } from "../types/chat";
 import type { BotItem } from "../types/bot";
 import { authHeaders } from "../lib/api";
@@ -82,7 +83,7 @@ export function useChatSession({
       if (!text || isTyping) return;
 
       if (!activeBot?.bot_id) {
-        alert("กรุณาเลือกบอทก่อนเริ่มการสนทนา");
+        toast.error("กรุณาเลือกบอทก่อนเริ่มการสนทนา");
         return;
       }
 

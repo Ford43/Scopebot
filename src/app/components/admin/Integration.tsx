@@ -1,9 +1,28 @@
-import { useState } from "react";
-import { ExternalLink, Globe, Copy, Check, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ExternalLink,
+  Globe,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { toast } from "sonner";
+import type { BotItem } from "../../types/bot";
+import {
+  fetchBots,
+  toggleBotLine,
+  toggleBotWeb,
+  updateBot,
+} from "../../lib/bots";
 
-/* ── LINE Icon SVG ── */
 const LineIcon = () => (
-  <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+  <svg
+    viewBox="0 0 40 40"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-full h-full"
+  >
     <rect width="40" height="40" rx="10" fill="#06C755" />
     <path
       d="M33 18.8c0-6.1-6.1-11-13.7-11S5.6 12.7 5.6 18.8c0 5.4 4.8 10 11.3 10.9.4.1 1 .3 1.2.7.2.3.1.9.1.9l-.2 1.2c-.1.4-.3 1.5 1.3.8 1.6-.7 8.5-5 11.6-8.6A9.7 9.7 0 0 0 33 18.8z"
@@ -16,12 +35,21 @@ const LineIcon = () => (
   </svg>
 );
 
-/* ── Toggle Switch (amber theme) ── */
-function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+function Toggle({
+  enabled,
+  onToggle,
+  disabled,
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
+      type="button"
+      disabled={disabled}
       onClick={onToggle}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
         enabled ? "bg-amber-400" : "bg-gray-300"
       }`}
     >
@@ -34,77 +62,137 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
   );
 }
 
-/* ── Copy button ── */
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopied(true);
+    toast.success("คัดลอกแล้ว");
     setTimeout(() => setCopied(false), 2000);
   };
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
       title="คัดลอก"
     >
-      {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-green-500" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
     </button>
   );
 }
 
-/* ── Code block ── */
 function CodeBlock({ code }: { code: string }) {
   return (
-    <div className="bg-gray-900 rounded-lg px-4 py-3 flex items-start justify-between gap-2 group">
-      <code className="text-xs text-green-400 font-mono break-all flex-1">{code}</code>
+    <div className="bg-gray-900 rounded-lg px-4 py-3 flex items-start justify-between gap-2">
+      <code className="text-xs text-green-400 font-mono break-all flex-1">
+        {code}
+      </code>
       <CopyButton text={code} />
     </div>
   );
 }
 
-/* ── LINE Config Panel ── */
-function LineConfigPanel() {
+function LineConfigPanel({
+  bot,
+  onSaved,
+}: {
+  bot: BotItem;
+  onSaved: (bot: BotItem) => void;
+}) {
   const [channelToken, setChannelToken] = useState("");
   const [channelSecret, setChannelSecret] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const webhookUrl = useMemo(() => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "https://YOUR_DOMAIN";
+    return `${origin}/api/line/webhook/${bot.bot_id}`;
+  }, [bot.bot_id]);
+
+  const handleSave = async () => {
+    if (!channelToken.trim() || !channelSecret.trim()) {
+      toast.error("กรุณากรอก Channel Access Token และ Channel Secret");
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await updateBot(bot.bot_id, {
+        line_channel_token: channelToken.trim(),
+        line_channel_secret: channelSecret.trim(),
+      });
+      onSaved(updated);
+      setChannelToken("");
+      setChannelSecret("");
+      toast.success("บันทึก LINE credentials เรียบร้อย");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "บันทึกไม่สำเร็จ"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
-      {/* Webhook URL */}
       <div>
-        <p className="text-xs text-gray-500 mb-1.5">Webhook URL (ใช้ตั้งค่าใน LINE Developers Console)</p>
-        <CodeBlock code="https://api.scopebot.com/webhook/line" />
+        <p className="text-xs text-gray-500 mb-1.5">
+          Webhook URL (ตั้งใน LINE Developers Console)
+        </p>
+        <CodeBlock code={webhookUrl} />
+        <p className="text-[11px] text-gray-400 mt-1.5">
+          หาก deploy แล้ว ให้ใช้โดเมนสาธารณะแทน localhost
+        </p>
       </div>
 
-      {/* Step guide */}
       <div className="space-y-2">
         {[
-          { step: "1", title: "สร้าง LINE Official Account", desc: "ไปที่ LINE Developers Console และสร้าง Messaging API Channel ใหม่" },
-          { step: "2", title: "รับ Credentials", desc: "คัดลอก Channel Access Token และ Channel Secret จาก Console" },
-          { step: "3", title: "วาง Webhook URL ด้านบน", desc: "ไปที่ Messaging API → Webhook settings → ใส่ URL แล้วกด Verify" },
+          {
+            step: "1",
+            title: "สร้าง LINE Official Account",
+            desc: "ไปที่ LINE Developers Console และสร้าง Messaging API Channel",
+          },
+          {
+            step: "2",
+            title: "รับ Credentials",
+            desc: "คัดลอก Channel Access Token และ Channel Secret",
+          },
+          {
+            step: "3",
+            title: "วาง Webhook URL ด้านบน",
+            desc: "Messaging API → Webhook settings → ใส่ URL แล้ว Verify",
+          },
         ].map((s) => (
-          <div key={s.step} className="flex gap-3 bg-gray-50 rounded-lg px-3 py-2.5">
-            <div className="w-5 h-5 rounded-full bg-green-100 text-green-700 text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5" style={{ fontWeight: 700 }}>
+          <div
+            key={s.step}
+            className="flex gap-3 bg-gray-50 rounded-lg px-3 py-2.5"
+          >
+            <div
+              className="w-5 h-5 rounded-full bg-green-100 text-green-700 text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ fontWeight: 700 }}
+            >
               {s.step}
             </div>
             <div>
-              <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>{s.title}</p>
+              <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>
+                {s.title}
+              </p>
               <p className="text-[11px] text-gray-500 mt-0.5">{s.desc}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Token inputs */}
       <div className="space-y-3">
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Channel Access Token</label>
+          <label className="block text-xs text-gray-600 mb-1">
+            Channel Access Token
+          </label>
           <input
             type="password"
             value={channelToken}
@@ -114,7 +202,9 @@ function LineConfigPanel() {
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Channel Secret</label>
+          <label className="block text-xs text-gray-600 mb-1">
+            Channel Secret
+          </label>
           <input
             type="password"
             value={channelSecret}
@@ -124,263 +214,312 @@ function LineConfigPanel() {
           />
         </div>
         <button
+          type="button"
           onClick={handleSave}
-          className={`w-full py-2 rounded-lg text-xs transition-colors ${
-            saved
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-amber-400 hover:bg-amber-500 text-gray-900"
-          }`}
+          disabled={saving}
+          className="w-full py-2 rounded-lg text-xs bg-amber-400 hover:bg-amber-500 text-gray-900 disabled:opacity-50"
           style={{ fontWeight: 600 }}
         >
-          {saved ? "✓ บันทึกแล้ว" : "บันทึกการตั้งค่า"}
+          {saving ? "กำลังบันทึก..." : "บันทึก Credentials"}
         </button>
       </div>
     </div>
   );
 }
 
-/* ── Website Config Panel ── */
-function WebConfigPanel() {
-  const widgetScript = `<script src="https://cdn.scopebot.com/widget.js"\n  data-id="YOUR_BOT_ID"\n  data-theme="amber"\n  data-lang="th">\n</script>`;
-
-  const [primaryColor, setPrimaryColor] = useState("#f59e0b");
-  const [welcomeMsg, setWelcomeMsg]     = useState("สวัสดี! มีอะไรให้ช่วยไหม?");
-  const [position, setPosition]         = useState<"right" | "left">("right");
-  const [saved, setSaved]               = useState(false);
-
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+function WebConfigPanel({ bot }: { bot: BotItem }) {
+  const widgetScript = `<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"
+  data-id="${bot.bot_id}"
+  data-theme="amber"
+  data-lang="th">
+</script>`;
 
   return (
     <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
-      {/* Script snippet */}
       <div>
-        <p className="text-xs text-gray-500 mb-1.5">เพิ่ม Script นี้ก่อนปิด &lt;/body&gt;</p>
+        <p className="text-xs text-gray-500 mb-1.5">
+          Bot ID สำหรับฝังบนเว็บ / ทดสอบแชทในแอป
+        </p>
+        <CodeBlock code={bot.bot_id} />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 mb-1.5">
+          ตัวอย่าง snippet (widget จริงอาจต้อง deploy แยก)
+        </p>
         <CodeBlock code={widgetScript} />
       </div>
-
-      {/* Widget config */}
-      <div className="space-y-3">
-        <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>ปรับแต่ง Widget</p>
-
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <label className="block text-[11px] text-gray-500 mb-1">ข้อความต้อนรับ</label>
-            <input
-              type="text"
-              value={welcomeMsg}
-              onChange={(e) => setWelcomeMsg(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] text-gray-500 mb-1">สีหลัก</label>
-            <input
-              type="color"
-              value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
-              className="h-9 w-12 rounded-lg border border-gray-200 cursor-pointer"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-[11px] text-gray-500 mb-1">ตำแหน่ง Widget</label>
-          <div className="flex gap-2">
-            {(["right", "left"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPosition(p)}
-                className={`flex-1 py-1.5 rounded-lg text-xs border transition-colors ${
-                  position === p
-                    ? "bg-amber-400 text-gray-900 border-amber-400"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-amber-300"
-                }`}
-              >
-                {p === "right" ? "ขวา" : "ซ้าย"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={handleSave}
-          className={`w-full py-2 rounded-lg text-xs transition-colors ${
-            saved
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-amber-400 hover:bg-amber-500 text-gray-900"
-          }`}
-          style={{ fontWeight: 600 }}
-        >
-          {saved ? "✓ บันทึกแล้ว" : "บันทึกการตั้งค่า"}
-        </button>
-      </div>
-
-      {/* Preview badge */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-amber-800" style={{ fontWeight: 600 }}>Widget Preview</p>
-          <p className="text-[11px] text-amber-600 mt-0.5">Chatbot จะปรากฏที่มุม{position === "right" ? "ขวา" : "ซ้าย"}ล่างของเว็บไซต์</p>
-        </div>
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center shadow-md flex-shrink-0"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <Globe className="w-4 h-4 text-white" />
-        </div>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+        <p className="text-xs text-amber-800" style={{ fontWeight: 600 }}>
+          แชทบนเว็บในแอป
+        </p>
+        <p className="text-[11px] text-amber-700 mt-0.5">
+          เปิดสวิตช์ Website ด้านบน แล้วไปที่หน้าบอท → คลิกการ์ดเพื่อทดสอบแชท
+        </p>
       </div>
     </div>
   );
 }
 
-/* ── Integration Card ── */
-interface CardData {
-  id: "line" | "website";
-  name: string;
-  tag: string;
-  tagColor: string;
-  description: string;
-  icon: React.ReactNode;
-  enabled: boolean;
-}
-
-function IntegrationCard({ card, onToggle }: { card: CardData; onToggle: (id: string) => void }) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className={`bg-white border rounded-xl shadow-sm overflow-hidden transition-all ${
-      card.enabled ? "border-amber-300" : "border-gray-200"
-    }`}>
-      {/* Card header */}
-      <div className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-              {card.icon}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{card.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${card.tagColor}`}>
-                  {card.tag}
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-400 mt-0.5">{card.description}</p>
-            </div>
-          </div>
-          <Toggle enabled={card.enabled} onToggle={() => onToggle(card.id)} />
-        </div>
-
-        {/* Status badge */}
-        {card.enabled && (
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 bg-green-50 rounded-lg px-3 py-1.5">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            เชื่อมต่อแล้ว — พร้อมใช้งาน
-          </div>
-        )}
-
-        {/* Footer actions */}
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            ตั้งค่า & เอกสาร
-            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-
-          {card.enabled && (
-            <button className="flex items-center gap-1.5 text-xs text-amber-600 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-50 transition-colors ml-auto">
-              <RefreshCw className="w-3 h-3" />
-              ทดสอบการเชื่อมต่อ
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Expandable config */}
-      {expanded && (
-        <div className="px-5 pb-5">
-          {card.id === "line" ? <LineConfigPanel /> : <WebConfigPanel />}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Main Component ── */
 export default function Integration() {
-  const [cards, setCards] = useState<CardData[]>([
-    {
-      id: "line",
-      name: "LINE Official Account",
-      tag: "Messaging",
-      tagColor: "bg-green-100 text-green-700",
-      description: "เชื่อมต่อ scopebot กับ LINE OA เพื่อตอบคำถามพนักงานผ่านแอป LINE",
-      icon: <LineIcon />,
-      enabled: false,
-    },
-    {
-      id: "website",
-      name: "Website Widget",
-      tag: "Web",
-      tagColor: "bg-amber-100 text-amber-700",
-      description: "ฝัง chatbot widget บนเว็บไซต์ขององค์กรด้วย script เพียงบรรทัดเดียว",
-      icon: (
-        <div className="w-full h-full flex items-center justify-center bg-amber-500 rounded-xl">
-          <Globe className="w-5 h-5 text-white" />
-        </div>
-      ),
-      enabled: false,
-    },
-  ]);
+  const [bots, setBots] = useState<BotItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState<"line" | "web" | null>(null);
+  const [expanded, setExpanded] = useState<"line" | "website" | null>("line");
 
-  const toggleCard = (id: string) =>
-    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c)));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchBots();
+      setBots(data);
+      setSelectedId((prev) => prev || data[0]?.bot_id || "");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "โหลดรายการบอทไม่สำเร็จ"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const connected = cards.filter((c) => c.enabled).length;
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const bot = bots.find((b) => b.bot_id === selectedId) ?? null;
+  const lineOn = !!bot?.is_line_connected;
+  const webOn = !!bot?.is_web_connected;
+  const connected = (lineOn ? 1 : 0) + (webOn ? 1 : 0);
+
+  const patchBot = (updated: BotItem) => {
+    setBots((prev) =>
+      prev.map((b) => (b.bot_id === updated.bot_id ? { ...b, ...updated } : b))
+    );
+  };
+
+  const handleToggleLine = async () => {
+    if (!bot) return;
+    setToggling("line");
+    try {
+      const next = await toggleBotLine(bot.bot_id);
+      patchBot({ ...bot, is_line_connected: next });
+      toast.success(next ? "เปิดการเชื่อมต่อ LINE แล้ว" : "ปิดการเชื่อมต่อ LINE แล้ว");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "สลับ LINE ไม่สำเร็จ"
+      );
+    } finally {
+      setToggling(null);
+    }
+  };
+
+  const handleToggleWeb = async () => {
+    if (!bot) return;
+    setToggling("web");
+    try {
+      const next = await toggleBotWeb(bot.bot_id);
+      patchBot({ ...bot, is_web_connected: next });
+      toast.success(
+        next ? "เปิดการเชื่อมต่อ Website แล้ว" : "ปิดการเชื่อมต่อ Website แล้ว"
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "สลับ Website ไม่สำเร็จ"
+      );
+    } finally {
+      setToggling(null);
+    }
+  };
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-gray-900">การเชื่อมต่อ</h1>
-          <p className="text-sm text-gray-500 mt-0.5">เชื่อมต่อ scopebot กับช่องทางการสื่อสารต่างๆ</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            เชื่อมต่อบอทกับ LINE และช่องทางเว็บ (บันทึกจริงลงเซิร์ฟเวอร์)
+          </p>
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
           <span className="w-2 h-2 bg-amber-400 rounded-full" />
           <span className="text-sm text-amber-700">
-            <span style={{ fontWeight: 600 }}>{connected}</span> / {cards.length} เชื่อมต่อแล้ว
+            <span style={{ fontWeight: 600 }}>{bot ? connected : 0}</span> / 2
+            เชื่อมต่อแล้ว
           </span>
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {cards.map((card) => (
-          <IntegrationCard key={card.id} card={card} onToggle={toggleCard} />
-        ))}
+      <div className="mb-5 max-w-md">
+        <label className="block text-xs text-gray-600 mb-1.5">เลือกบอท</label>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+          disabled={loading || bots.length === 0}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+        >
+          {bots.length === 0 ? (
+            <option value="">ยังไม่มีบอท — สร้างบอทก่อน</option>
+          ) : (
+            bots.map((b) => (
+              <option key={b.bot_id} value={b.bot_id}>
+                {b.name} ({b.bot_id})
+              </option>
+            ))
+          )}
+        </select>
       </div>
 
-      {/* Info banner */}
-      <div className="mt-6 bg-gray-900 rounded-xl px-5 py-4 flex items-start gap-4">
-        <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center flex-shrink-0">
-          <ExternalLink className="w-4 h-4 text-gray-900" />
+      {!bot ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-sm text-gray-400">
+          {loading ? "กำลังโหลด..." : "สร้างบอทก่อน แล้วค่อยตั้งค่าการเชื่อมต่อ"}
         </div>
-        <div>
-          <p className="text-sm text-white" style={{ fontWeight: 600 }}>ต้องการช่องทางอื่น?</p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            รองรับ Microsoft Teams, Slack, Facebook Messenger เร็วๆ นี้ ติดต่อทีมเราเพื่อขอ Early Access
-          </p>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* LINE */}
+          <div
+            className={`bg-white border rounded-xl shadow-sm overflow-hidden ${
+              lineOn ? "border-amber-300" : "border-gray-200"
+            }`}
+          >
+            <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+                    <LineIcon />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-sm text-gray-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        LINE Official Account
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                        Messaging
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      ตอบคำถามผ่าน LINE OA ของบอทนี้
+                    </p>
+                  </div>
+                </div>
+                <Toggle
+                  enabled={lineOn}
+                  disabled={toggling === "line"}
+                  onToggle={handleToggleLine}
+                />
+              </div>
+
+              {lineOn ? (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 bg-green-50 rounded-lg px-3 py-1.5">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  เปิดใช้งานแล้ว — อย่าลืมบันทึก Token/Secret
+                </div>
+              ) : (
+                <div className="mt-3 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-1.5">
+                  ยังไม่ได้เปิด — webhook จะไม่รับข้อความ
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpanded((v) => (v === "line" ? null : "line"))
+                  }
+                  className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  ตั้งค่า & เอกสาร
+                  {expanded === "line" ? (
+                    <ChevronUp className="w-3 h-3" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {expanded === "line" && (
+              <div className="px-5 pb-5">
+                <LineConfigPanel bot={bot} onSaved={patchBot} />
+              </div>
+            )}
+          </div>
+
+          {/* Website */}
+          <div
+            className={`bg-white border rounded-xl shadow-sm overflow-hidden ${
+              webOn ? "border-amber-300" : "border-gray-200"
+            }`}
+          >
+            <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-amber-500 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-sm text-gray-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Website / In-app Chat
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        Web
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      เปิดใช้แชทบนเว็บสำหรับบอทนี้
+                    </p>
+                  </div>
+                </div>
+                <Toggle
+                  enabled={webOn}
+                  disabled={toggling === "web"}
+                  onToggle={handleToggleWeb}
+                />
+              </div>
+
+              {webOn ? (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 bg-green-50 rounded-lg px-3 py-1.5">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  เปิดใช้งานแล้ว
+                </div>
+              ) : (
+                <div className="mt-3 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-1.5">
+                  ยังไม่ได้เปิดสำหรับบอทนี้
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpanded((v) => (v === "website" ? null : "website"))
+                  }
+                  className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  ตั้งค่า & เอกสาร
+                  {expanded === "website" ? (
+                    <ChevronUp className="w-3 h-3" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {expanded === "website" && (
+              <div className="px-5 pb-5">
+                <WebConfigPanel bot={bot} />
+              </div>
+            )}
+          </div>
         </div>
-        <button className="ml-auto flex-shrink-0 bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs px-4 py-2 rounded-lg transition-colors" style={{ fontWeight: 600 }}>
-          ติดต่อเรา
-        </button>
-      </div>
+      )}
     </div>
   );
 }

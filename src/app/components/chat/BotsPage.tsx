@@ -95,10 +95,13 @@ export default function BotsPage({
     return (
       <BotForm
         existing={editingBot}
-        onBack={backToList}
-        onSaveSuccess={() => {
+        onBack={() => {
           backToList();
           loadBots();
+        }}
+        onSaveSuccess={(options) => {
+          loadBots();
+          if (options?.leave) backToList();
         }}
         statusNotice={view === "edit" ? editNotice : null}
         onDismissNotice={() => setEditNotice(null)}

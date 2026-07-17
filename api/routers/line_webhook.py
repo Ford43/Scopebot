@@ -247,13 +247,33 @@ async def line_webhook(bot_id: str, request: Request):
                     db.commit()
                     continue
 
-                # ---- RAG ----
+                # ---- RAG (+ ประวัติ session) ----
+                prior_rows = (
+                    db.query(models.Conversation)
+                    .filter(
+                        models.Conversation.bot_id == bot.id,
+                        models.Conversation.session_id == line_user_id,
+                    )
+                    .order_by(models.Conversation.created_at.desc())
+                    .limit(6)
+                    .all()
+                )
+                history = [
+                    {"question": row.question, "answer": row.answer}
+                    for row in reversed(prior_rows)
+                    if row.question and row.answer
+                ]
                 answer = ask_rag(
                     user_message,
                     bot_id,
                     user_system_prompt=bot.system_prompt,
+                    history=history,
                 )
-                is_bot_answered = answer != "ไม่พบข้อมูล"
+                if answer == "REQUIRE_HUMAN_HANDOFF":
+                    answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
+                    is_bot_answered = False
+                else:
+                    is_bot_answered = "ไม่พบข้อมูล" not in answer
 
                 db.add(models.Conversation(
                     session_id=line_user_id,

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Send, CheckCircle, Clock, User, Bot, Headphones, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { authHeaders } from "../../lib/api";
 
 // Types อ้างอิงตามโครงสร้าง DB ใน README
@@ -119,10 +120,13 @@ export default function UnifiedChat() {
       if (res.ok) {
         setActiveSession(null);
         setMessages([]);
-        alert("จบการสนทนาเรียบร้อย บอทกลับมาทำงานแล้ว");
+        toast.success("จบการสนทนาเรียบร้อย บอทกลับมาทำงานแล้ว");
+      } else {
+        toast.error("จบการสนทนาไม่สำเร็จ");
       }
     } catch (error) {
       console.error("End session error:", error);
+      toast.error("จบการสนทนาไม่สำเร็จ");
     }
   };
 

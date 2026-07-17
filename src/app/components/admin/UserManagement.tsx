@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, ChevronDown, Hourglass, Eye, Trash2, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
 import { useAuth } from "../../contexts/AuthContext";
 import { authHeaders } from "../../lib/api";
@@ -96,12 +97,14 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
         body: JSON.stringify({ is_approved: true, is_active: true })
       });
       if (res.ok) {
-        fetchUsers(); // โหลดข้อมูลใหม่ทันที
+        fetchUsers();
+        toast.success("อนุมัติผู้ใช้เรียบร้อย");
       } else {
-        alert("เกิดข้อผิดพลาดในการอนุมัติ");
+        toast.error("เกิดข้อผิดพลาดในการอนุมัติ");
       }
     } catch (error) {
       console.error("Approve error", error);
+      toast.error("เกิดข้อผิดพลาดในการอนุมัติ");
     }
   };
 
@@ -109,18 +112,19 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
   const handleRejectUser = async (userId: string | number) => {
     if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธและลบคำขอของผู้ใช้งานคนนี้?")) return;
     try {
-      // ตรงนี้สมมติว่าเป็น endpoint ลบ user ของคุณ (ปรับใช้ตาม Backend ที่มีจริง)
       const res = await fetch(`/api/auth/users/${userId}`, { 
         method: "DELETE",
         headers: authHeaders(),
       });
       if (res.ok) {
         fetchUsers();
+        toast.success("ปฏิเสธคำขอเรียบร้อย");
       } else {
-        alert("เกิดข้อผิดพลาดในการปฏิเสธคำขอ");
+        toast.error("เกิดข้อผิดพลาดในการปฏิเสธคำขอ");
       }
     } catch (error) {
       console.error("Reject error", error);
+      toast.error("เกิดข้อผิดพลาดในการปฏิเสธคำขอ");
     }
   };
 
@@ -382,7 +386,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
 
               {isAdmin && (
                 <button 
-                  onClick={() => alert("ระบบกำลังส่งอีเมลรีเซ็ตรหัสผ่าน...")}
+                  onClick={() => toast.message("ระบบกำลังส่งอีเมลรีเซ็ตรหัสผ่าน...")}
                   className="w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   รีเซ็ตรหัสผ่านพนักงาน
@@ -418,13 +422,15 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       });
                       
                       if (res.ok) {
-                        fetchUsers(); // รีเฟรชตารางใหม่
-                        setEditModalUser(null); // ปิดหน้าต่าง
+                        fetchUsers();
+                        setEditModalUser(null);
+                        toast.success("บันทึกข้อมูลผู้ใช้เรียบร้อย");
                       } else {
-                        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
                       }
                     } catch (error) {
                       console.error("Save error", error);
+                      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
                     }
                   }}
                 >
@@ -523,9 +529,20 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       </button>
                       <button 
                         onClick={async () => {
-                          if(window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้อย่างถาวร?")) {
-                            await fetch(`/api/auth/users/${user.id}`, { method: "DELETE", headers: authHeaders() });
-                            fetchUsers();
+                          if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้อย่างถาวร?")) return;
+                          try {
+                            const res = await fetch(`/api/auth/users/${user.id}`, {
+                              method: "DELETE",
+                              headers: authHeaders(),
+                            });
+                            if (res.ok) {
+                              fetchUsers();
+                              toast.success("ลบผู้ใช้เรียบร้อย");
+                            } else {
+                              toast.error("ลบผู้ใช้ไม่สำเร็จ");
+                            }
+                          } catch {
+                            toast.error("ลบผู้ใช้ไม่สำเร็จ");
                           }
                         }}
                         className="rounded-lg bg-rose-500 px-3 py-2 text-xs font-medium text-white hover:bg-rose-600 transition-colors"

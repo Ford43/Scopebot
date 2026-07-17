@@ -94,27 +94,59 @@ def chat(
             "conversation_id": 0
         }
 
-    # ---- RAG ปกติ ----
-    answer = ask_rag(body.question, bot_id, user_system_prompt=bot.system_prompt)
-    # 🟢 เพิ่มโค้ดดักจับตรงนี้
-    if answer == "REQUIRE_HUMAN_HANDOFF":
-        answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
-        is_bot_answered = False  # เพื่อบังคับให้ระบบสร้าง Session รอเจ้าหน้าที่
-    else:
-        is_bot_answered = answer != "ไม่พบข้อมูล" 
+    # ---- RAG ปกติ (ส่งประวัติ N เทิร์นล่าสุดของ session นี้) ----
+    source = (body.source_channel or "web").lower()
+    session_key = body.session_id or "web_user"
 
-    # ถ้า Bot ตอบไม่ได้ → สร้าง session รอเจ้าหน้าที่อัตโนมัติ
+    prior_rows = (
+        db.query(models.Conversation)
+        .filter(
+            models.Conversation.bot_id == bot.id,
+            models.Conversation.session_id == body.session_id,
+        )
+        .order_by(models.Conversation.created_at.desc())
+        .limit(6)
+        .all()
+    )
+    history = [
+        {"question": row.question, "answer": row.answer}
+        for row in reversed(prior_rows)
+        if row.question and row.answer
+    ]
+
+    answer = ask_rag(
+        body.question,
+        bot_id,
+        user_system_prompt=bot.system_prompt,
+        history=history,
+    )
+
+    # Web test chat: ไม่ auto-handoff — ให้พิมพ์ขอเจ้าหน้าที่เอง
+    # LINE / ช่องทางอื่น: สร้าง LiveSession เมื่อบอทตอบไม่ได้
+    if answer == "REQUIRE_HUMAN_HANDOFF":
+        if source == "web":
+            answer = (
+                "ไม่พบข้อมูลที่เกี่ยวข้องในฐานความรู้ "
+                "หากต้องการคุยกับเจ้าหน้าที่ พิมพ์ว่า \"ขอคุยกับเจ้าหน้าที่\""
+            )
+            is_bot_answered = True
+        else:
+            answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
+            is_bot_answered = False
+    else:
+        is_bot_answered = "ไม่พบข้อมูล" not in answer
+
     if not is_bot_answered:
         existing = db.query(models.LiveSession).filter(
-            models.LiveSession.line_user_id == (body.session_id or "web_user"),
+            models.LiveSession.line_user_id == session_key,
             models.LiveSession.bot_id == bot.id,
             models.LiveSession.is_active == True
         ).first()
 
         if not existing:
             new_session = models.LiveSession(
-                line_user_id=body.session_id or "web_user",
-                line_display_name=f"Web User ({(body.session_id or 'web')[:4]})",
+                line_user_id=session_key,
+                line_display_name=f"Web User ({session_key[:4]})",
                 mode=models.SessionMode.waiting,
                 is_active=True,
                 bot_id=bot.id
@@ -143,7 +175,7 @@ def chat(
         answer=answer,
         is_answered_by_bot=is_bot_answered,
         is_resolved=is_bot_answered,
-        source_channel=body.source_channel or "web",
+        source_channel=source,
         bot_id=bot.id
     )
     db.add(conversation)

@@ -8,6 +8,7 @@ import {
   FileText,
   Clock,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { BotDocument, BotItem } from "../../types/bot";
 import {
   createBot,
@@ -33,7 +34,8 @@ import { BotFileIcon } from "./BotFileIcon";
 interface BotFormProps {
   existing?: BotItem;
   onBack: () => void;
-  onSaveSuccess: () => void;
+  /** Called after save/delete. leave=true returns to list (e.g. after delete). */
+  onSaveSuccess: (options?: { leave?: boolean }) => void;
   /** Inline notice when redirected here (e.g. inactive bot can't chat yet) */
   statusNotice?: string | null;
   onDismissNotice?: () => void;
@@ -56,6 +58,7 @@ export default function BotForm({
   statusNotice,
   onDismissNotice,
 }: BotFormProps) {
+  const [currentBot, setCurrentBot] = useState<BotItem | undefined>(existing);
   const [activeTab, setActiveTab] = useState<"general" | "knowledge">(
     existing ? "general" : "knowledge"
   );
@@ -72,8 +75,9 @@ export default function BotForm({
   const [botStatus, setBotStatus] = useState<string>(
     existing?.status || "inactive"
   );
+  const prevStatusRef = useRef<string>(existing?.status || "inactive");
 
-  const isNewBot = !existing;
+  const isNewBot = !currentBot;
   const isProcessing = botStatus === "processing";
   const canCreate = !!name.trim() && docs.length > 0;
   const canSave =
@@ -83,27 +87,27 @@ export default function BotForm({
     (isNewBot ? canCreate : !!name.trim());
 
   const fetchDocs = useCallback(async () => {
-    if (!existing?.bot_id) return;
+    if (!currentBot?.bot_id) return;
     try {
-      const data = await fetchBotDocuments(existing.bot_id);
+      const data = await fetchBotDocuments(currentBot.bot_id);
       setDocs(data);
     } catch (error) {
       console.error("Failed to fetch documents", error);
     }
-  }, [existing?.bot_id]);
+  }, [currentBot?.bot_id]);
 
   useEffect(() => {
-    if (existing) fetchDocs();
-  }, [existing, fetchDocs]);
+    if (currentBot) fetchDocs();
+  }, [currentBot, fetchDocs]);
 
   // Sync status from server on mount / when editing existing bot
   useEffect(() => {
-    if (!existing?.bot_id) return;
+    if (!currentBot?.bot_id) return;
     let cancelled = false;
 
     const sync = async () => {
       try {
-        const data = await fetchBot(existing.bot_id);
+        const data = await fetchBot(currentBot.bot_id);
         if (!cancelled) setBotStatus(data.status);
       } catch (error) {
         console.error("Initial status sync error:", error);
@@ -113,15 +117,15 @@ export default function BotForm({
     return () => {
       cancelled = true;
     };
-  }, [existing?.bot_id]);
+  }, [currentBot?.bot_id]);
 
   useEffect(() => {
-    if (!existing?.bot_id) return;
+    if (!currentBot?.bot_id) return;
     if (botStatus !== "processing") return;
 
     const checkBotStatus = async () => {
       try {
-        const data = await fetchBot(existing.bot_id);
+        const data = await fetchBot(currentBot.bot_id);
         setBotStatus(data.status);
         if (data.status !== "processing") {
           fetchDocs();
@@ -131,11 +135,25 @@ export default function BotForm({
       }
     };
 
-    // poll immediately once, then every 2s
     checkBotStatus();
     const interval = setInterval(checkBotStatus, 2000);
     return () => clearInterval(interval);
-  }, [existing?.bot_id, botStatus, fetchDocs]);
+  }, [currentBot?.bot_id, botStatus, fetchDocs]);
+
+  // Toast when ingest finishes
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    if (prev === "processing" && botStatus === "active") {
+      toast.success("บอทพร้อมใช้งานแล้ว", {
+        description: "ฐานความรู้ประมวลผลเสร็จ สามารถเข้าแชทได้",
+      });
+    } else if (prev === "processing" && botStatus === "inactive") {
+      toast.error("ประมวลผลเอกสารไม่สำเร็จ", {
+        description: "บอทยังไม่พร้อมใช้งาน — ตรวจสอบเอกสารแล้วลองใหม่",
+      });
+    }
+    prevStatusRef.current = botStatus;
+  }, [botStatus]);
 
   const filteredDocs = docs.filter((d) =>
     d.filename.toLowerCase().includes(docSearch.toLowerCase())
@@ -164,27 +182,36 @@ export default function BotForm({
         system_prompt: systemPrompt.trim(),
       };
 
-      const savedBot = existing
-        ? await updateBot(existing.bot_id, payload)
+      const wasNew = !currentBot;
+      const savedBot = currentBot
+        ? await updateBot(currentBot.bot_id, payload)
         : await createBot(payload);
 
-      if (!existing && docs.length > 0) {
+      if (wasNew && docs.length > 0) {
         for (const doc of docs) {
           await assignDocumentToBot(doc.id, savedBot.bot_id);
         }
+        setCurrentBot(savedBot);
         setBotStatus("processing");
+        prevStatusRef.current = "processing";
+        toast.success("สร้างบอทแล้ว", {
+          description: "กำลังประมวลผลเอกสาร — อยู่หน้านี้จนกว่าจะพร้อมใช้งาน",
+        });
+      } else {
+        setCurrentBot(savedBot);
+        toast.success("บันทึกการตั้งค่าเรียบร้อย");
       }
-      onSaveSuccess();
+      onSaveSuccess({ leave: false });
     } catch (error) {
       console.error("Save bot error:", error);
-      alert(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
+      toast.error(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteBot = async () => {
-    if (!existing?.bot_id) return;
+    if (!currentBot?.bot_id) return;
     if (
       !window.confirm(
         "คุณแน่ใจหรือไม่ว่าต้องการลบบอทนี้? ข้อมูลและเอกสารจะถูกลบทั้งหมด"
@@ -193,11 +220,12 @@ export default function BotForm({
       return;
 
     try {
-      await deleteBot(existing.bot_id);
-      onSaveSuccess();
+      await deleteBot(currentBot.bot_id);
+      toast.success("ลบบอทเรียบร้อย");
+      onSaveSuccess({ leave: true });
     } catch (error) {
       console.error("Delete bot error:", error);
-      alert(error instanceof Error ? error.message : "ลบบอทไม่สำเร็จ");
+      toast.error(error instanceof Error ? error.message : "ลบบอทไม่สำเร็จ");
     }
   };
 
@@ -212,25 +240,32 @@ export default function BotForm({
     for (const file of Array.from(files)) {
       const validationError = isAllowedDocFile(file);
       if (validationError) {
-        alert(validationError);
+        toast.error(validationError);
         continue;
       }
 
       try {
         const docData = await uploadDocument(file);
 
-        if (existing?.bot_id) {
-          await assignDocumentToBot(docData.id, existing.bot_id);
+        if (currentBot?.bot_id) {
+          await assignDocumentToBot(docData.id, currentBot.bot_id);
           assignedAny = true;
+          toast.success(`อัปโหลด ${file.name} แล้ว`, {
+            description: "กำลังประมวลผลเข้าฐานความรู้",
+          });
         } else {
           setDocs((prev) => {
-            if (prev.some((d) => d.id === docData.id)) return prev;
+            if (prev.some((d) => d.id === docData.id)) {
+              toast.message(`ใช้ไฟล์ที่มีอยู่แล้ว: ${file.name}`);
+              return prev;
+            }
             return [...prev, docData];
           });
+          toast.success(`เพิ่มไฟล์ ${file.name}`);
         }
       } catch (error) {
         console.error("File processing error", error);
-        alert(
+        toast.error(
           error instanceof Error
             ? error.message
             : `อัปโหลดไฟล์ ${file.name} ไม่สำเร็จ`
@@ -238,8 +273,9 @@ export default function BotForm({
       }
     }
 
-    if (existing?.bot_id && assignedAny) {
+    if (currentBot?.bot_id && assignedAny) {
       setBotStatus("processing");
+      prevStatusRef.current = "processing";
       await fetchDocs();
     }
     setIsUploading(false);
@@ -264,7 +300,7 @@ export default function BotForm({
       setDocs((prev) => prev.filter((d) => d.id !== docId));
       return;
     }
-    if (!existing?.bot_id) return;
+    if (!currentBot?.bot_id) return;
     if (
       !window.confirm(
         "คุณต้องการลบเอกสารนี้ออกจากระบบอย่างถาวรใช่หรือไม่?"
@@ -274,9 +310,13 @@ export default function BotForm({
 
     try {
       await deleteDocument(docId);
+      toast.success("ลบเอกสารเรียบร้อย");
       fetchDocs();
     } catch (error) {
       console.error("Delete doc error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "ลบเอกสารไม่สำเร็จ"
+      );
     }
   };
 
@@ -284,7 +324,7 @@ export default function BotForm({
     if (isSaving) return "กำลังบันทึก...";
     if (isProcessing) return "กำลังประมวลผลเอกสาร...";
     if (isUploading) return "กำลังอัปโหลด...";
-    if (existing) return "บันทึกการตั้งค่า";
+    if (currentBot) return "บันทึกการตั้งค่า";
     return "สร้างบอท";
   };
 
@@ -350,9 +390,9 @@ export default function BotForm({
               {name || "บอทใหม่ยังไม่มีชื่อ"}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              ID: {existing?.bot_id ?? "จะถูกสร้างอัตโนมัติ"}
+              ID: {currentBot?.bot_id ?? "จะถูกสร้างอัตโนมัติ"}
             </p>
-            {existing && <BotStatusBadge status={botStatus} />}
+            {currentBot && <BotStatusBadge status={botStatus} />}
           </div>
         </div>
 
@@ -460,7 +500,7 @@ export default function BotForm({
               </div>
             )}
 
-            {existing && (
+            {currentBot && (
               <div className="pt-8 mt-6 border-t border-red-100 flex flex-col items-center">
                 <button
                   onClick={handleDeleteBot}

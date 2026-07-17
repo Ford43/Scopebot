@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useChatSession } from "../../hooks/useChatSession";
-import { useNotifications } from "../../hooks/useNotifications";
+import {
+  resolveNotificationView,
+  useNotifications,
+} from "../../hooks/useNotifications";
 import type { ActiveView } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
 import Dashboard from "../admin/Dashboard";
@@ -172,36 +175,45 @@ export default function ChatInterface() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {activeView !== "chat" && (
-          <ChatTopBar
-            activeView={activeView}
-            userName={user?.name}
-            userEmail={user?.email}
-            isAdmin={isAdmin}
-            isSupport={isSupport}
-            unreadNotifs={unreadNotifs}
-            notifications={notifications}
-            onMarkRead={markRead}
-            onMarkAllRead={markAllRead}
-            onSearch={(query) => {
-              setGlobalSearchQuery(query);
-              if (isAdmin || isSupport) {
-                if (activeView === "user-management") {
-                  setActiveView("user-management");
-                } else if (activeView === "bots") {
-                  setActiveView("bots");
-                } else {
-                  setActiveView("search-history");
-                }
+        <ChatTopBar
+          activeView={activeView}
+          userName={user?.name}
+          userEmail={user?.email}
+          isAdmin={isAdmin}
+          isSupport={isSupport}
+          unreadNotifs={unreadNotifs}
+          notifications={notifications}
+          hideSearch={activeView === "chat"}
+          onMarkRead={markRead}
+          onMarkAllRead={markAllRead}
+          onNotificationClick={(n) => {
+            const target = resolveNotificationView(n);
+            if (target === "unified-chat" && (isAdmin || isSupport)) {
+              setActiveView("unified-chat");
+            } else if (target === "dashboard" && isAdmin) {
+              setActiveView("dashboard");
+            } else {
+              setActiveView("bots");
+            }
+          }}
+          onSearch={(query) => {
+            setGlobalSearchQuery(query);
+            if (isAdmin || isSupport) {
+              if (activeView === "user-management") {
+                setActiveView("user-management");
+              } else if (activeView === "bots") {
+                setActiveView("bots");
               } else {
-                setHistorySearchQuery(query);
-                setShowHistoryDrawer(true);
+                setActiveView("search-history");
               }
-            }}
-            onNavigateBots={() => setActiveView("bots")}
-            onLogout={handleLogout}
-          />
-        )}
+            } else {
+              setHistorySearchQuery(query);
+              setShowHistoryDrawer(true);
+            }
+          }}
+          onNavigateBots={() => setActiveView("bots")}
+          onLogout={handleLogout}
+        />
         <main
           className={`flex-1 ${activeView === "chat" || activeView === "bots" ? "overflow-y-auto" : "overflow-y-auto p-6"}`}
         >

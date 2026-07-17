@@ -26,8 +26,11 @@ interface ChatTopBarProps {
   onSearch: (query: string) => void;
   onMarkRead: (id: number) => void;
   onMarkAllRead: () => void;
+  onNotificationClick?: (notification: AppNotification) => void;
   onNavigateBots: () => void;
   onLogout: () => void;
+  /** Hide search field (e.g. on chat view) */
+  hideSearch?: boolean;
 }
 
 function timeAgo(dateStr: string): string {
@@ -53,8 +56,10 @@ export default function ChatTopBar({
   onSearch,
   onMarkRead,
   onMarkAllRead,
+  onNotificationClick,
   onNavigateBots,
   onLogout,
+  hideSearch = false,
 }: ChatTopBarProps) {
   const [topSearch, setTopSearch] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -81,22 +86,24 @@ export default function ChatTopBar({
             {VIEW_LABELS[activeView]}
           </span>
         </p>
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            value={topSearch}
-            onChange={(e) => setTopSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submitSearch();
-              }
-            }}
-            placeholder={searchPlaceholder}
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-          />
-        </div>
+        {!hideSearch && (
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              value={topSearch}
+              onChange={(e) => setTopSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitSearch();
+                }
+              }}
+              placeholder={searchPlaceholder}
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 ml-4">
@@ -152,6 +159,8 @@ export default function ChatTopBar({
                         type="button"
                         onClick={() => {
                           if (!n.is_read) onMarkRead(n.id);
+                          setShowNotifs(false);
+                          onNotificationClick?.(n);
                         }}
                         className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-amber-50/60 transition-colors ${
                           n.is_read ? "bg-white" : "bg-amber-50/40"
