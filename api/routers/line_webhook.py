@@ -2,6 +2,8 @@ import hashlib
 import hmac
 import base64
 import json
+import urllib.error
+import urllib.request
 from fastapi import APIRouter, Request, HTTPException
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
@@ -13,6 +15,34 @@ from api import models
 from rag.rag_pipeline import ask_rag
 
 router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
+
+# แสดง loading ระหว่าง RAG (ต้องเป็นพหุคูณของ 5, สูงสุด 60)
+RAG_LOADING_SECONDS = 20
+
+
+def _show_line_loading(access_token: str, chat_id: str, loading_seconds: int = RAG_LOADING_SECONDS) -> None:
+    """แสดง loading animation ในแชท 1:1 จนกว่าบอทจะตอบหรือหมดเวลา"""
+    if not access_token or not chat_id:
+        return
+    seconds = max(5, min(60, (int(loading_seconds) // 5) * 5))
+    payload = json.dumps({
+        "chatId": chat_id,
+        "loadingSeconds": seconds,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.line.me/v2/bot/chat/loading/start",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            resp.read()
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+        print(f"[LINE] show loading failed: {e}")
 
 # ข้อความ Flex ปุ่มติดต่อเจ้าหน้าที่
 CONTACT_FLEX = {
@@ -248,6 +278,9 @@ async def line_webhook(bot_id: str, request: Request):
                     continue
 
                 # ---- RAG (+ ประวัติ session) ----
+                # แสดง loading ก่อนคิดคำตอบ เพื่อไม่ให้ดูเหมือนบอทค้าง
+                _show_line_loading(bot.line_channel_token, line_user_id)
+
                 prior_rows = (
                     db.query(models.Conversation)
                     .filter(
