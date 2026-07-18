@@ -7,7 +7,7 @@ import urllib.request
 from fastapi import APIRouter, Request, HTTPException
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
-    ReplyMessageRequest, TextMessage,
+    ReplyMessageRequest, PushMessageRequest, TextMessage,
     FlexMessage, FlexContainer
 )
 from api.database import SessionLocal
@@ -18,10 +18,11 @@ router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
 
 # แสดง loading ระหว่าง RAG (ต้องเป็นพหุคูณของ 5, สูงสุด 60)
 RAG_LOADING_SECONDS = 20
+RAG_WAIT_TEXT = "กำลังหาข้อมูล ..."
 
 
 def _show_line_loading(access_token: str, chat_id: str, loading_seconds: int = RAG_LOADING_SECONDS) -> None:
-    """แสดง loading animation ในแชท 1:1 จนกว่าบอทจะตอบหรือหมดเวลา"""
+    """แสดง loading animation ในแชท 1:1 (เห็นเฉพาะตอนเปิดหน้าแชท OA)"""
     if not access_token or not chat_id:
         return
     seconds = max(5, min(60, (int(loading_seconds) // 5) * 5))
@@ -41,7 +42,10 @@ def _show_line_loading(access_token: str, chat_id: str, loading_seconds: int = R
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
             resp.read()
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[LINE] show loading failed: HTTP {e.code} {body}")
+    except (urllib.error.URLError, TimeoutError) as e:
         print(f"[LINE] show loading failed: {e}")
 
 # ข้อความ Flex ปุ่มติดต่อเจ้าหน้าที่
@@ -278,8 +282,15 @@ async def line_webhook(bot_id: str, request: Request):
                     continue
 
                 # ---- RAG (+ ประวัติ session) ----
-                # แสดง loading ก่อนคิดคำตอบ เพื่อไม่ให้ดูเหมือนบอทค้าง
+                # ตอบทันทีว่ากำลังค้น + ลองแสดง loading animation
+                # (ไอคอน loading ของ LINE เห็นเฉพาะตอนเปิดหน้าแชท และบางเครื่องแทบไม่โชว์)
                 _show_line_loading(bot.line_channel_token, line_user_id)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=reply_token,
+                        messages=[TextMessage(text=RAG_WAIT_TEXT)]
+                    )
+                )
 
                 prior_rows = (
                     db.query(models.Conversation)
@@ -326,18 +337,17 @@ async def line_webhook(bot_id: str, request: Request):
                 db.commit()
 
                 if is_bot_answered:
-                    # Bot ตอบได้ → ส่งคำตอบปกติ
-                    line_bot_api.reply_message(
-                        ReplyMessageRequest(
-                            reply_token=reply_token,
+                    # reply_token ใช้ไปแล้ว → ส่งคำตอบด้วย push
+                    line_bot_api.push_message(
+                        PushMessageRequest(
+                            to=line_user_id,
                             messages=[TextMessage(text=answer)]
                         )
                     )
                 else:
-                    # Bot ตอบไม่ได้ → ส่ง Flex Message ปุ่มติดต่อเจ้าหน้าที่
-                    line_bot_api.reply_message(
-                        ReplyMessageRequest(
-                            reply_token=reply_token,
+                    line_bot_api.push_message(
+                        PushMessageRequest(
+                            to=line_user_id,
                             messages=[
                                 FlexMessage(
                                     alt_text="ไม่พบข้อมูล — ติดต่อเจ้าหน้าที่",
