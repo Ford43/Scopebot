@@ -13,11 +13,12 @@ import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
 import UserManagement from "../admin/UserManagement";
 import BotsPage from "./BotsPage";
+import AuditLogPage from "../admin/AuditLogs";
 
 /* ─────────────── Types ─────────────── */
 type ActiveView =
   | "dashboard" | "unified-chat"
-  | "search-history" | "integration" | "chat" | "bots" | "user-management" ;
+  | "search-history" | "integration" | "chat" | "bots" | "user-management"  | "audit" ;
 
 interface Message {
   id: string;
@@ -64,6 +65,7 @@ const viewLabels: Record<ActiveView, string> = {
   chat:             "แชท",
   bots:             "บอท",
   "user-management": "จัดการผู้ใช้งาน",
+  audit: "Audit Logs",
 };
 
 function groupByDate(items: HistoryItem[]) {
@@ -303,6 +305,7 @@ export default function ChatInterface() {
     { id: "user-management" as ActiveView, label: "จัดการผู้ใช้งาน",  icon: User },
     { id: "search-history"  as ActiveView, label: "ประวัติการค้นหา",  icon: History },
     { id: "integration"     as ActiveView, label: "การเชื่อมต่อ",      icon: Puzzle },
+    { id: "audit" as ActiveView, label: "Audit Logs", icon: History },
   ];
 
   const supportMenuItems = [
@@ -314,8 +317,9 @@ export default function ChatInterface() {
       case "dashboard":      return <Dashboard />;
       case "unified-chat":   return <UnifiedChat />;
       case "search-history": return <SearchHistory />;
-      case "integration":    return <Integration />;
+      case "integration":    return <Integration botId={activeBot?.bot_id} />;
       case "user-management": return <UserManagement/>;
+      case "audit": return <AuditLogPage />;
       case "bots":           
         return (
           <BotsPage 

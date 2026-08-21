@@ -14,6 +14,7 @@ import {
   Brain,
   Bell,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -22,7 +23,9 @@ const menuItems = [
   { id: "chat",           label: "Unified Chat",         path: "/unified-chat",   icon: MessageSquare,  badge: true },
   { id: "documents",      label: "Documents",            path: "/documents",      icon: FileText },
   { id: "search-history", label: "ประวัติการค้นหา",     path: "/search-history", icon: History },
+  {id: "audit",label: "Audit Logs",path: "/admin/audit-logs",icon: History,},
   { id: "integration",    label: "Integration",          path: "/integration",    icon: Puzzle },
+
 ];
 
 export default function AdminLayout() {

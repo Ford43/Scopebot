@@ -38,4 +38,6 @@ ngrok
 Thumbs.db
 
 # Logs
-*.log
+*.logsrc/**/__pycache__/
+src/**/*.py
+scopebot.db

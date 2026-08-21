@@ -11,61 +11,63 @@ def build_context(docs):
         parts.append(f"[เอกสารที่ {i}]\n{doc.page_content.strip()}")
     return "\n\n".join(parts)
 
-# 1. เพิ่มพารามิเตอร์ user_system_prompt ในวงเล็บ
-def ask_rag(question: str, bot_id: str, user_system_prompt: str = None) -> str:
+
+def ask_rag(question: str, bot_id: str) -> str:
     # ดึง docs ที่เกี่ยวข้อง
     docs = retrieve_docs(question, bot_id)
 
-    # 🟢 แก้ไขจุดที่ 1: ถ้าไม่พบเอกสารเลย ให้ส่ง Signal โอนสาย
+    # ถ้าไม่มี docs → ตอบว่าไม่พบข้อมูล (ไม่ใช่ REQUIRE_HUMAN_HANDOFF)
     if not docs:
-        return "REQUIRE_HUMAN_HANDOFF"
+        return "ไม่พบข้อมูล"
 
     context = build_context(docs)
 
     if DEBUG:
         print(f"\n[DEBUG] Question: {question}")
-        print(f"[DEBUG] Context:\n {context[:500]}...")
+        print(f"[DEBUG] Context:\n{context[:500]}...")
 
-    prompt = f"""ข้อมูลอ้างอิง:
+    prompt = f"""อ่าน context ด้านล่างนี้อย่างละเอียด แล้วตอบคำถามโดยใช้ข้อมูลจาก context เท่านั้น
+
+=== context ===
 {context}
+=== จบ context ===
 
 คำถาม: {question}
 
-คำตอบ:"""
+คำแนะนำ: ถ้า context มีการระบุลำดับหรือรายการ ให้ตอบตามลำดับนั้นเลย อย่าสลับหรือเพิ่มเติม
 
-    # 2. สร้าง Hybrid Prompt ตรงนี้
-    final_system_prompt = SYSTEM_PROMPT
-    if user_system_prompt and user_system_prompt.strip() != "":
-        final_system_prompt += f"\n\nคำสั่งเพิ่มเติมเกี่ยวกับบทบาทและพฤติกรรมของคุณ:\n{user_system_prompt}"
+คำตอบ:"""
 
     try:
         response = ollama.chat(
             model=MODEL_NAME,
             messages=[
-                # 3. เปลี่ยนจาก SYSTEM_PROMPT เป็น final_system_prompt
-                {"role": "system", "content": final_system_prompt},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
             ],
             options={
-                "temperature": 0.0, 
-                "top_p": 0.9,
+                "temperature": 0.0,
+                "top_p": 0.8,
                 "repeat_penalty": 1.1,
-                "seed": 42,          
-                "num_predict": 512,   
+                "seed": 42,
+                "num_predict": 512,
             }
         )
         answer = response["message"]["content"].strip()
 
         if DEBUG:
-            print(f"[DEBUG] System Prompt:\n {final_system_prompt}") # ลองปริ้นท์ดูเพื่อความชัวร์
-            print(f"[DEBUG] Answer:\n {answer}")
+            print(f"[DEBUG] Answer:\n{answer}")
 
-        # 🟢 แก้ไขจุดที่ 2: ตรวจสอบคำตอบของ LLM ว่าตอบไม่ได้หรือไม่
-        if not answer or "ไม่พบข้อมูล" in answer:
-            return "REQUIRE_HUMAN_HANDOFF"
+        # ถ้า LLM ตอบว่าไม่รู้ในรูปแบบต่างๆ → normalize เป็น "ไม่พบข้อมูล"
+        no_answer_phrases = [
+            "ไม่พบข้อมูล", "ไม่มีข้อมูล", "ไม่ทราบ",
+            "not found", "no information", "i don't know"
+        ]
+        if any(phrase in answer.lower() for phrase in no_answer_phrases):
+            return "ไม่พบข้อมูล"
 
-        return answer
+        return answer if answer else "ไม่พบข้อมูล"
 
     except Exception as e:
-        print(f"LLM error: {e}")
+        print(f"❌ LLM error: {e}")
         return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"

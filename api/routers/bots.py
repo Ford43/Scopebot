@@ -2,10 +2,12 @@ import os
 import uuid
 import time
 import shutil
+import json
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from api.routers.auth import write_audit_log
 
 router = APIRouter(prefix="/api/bots", tags=["Bots"])
 
@@ -14,7 +16,6 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
 
 
 def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
-    """Helper: ดึง bot และเช็คว่าเป็นของ user คนนี้"""
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id_str).first()
     if not bot:
         raise HTTPException(status_code=404, detail="ไม่พบ Bot")
@@ -23,24 +24,36 @@ def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
     return bot
 
 
+def _force_delete_folder(folder_path: str):
+    """ลบโฟลเดอร์พร้อม retry สำหรับ Windows"""
+    if not os.path.exists(folder_path):
+        return
+    for attempt in range(3):
+        try:
+            shutil.rmtree(folder_path)
+            break
+        except PermissionError:
+            time.sleep(1)
+        except Exception as e:
+            print(f"Error deleting {folder_path}: {e}")
+            break
+
+
 # =====================
 # CRUD Bot
 # =====================
 @router.post("/", response_model=schemas.BotOut)
 def create_bot(
     body: schemas.BotCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
-    # เช็คจำนวน Bot ที่มีอยู่
     bot_count = db.query(models.Bot).filter(models.Bot.owner_id == current_user.id).count()
     if bot_count >= current_user.max_bots:
         raise HTTPException(status_code=400, detail=f"ถึงจำนวนสูงสุดแล้ว ({current_user.max_bots} Bot)")
 
-    # สร้าง bot_id แบบ unique (ใช้เป็นชื่อโฟลเดอร์ด้วย)
     bot_id_str = f"bot_{uuid.uuid4().hex[:8]}"
-
-    # สร้างโฟลเดอร์สำหรับเก็บเอกสาร
     os.makedirs(os.path.join(UPLOAD_BASE, bot_id_str), exist_ok=True)
 
     bot = models.Bot(
@@ -53,6 +66,16 @@ def create_bot(
     db.add(bot)
     db.commit()
     db.refresh(bot)
+
+    write_audit_log(
+        db=db, user=current_user,
+        action="create_bot",
+        target_type="bot",
+        target_id=bot_id_str,
+        detail={"bot_name": body.name},
+        ip=request.client.host
+    )
+
     return bot
 
 
@@ -79,62 +102,60 @@ def get_bot(
 def update_bot(
     bot_id: str,
     body: schemas.BotUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
+    changes = {}
     for field, value in body.dict(exclude_unset=True).items():
-        setattr(bot, field, value)
+        old_val = getattr(bot, field, None)
+        if old_val != value:
+            # ไม่เก็บ token/secret ลง log
+            if "token" not in field and "secret" not in field:
+                changes[field] = {"before": str(old_val), "after": str(value)}
+            setattr(bot, field, value)
+
     db.commit()
     db.refresh(bot)
+
+    write_audit_log(
+        db=db, user=current_user,
+        action="update_bot",
+        target_type="bot",
+        target_id=bot_id,
+        detail={"bot_name": bot.name, "changes": changes},
+        ip=request.client.host
+    )
+
     return bot
 
 
 @router.delete("/{bot_id}")
 def delete_bot(
     bot_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
-
-    # ลบโฟลเดอร์เอกสาร
-    folder = os.path.join(UPLOAD_BASE, bot_id)
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
-
-    # ลบ vector DB
-    vdb = os.path.join("vector_db", bot_id)
-    if os.path.exists(vdb):
-        shutil.rmtree(vdb)
+    bot_name = bot.name
 
     db.delete(bot)
     db.commit()
-    # 1. สร้างฟังก์ชันย่อยสำหรับบังคับลบโฟลเดอร์พร้อม retry
-    def force_delete_folder(folder_path):
-        if not os.path.exists(folder_path):
-            return
-            
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                shutil.rmtree(folder_path)
-                print(f"Deleted folder: {folder_path}")
-                break # ลบสำเร็จ ออกจาก loop
-            except PermissionError as e:
-                print(f"Attempt {attempt + 1}: Cannot delete {folder_path} yet ({e}). Waiting...")
-                time.sleep(1) # รอ 1 วินาทีแล้วลองใหม่
-            except Exception as e:
-                print(f"Error deleting {folder_path}: {e}")
-                break
 
-    # 2. ทำการลบโฟลเดอร์ Data
-    bot_data_dir = os.path.join("data", bot_id)
-    force_delete_folder(bot_data_dir)
+    # ลบโฟลเดอร์ (ครั้งเดียว ด้วย retry)
+    _force_delete_folder(os.path.join("data", bot_id))
+    _force_delete_folder(os.path.join("vector_db", bot_id))
 
-    # 3. ทำการลบโฟลเดอร์ Vector DB
-    vdb = os.path.join("vector_db", bot_id)
-    force_delete_folder(vdb)
+    write_audit_log(
+        db=db, user=current_user,
+        action="delete_bot",
+        target_type="bot",
+        target_id=bot_id,
+        detail={"bot_name": bot_name},
+        ip=request.client.host
+    )
 
     return {"message": "ลบบอทสำเร็จ"}
 
@@ -155,22 +176,44 @@ def list_documents(
 @router.post("/{bot_id}/toggle-line")
 def toggle_line(
     bot_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     bot.is_line_connected = not bot.is_line_connected
     db.commit()
+
+    write_audit_log(
+        db=db, user=current_user,
+        action="toggle_line",
+        target_type="bot",
+        target_id=bot_id,
+        detail={"bot_name": bot.name, "is_line_connected": bot.is_line_connected},
+        ip=request.client.host
+    )
+
     return {"is_line_connected": bot.is_line_connected}
 
 
 @router.post("/{bot_id}/toggle-web")
 def toggle_web(
     bot_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     bot.is_web_connected = not bot.is_web_connected
     db.commit()
+
+    write_audit_log(
+        db=db, user=current_user,
+        action="toggle_web",
+        target_type="bot",
+        target_id=bot_id,
+        detail={"bot_name": bot.name, "is_web_connected": bot.is_web_connected},
+        ip=request.client.host
+    )
+
     return {"is_web_connected": bot.is_web_connected}

@@ -7,9 +7,10 @@ from api.routers import documents
 from api.routers import notifications 
 from api.routers import dashboard  
 from api.routers import live_chat
+from api.routers import system
+from api.routers import bot_settings
 
-# สร้าง table ทั้งหมดอัตโนมัติตอน startup
-Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
     title="Scope Bot API",
@@ -35,6 +36,8 @@ app.include_router(documents.router)
 app.include_router(notifications.router)
 app.include_router(dashboard.router)
 app.include_router(live_chat.router)
+app.include_router(system.router)
+app.include_router(bot_settings.router)
 
 @app.get("/")
 def root():

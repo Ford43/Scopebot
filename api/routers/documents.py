@@ -1,9 +1,11 @@
 import os
+import hashlib
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
+from api.routers.auth import write_audit_log
 from rag.ingest import ingest
 
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
@@ -12,13 +14,14 @@ UPLOAD_BASE = "data/library"
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
 
 
+def _get_file_hash(content: bytes) -> str:
+    """คำนวณ MD5 hash ของไฟล์ — ใช้ตรวจ duplicate"""
+    return hashlib.md5(content).hexdigest()
+
+
 def _create_notification(db: Session, user_id: int, title: str, message: str, type: str = "info"):
-    """Helper สร้าง notification"""
     notif = models.Notification(
-        user_id=user_id,
-        title=title,
-        message=message,
-        type=type
+        user_id=user_id, title=title, message=message, type=type
     )
     db.add(notif)
     db.commit()
@@ -30,26 +33,37 @@ def _create_notification(db: Session, user_id: int, title: str, message: str, ty
 @router.post("/upload", response_model=schemas.DocumentOut)
 async def upload_document(
     background_tasks: BackgroundTasks,
+    request: Request,
     file: UploadFile = File(...),
     category: str = "ทั่วไป",
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
-    # เช็คนามสกุลไฟล์
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"ไฟล์ประเภท {ext} ไม่รองรับ")
 
+    content = await file.read()
+
+    # ✅ Duplicate Detection — เช็ค hash ก่อน upload
+    file_hash = _get_file_hash(content)
+    existing_hash = db.query(models.Document).filter(
+        models.Document.file_hash == file_hash,
+        models.Document.owner_id == current_user.id
+    ).first()
+    if existing_hash:
+        raise HTTPException(
+            status_code=400,
+            detail=f"ไฟล์นี้ซ้ำกับ '{existing_hash.filename}' ที่มีอยู่แล้ว"
+        )
+
     # เช็คชื่อไฟล์ซ้ำ
-    existing = db.query(models.Document).filter(
+    existing_name = db.query(models.Document).filter(
         models.Document.filename == file.filename,
         models.Document.owner_id == current_user.id
     ).first()
-
-    if existing:
-        # หากมีไฟล์ชื่อนี้อยู่แล้วใน Library ของ User คนนี้
-        # ให้ส่งข้อมูลไฟล์เดิมกลับไปเลย โดยไม่ต้องบันทึกใหม่และไม่เกิด Error
-        return existing 
+    if existing_name:
+        raise HTTPException(status_code=400, detail=f"มีไฟล์ชื่อ {file.filename} อยู่แล้ว")
 
     # บันทึกไฟล์
     folder = os.path.join(UPLOAD_BASE, str(current_user.id))
@@ -57,14 +71,13 @@ async def upload_document(
     file_path = os.path.join(folder, file.filename)
 
     with open(file_path, "wb") as f:
-        content = await file.read()
         f.write(content)
 
-    # บันทึก metadata
     doc = models.Document(
         filename=file.filename,
         file_path=file_path,
         file_size=len(content),
+        file_hash=file_hash,
         category=category,
         owner_id=current_user.id
     )
@@ -72,7 +85,16 @@ async def upload_document(
     db.commit()
     db.refresh(doc)
 
-    # แจ้งเตือน
+    # Audit Log
+    write_audit_log(
+        db=db, user=current_user,
+        action="upload_document",
+        target_type="document",
+        target_id=str(doc.id),
+        detail={"filename": file.filename, "category": category, "size": len(content)},
+        ip=request.client.host
+    )
+
     background_tasks.add_task(
         _create_notification, db, current_user.id,
         "อัปโหลดเอกสารสำเร็จ",
@@ -84,7 +106,7 @@ async def upload_document(
 
 
 # =====================
-# ดูเอกสารทั้งหมดของตัวเอง
+# ดูเอกสารทั้งหมด
 # =====================
 @router.get("/", response_model=list[schemas.DocumentOut])
 def list_documents(
@@ -101,7 +123,7 @@ def list_documents(
 
 
 # =====================
-# ดู categories ทั้งหมด
+# ดู Categories
 # =====================
 @router.get("/categories")
 def list_categories(
@@ -115,12 +137,13 @@ def list_categories(
 
 
 # =====================
-# แก้ไข category เอกสาร
+# แก้ไข category
 # =====================
 @router.patch("/{doc_id}", response_model=schemas.DocumentOut)
 def update_document(
     doc_id: int,
     body: schemas.DocumentUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
@@ -131,19 +154,31 @@ def update_document(
     if not doc:
         raise HTTPException(status_code=404, detail="ไม่พบเอกสาร")
 
+    old_category = doc.category
     if body.category is not None:
         doc.category = body.category
     db.commit()
     db.refresh(doc)
+
+    write_audit_log(
+        db=db, user=current_user,
+        action="update_document",
+        target_type="document",
+        target_id=str(doc_id),
+        detail={"filename": doc.filename, "category": {"before": old_category, "after": doc.category}},
+        ip=request.client.host
+    )
+
     return doc
 
 
 # =====================
-# ลบเอกสาร (พร้อมแจ้งเตือน)
+# ลบเอกสาร
 # =====================
 @router.delete("/{doc_id}")
 def delete_document(
     doc_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
@@ -154,19 +189,25 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="ไม่พบเอกสาร")
 
-    # เช็คว่าเอกสารนี้ถูกใช้โดย Bot กี่ตัว
     bot_count = len(doc.bots)
     bot_names = [b.name for b in doc.bots]
+    filename = doc.filename
 
-    # ลบไฟล์จริง
     if os.path.exists(doc.file_path):
         os.remove(doc.file_path)
 
-    filename = doc.filename
     db.delete(doc)
     db.commit()
 
-    # แจ้งเตือน
+    write_audit_log(
+        db=db, user=current_user,
+        action="delete_document",
+        target_type="document",
+        target_id=str(doc_id),
+        detail={"filename": filename, "affected_bots": bot_names},
+        ip=request.client.host
+    )
+
     if bot_count > 0:
         _create_notification(
             db, current_user.id,
@@ -182,20 +223,18 @@ def delete_document(
             "info"
         )
 
-    return {
-        "message": f"ลบ '{filename}' สำเร็จ",
-        "affected_bots": bot_names
-    }
+    return {"message": f"ลบ '{filename}' สำเร็จ", "affected_bots": bot_names}
 
 
 # =====================
-# กำหนดเอกสารให้ Bot
+# Assign เอกสารให้ Bot
 # =====================
 @router.post("/{doc_id}/assign/{bot_id}")
 def assign_to_bot(
     doc_id: int,
     bot_id: str,
     background_tasks: BackgroundTasks,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
@@ -213,34 +252,43 @@ def assign_to_bot(
     if not bot:
         raise HTTPException(status_code=404, detail="ไม่พบ Bot")
 
-    # เช็คว่า assign แล้วหรือยัง
     if doc in bot.documents:
         raise HTTPException(status_code=400, detail="เอกสารนี้ถูก assign ให้ Bot นี้แล้ว")
 
-    # copy ไฟล์ไปยังโฟลเดอร์ของ Bot
+    # copy ไฟล์ไปยังโฟลเดอร์ Bot
     bot_folder = os.path.join("data", bot_id)
     os.makedirs(bot_folder, exist_ok=True)
     dest_path = os.path.join(bot_folder, doc.filename)
     shutil.copy2(doc.file_path, dest_path)
 
-    # เชื่อม relation
     bot.documents.append(doc)
     bot.status = models.BotStatus.processing
     db.commit()
 
-    # รัน ingest ใน background
-    background_tasks.add_task(_run_ingest_and_notify, bot_id, bot.id, doc.filename, current_user.id, db)
+    write_audit_log(
+        db=db, user=current_user,
+        action="assign_document",
+        target_type="document",
+        target_id=str(doc_id),
+        detail={"filename": doc.filename, "bot_id": bot_id, "bot_name": bot.name},
+        ip=request.client.host
+    )
+
+    background_tasks.add_task(
+        _run_ingest_and_notify, bot_id, bot.id, doc.filename, current_user.id, db
+    )
 
     return {"message": f"กำหนด '{doc.filename}' ให้ Bot '{bot.name}' เรียบร้อย กำลัง ingest..."}
 
 
 # =====================
-# ถอด เอกสารออกจาก Bot
+# Unassign เอกสารออกจาก Bot
 # =====================
 @router.delete("/{doc_id}/unassign/{bot_id}")
 def unassign_from_bot(
     doc_id: int,
     bot_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_approved_user)
 ):
@@ -261,16 +309,22 @@ def unassign_from_bot(
     if doc not in bot.documents:
         raise HTTPException(status_code=400, detail="เอกสารนี้ไม่ได้ถูก assign ให้ Bot นี้")
 
-    # ลบไฟล์ออกจากโฟลเดอร์ Bot
     dest_path = os.path.join("data", bot_id, doc.filename)
     if os.path.exists(dest_path):
         os.remove(dest_path)
 
-    # ตัด relation
     bot.documents.remove(doc)
     db.commit()
 
-    # แจ้งเตือน
+    write_audit_log(
+        db=db, user=current_user,
+        action="unassign_document",
+        target_type="document",
+        target_id=str(doc_id),
+        detail={"filename": doc.filename, "bot_id": bot_id, "bot_name": bot.name},
+        ip=request.client.host
+    )
+
     _create_notification(
         db, current_user.id,
         "ถอดเอกสารออกจาก Bot",
@@ -281,7 +335,7 @@ def unassign_from_bot(
     return {"message": f"ถอด '{doc.filename}' ออกจาก Bot '{bot.name}' สำเร็จ"}
 
 
-def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int, db: Session):
+def _run_ingest_and_notify(bot_id_str, bot_db_id, filename, user_id, db):
     try:
         ingest(bot_id_str)
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
@@ -295,13 +349,6 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
             "success"
         )
     except Exception as e:
-        # 🔴 เพิ่มโค้ดส่วนนี้เพื่อให้มันปริ้นท์ Error สีแดงๆ ออกมาที่หน้า Terminal
-        import traceback
-        print(f"\n{'='*50}")
-        print(f"❌ ERROR INGESTING FILE: {filename}")
-        traceback.print_exc()
-        print(f"{'='*50}\n")
-
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
         if bot:
             bot.status = models.BotStatus.inactive

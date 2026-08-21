@@ -2,7 +2,8 @@ import hashlib
 import hmac
 import base64
 import json
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
+from sqlalchemy.orm import Session # เพิ่ม import นี้
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
     ReplyMessageRequest, TextMessage,
@@ -13,6 +14,14 @@ from api import models
 from rag.rag_pipeline import ask_rag
 
 router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
+
+# Dependency สำหรับสร้างและคืนค่า DB Session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # ข้อความ Flex ปุ่มติดต่อเจ้าหน้าที่
 CONTACT_FLEX = {
@@ -55,7 +64,6 @@ CONTACT_FLEX = {
     }
 }
 
-
 def _handle_small_talk(text: str) -> str | None:
     """
     จัดการคำทักทาย/ขอบคุณ/คำทั่วไป
@@ -89,7 +97,6 @@ def _handle_small_talk(text: str) -> str | None:
 
     return None  # ไม่ใช่ small talk → ส่งต่อให้ RAG
 
-
 def _verify_signature(secret: str, body: str, signature: str) -> bool:
     hash_value = hmac.new(
         secret.encode("utf-8"),
@@ -98,7 +105,6 @@ def _verify_signature(secret: str, body: str, signature: str) -> bool:
     ).digest()
     expected = base64.b64encode(hash_value).decode("utf-8")
     return hmac.compare_digest(expected, signature)
-
 
 def _get_display_name(token: str, line_user_id: str) -> str:
     """ดึงชื่อลูกค้าจาก Line"""
@@ -112,9 +118,9 @@ def _get_display_name(token: str, line_user_id: str) -> str:
         return line_user_id
 
 
+# ใช้ Depends(get_db) เพื่อดึง session
 @router.post("/webhook/{bot_id}")
-async def line_webhook(bot_id: str, request: Request):
-    db = SessionLocal()
+async def line_webhook(bot_id: str, request: Request, db: Session = Depends(get_db)):
     try:
         bot = db.query(models.Bot).filter(
             models.Bot.bot_id == bot_id
@@ -297,5 +303,3 @@ async def line_webhook(bot_id: str, request: Request):
     except Exception as e:
         print(f"❌ Line webhook error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()

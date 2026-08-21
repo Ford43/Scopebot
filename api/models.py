@@ -51,6 +51,7 @@ class Bot(Base):
     bot_id = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    system_prompt = Column(Text, nullable=True)
     status = Column(Enum(BotStatus), default=BotStatus.inactive)
     is_line_connected = Column(Boolean, default=False)
     is_web_connected = Column(Boolean, default=False)
@@ -72,6 +73,7 @@ class Document(Base):
     filename = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     file_size = Column(Integer, nullable=True)
+    file_hash = Column(String, nullable=True, index=True)
     category = Column(String, nullable=True, default="ทั่วไป")  # user กำหนดเอง
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # เปลี่ยนจาก bot_id
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -152,3 +154,19 @@ class LiveMessage(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     session = relationship("LiveSession", back_populates="messages")
+# =====================
+# Table: audit_logs
+# =====================
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    username = Column(String, nullable=True)       # เก็บไว้เผื่อ user ถูกลบ
+    role = Column(String, nullable=True)
+    action = Column(String, nullable=False)        # approve_user, delete_bot ฯลฯ
+    target_type = Column(String, nullable=True)    # user, bot, document
+    target_id = Column(String, nullable=True)
+    detail = Column(Text, nullable=True)           # JSON รายละเอียด
+    ip_address = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

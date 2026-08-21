@@ -6,13 +6,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./scopebot.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.evaowiifrxlvfvkgyvre:scopebot0011@aws-0-ap-south-1.pooler.supabase.com:5432/postgres")
 
 # สร้าง engine เชื่อมต่อ database
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # จำเป็นสำหรับ SQLite
-)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    engine = create_engine(DATABASE_URL)
 
 # SessionLocal ใช้สำหรับสร้าง session ในแต่ละ request
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
