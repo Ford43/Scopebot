@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from api import auth, models, schemas
 from api.database import get_db
@@ -204,7 +205,28 @@ def list_users(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_role("support", "admin")),
 ):
-    return db.query(models.User).all()
+    users = db.query(models.User).all()
+    counts = dict(
+        db.query(models.Bot.owner_id, func.count(models.Bot.id))
+        .group_by(models.Bot.owner_id)
+        .all()
+    )
+    result = []
+    for u in users:
+        result.append(
+            schemas.UserOut(
+                id=u.id,
+                email=u.email,
+                username=u.username,
+                role=u.role,
+                is_approved=u.is_approved,
+                is_active=u.is_active,
+                max_bots=u.max_bots,
+                created_at=u.created_at,
+                bot_count=counts.get(u.id, 0),
+            )
+        )
+    return result
 
 
 @router.patch("/users/{user_id}/approve", response_model=schemas.UserOut)

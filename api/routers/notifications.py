@@ -59,3 +59,15 @@ def mark_all_read(
     ).update({"is_read": True})
     db.commit()
     return {"message": "อ่านทั้งหมดแล้ว"}
+
+
+@router.delete("/clear-all")
+def clear_all(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    db.query(models.Notification).filter(
+        models.Notification.user_id == current_user.id
+    ).delete()
+    db.commit()
+    return {"message": "ล้างการแจ้งเตือนแล้ว"}

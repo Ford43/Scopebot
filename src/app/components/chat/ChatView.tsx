@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 import {
   Sparkles,
   Zap,
   Send,
   Bot,
-  AlertTriangle,
   Settings,
   PenSquare,
   FileText,
@@ -132,21 +130,6 @@ export default function ChatView({
               rows={1}
               showSendLabel
             />
-            {!isAuthenticated && (
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                <p className="text-xs text-amber-600">
-                  โหมด Guest — ประวัติแชทจะไม่ถูกบันทึก{" "}
-                  <Link
-                    to="/signup"
-                    className="underline hover:text-amber-800"
-                    style={{ fontWeight: 600 }}
-                  >
-                    สมัครสมาชิกฟรี
-                  </Link>
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -231,25 +214,6 @@ function WelcomeScreen({
           ? activeBot.description
           : "ผู้ช่วยดิจิทัลอัจฉริยะ พร้อมให้บริการข้อมูลและความช่วยเหลือด้วยความเป็นมิตร"}
       </p>
-
-      {!isAuthenticated && (
-        <div className="w-full max-w-2xl mb-5">
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-            <p className="text-sm text-amber-700 flex-1">
-              คุณกำลังใช้งานในโหมด Guest — ประวัติการแชทจะ
-              <strong>ไม่ถูกบันทึก</strong>
-            </p>
-            <Link
-              to="/signup"
-              className="text-xs bg-amber-400 hover:bg-amber-500 text-gray-900 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-              style={{ fontWeight: 600 }}
-            >
-              สมัครฟรี
-            </Link>
-          </div>
-        </div>
-      )}
 
       <div className="w-full max-w-2xl">
         <ChatInput

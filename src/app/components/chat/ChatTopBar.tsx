@@ -13,7 +13,6 @@ import {
 import type { ActiveView } from "../../types/chat";
 import { VIEW_LABELS } from "../../constants/chat";
 import type { AppNotification } from "../../hooks/useNotifications";
-import { AdminScopeToggle } from "../../contexts/AdminScopeContext";
 
 interface ChatTopBarProps {
   activeView: ActiveView;
@@ -27,6 +26,7 @@ interface ChatTopBarProps {
   onSearch: (query: string) => void;
   onMarkRead: (id: number) => void;
   onMarkAllRead: () => void;
+  onClearNotifications: () => void;
   onNotificationClick?: (notification: AppNotification) => void;
   onNavigateBots: () => void;
   onLogout: () => void;
@@ -57,6 +57,7 @@ export default function ChatTopBar({
   onSearch,
   onMarkRead,
   onMarkAllRead,
+  onClearNotifications,
   onNotificationClick,
   onNavigateBots,
   onLogout,
@@ -87,9 +88,6 @@ export default function ChatTopBar({
             {VIEW_LABELS[activeView]}
           </span>
         </p>
-        {isAdmin && activeView !== "user-management" && activeView !== "chat" && (
-          <AdminScopeToggle />
-        )}
         {!hideSearch && (
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -136,19 +134,38 @@ export default function ChatTopBar({
                 onClick={() => setShowNotifs(false)}
               />
               <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white rounded-xl shadow-xl border border-gray-100 z-50 flex flex-col overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
                   <p className="text-sm text-gray-900" style={{ fontWeight: 600 }}>
                     การแจ้งเตือน
                   </p>
-                  {unreadNotifs > 0 && (
-                    <button
-                      type="button"
-                      onClick={onMarkAllRead}
-                      className="text-[11px] text-amber-700 hover:text-amber-800 flex items-center gap-1"
-                    >
-                      <CheckCheck className="w-3.5 h-3.5" />
-                      อ่านทั้งหมด
-                    </button>
+                  {sortedNotifs.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      {unreadNotifs > 0 && (
+                        <button
+                          type="button"
+                          onClick={onMarkAllRead}
+                          className="text-[11px] text-amber-700 hover:text-amber-800 flex items-center gap-1"
+                        >
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          อ่านทั้งหมด
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            !window.confirm(
+                              "ล้างการแจ้งเตือนทั้งหมด? กู้คืนไม่ได้"
+                            )
+                          )
+                            return;
+                          onClearNotifications();
+                        }}
+                        className="text-[11px] text-slate-500 hover:text-rose-600"
+                      >
+                        ล้างทั้งหมด
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="overflow-y-auto flex-1">
@@ -239,17 +256,19 @@ export default function ChatTopBar({
                   </p>
                   <p className="text-xs text-gray-400">{userEmail}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    onNavigateBots();
-                  }}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
-                >
-                  <Bot className="w-4 h-4" />
-                  Bots
-                </button>
+                {!isSupport && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onNavigateBots();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 transition-colors w-full text-left"
+                  >
+                    <Bot className="w-4 h-4" />
+                    Bots
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {

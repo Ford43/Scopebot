@@ -182,29 +182,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Register link */}
         <p className="mt-5 text-center text-sm text-gray-500">
           ยังไม่มีบัญชีใช่หรือไม่?{" "}
           <Link to="/signup" className="text-amber-600 hover:text-amber-700 transition-colors" style={{ fontWeight: 600 }}>
             สมัครสมาชิก
           </Link>
         </p>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 mt-5">
-          <div className="flex-1 h-px bg-gray-100" />
-          <span className="text-xs text-gray-400">หรือ</span>
-          <div className="flex-1 h-px bg-gray-100" />
-        </div>
-
-        {/* Guest access */}
-        <Link
-          to="/chat"
-          className="mt-4 flex items-center justify-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          ดำเนินต่อโดยไม่เข้าสู่ระบบ
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
     </div>
   );

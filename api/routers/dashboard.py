@@ -84,12 +84,9 @@ def get_stats(
         if total_conversations > 0 else 0, 1
     )
 
-    if current_user.role == models.UserRole.admin and auth.normalize_scope(scope) == "all":
-        total_documents = db.query(models.Document).count()
-    else:
-        total_documents = db.query(models.Document).filter(
-            models.Document.owner_id == current_user.id
-        ).count()
+    total_documents = db.query(models.Document).filter(
+        models.Document.owner_id == current_user.id
+    ).count()
 
     unread_notifications = db.query(models.Notification).filter(
         models.Notification.user_id == current_user.id,
@@ -194,7 +191,7 @@ def get_stats(
         },
         # Daily chart
         "daily_stats": daily_stats,
-        "scope": auth.normalize_scope(scope) if current_user.role == models.UserRole.admin else "mine",
+        "scope": "mine",
         "days": days,
     }
 

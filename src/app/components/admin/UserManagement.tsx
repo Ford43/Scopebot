@@ -203,6 +203,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
   };
 
   const isEditingSelf = editModalUser?.id === currentUser?.id;
+  const roleUsesBots = editFormData.role !== "support";
 
   return (
     <div className="p-6">
@@ -211,8 +212,8 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
           <h1 className="text-2xl font-semibold text-slate-900">จัดการผู้ใช้งาน</h1>
           <p className="mt-2 text-sm text-slate-500 max-w-2xl">
             {isSupport
-              ? "อนุมัติ ปฏิเสธ ระงับ และปลดระงับบัญชีได้ — การเปลี่ยนบทบาทเป็น Admin และการลบถาวรเป็นสิทธิ์ของผู้ดูแลระบบ"
-              : "จัดการบัญชีผู้ใช้งานทั้งหมด อนุมัติการเข้าถึง และตรวจสอบสถานะระบบ"}
+              ? "งานหลักคือคิวสมัครสมาชิก — อนุมัติ ปฏิเสธ ระงับ และปลดระงับ เปลี่ยนบทบาทเป็น Admin และลบถาวรเป็นสิทธิ์ผู้ดูแลระบบ"
+              : "จัดการบัญชีผู้ใช้งานทั้งหมด อนุมัติการเข้าถึง และดูจำนวนบอทของแต่ละร้าน — ไม่ต้องเข้าไปในบอทของร้านอื่น"}
           </p>
         </div>
       </div>
@@ -320,7 +321,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
               <tr className="bg-slate-100 text-slate-500">
                 <th className="px-4 py-3">Username / Email</th>
                 <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Max Bots</th>
+                <th className="px-4 py-3">บอท</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Joined Date</th>
               </tr>
@@ -360,7 +361,9 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       </td>
                       <td className="px-4 py-4 text-slate-600 capitalize">{user.role}</td>
                       <td className="px-4 py-4 text-slate-700 font-medium">
-                        {user.max_bots || 5}
+                        {user.role === "support"
+                          ? "—"
+                          : `${user.bot_count ?? 0}/${user.max_bots || 5}`}
                       </td>
                       <td className="px-4 py-4">
                         <span
@@ -439,18 +442,23 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                 <label className="text-xs font-semibold uppercase text-slate-400">
                   จำนวนบอทสูงสุด (Max Bots)
                 </label>
-                  <input
+                <input
                   type="number"
-                  disabled={!canEditUser(editModalUser)}
-                  value={editFormData.max_bots}
+                  disabled={!canEditUser(editModalUser) || !roleUsesBots}
+                  value={roleUsesBots ? editFormData.max_bots : 0}
                   onChange={(e) =>
                     setEditFormData({
                       ...editFormData,
                       max_bots: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400 disabled:bg-slate-50"
+                  className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400 disabled:bg-slate-100 disabled:text-slate-400"
                 />
+                {!roleUsesBots && (
+                  <p className="mt-1.5 text-[11px] text-slate-400">
+                    บัญชี Support ไม่ได้สร้างบอท จึงไม่ต้องกำหนดโควต้า
+                  </p>
+                )}
               </div>
 
               {/* ปุ่มระงับแบบ segmented control */}
@@ -536,8 +544,10 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       const payload: Record<string, unknown> = {
                         is_approved: true,
                         is_active: editFormData.is_active,
-                        max_bots: editFormData.max_bots,
                       };
+                      if (roleUsesBots) {
+                        payload.max_bots = editFormData.max_bots;
+                      }
                       if (canChangeRole) {
                         payload.role = editFormData.role;
                       }

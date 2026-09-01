@@ -45,7 +45,7 @@ export function AdminScopeProvider({
     }
   }, []);
 
-  const effective: DataScope = isAdmin ? scope : "mine";
+  const effective: DataScope = "mine";
 
   return (
     <AdminScopeContext.Provider

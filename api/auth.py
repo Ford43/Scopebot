@@ -100,11 +100,8 @@ def normalize_scope(scope: Optional[str]) -> str:
 
 
 def visible_bots_query(db: Session, user: models.User, scope: Optional[str] = None):
-    """บอทที่ผู้ใช้มีสิทธิ์เห็น: ร้าน = ของตัวเอง, แอดมิน = ทั้งระบบหรือเฉพาะบัญชีนี้"""
-    query = db.query(models.Bot)
-    if user.role == models.UserRole.admin and normalize_scope(scope) == "all":
-        return query
-    return query.filter(models.Bot.owner_id == user.id)
+    """บอทที่ผู้ใช้มีสิทธิ์เห็น — เฉพาะของบัญชีตัวเอง (แอดมินก็เช่นกัน)"""
+    return db.query(models.Bot).filter(models.Bot.owner_id == user.id)
 
 
 def assert_bot_access(user: models.User, bot: Optional[models.Bot]) -> models.Bot:
@@ -115,8 +112,6 @@ def assert_bot_access(user: models.User, bot: Optional[models.Bot]) -> models.Bo
             status_code=status.HTTP_403_FORBIDDEN,
             detail=SUPPORT_PRODUCT_FORBIDDEN,
         )
-    if user.role == models.UserRole.admin:
-        return bot
     if bot.owner_id != user.id:
         raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
     return bot

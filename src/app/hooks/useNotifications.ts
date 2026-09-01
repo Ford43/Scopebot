@@ -102,7 +102,23 @@ export function useNotifications(isAuthenticated: boolean) {
     }
   }, [refresh]);
 
-  return { unreadCount, notifications, refresh, markRead, markAllRead };
+  const clearAll = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications/clear-all", {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+        seenIdsRef.current = new Set();
+      }
+    } catch (error) {
+      console.error("Failed to clear notifications", error);
+    }
+  }, []);
+
+  return { unreadCount, notifications, refresh, markRead, markAllRead, clearAll };
 }
 
 /** Map notification content → app view */

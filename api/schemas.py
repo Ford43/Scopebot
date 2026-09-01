@@ -41,6 +41,7 @@ class UserOut(BaseModel):
     is_active: bool
     max_bots: int
     created_at: datetime
+    bot_count: int = 0
 
     class Config:
         from_attributes = True
@@ -122,7 +123,7 @@ class ConversationOut(BaseModel):
 class ApproveUser(BaseModel):
     is_approved: bool
     is_active: Optional[bool] = None
-    max_bots: Optional[int] = 3
+    max_bots: Optional[int] = None
     role: Optional[str] = None
 
 # =====================

@@ -58,6 +58,7 @@ function ChatShell() {
     notifications,
     markRead,
     markAllRead,
+    clearAll,
   } = useNotifications(isAuthenticated);
   const waitingQueueCount = useWaitingQueueCount(
     isAuthenticated && !isSupport,
@@ -219,6 +220,7 @@ function ChatShell() {
           hideSearch={activeView === "chat"}
           onMarkRead={markRead}
           onMarkAllRead={markAllRead}
+          onClearNotifications={clearAll}
           onNotificationClick={(n) => {
             if (isSupport) {
               setActiveView("user-management");

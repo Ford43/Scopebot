@@ -32,7 +32,7 @@ export default function BotsPage({
   const [editNotice, setEditNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const { isAdmin, scopeParam } = useAdminScope();
+  const { scopeParam } = useAdminScope();
 
   const maxBots = user?.max_bots || 5;
   const ownBotCount = bots.filter(
@@ -224,10 +224,6 @@ export default function BotsPage({
                               ? "กำลังประมวลผล"
                               : "ยังไม่พร้อม"}
                         </span>
-                        {isAdmin &&
-                          Number(bot.owner_id) !== Number(user?.id) && (
-                            <span className="ml-1.5 text-amber-600">· ร้านอื่น</span>
-                          )}
                       </p>
                     </div>
                   </div>

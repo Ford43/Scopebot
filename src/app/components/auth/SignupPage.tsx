@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Zap, ChevronRight, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Zap, CheckCircle } from "lucide-react";
 
 export default function SignupPage() {
   const [name, setName]                     = useState("");
@@ -204,17 +204,6 @@ export default function SignupPage() {
             เข้าสู่ระบบ
           </Link>
         </p>
-
-        <div className="flex items-center gap-3 mt-4">
-          <div className="flex-1 h-px bg-gray-100" />
-          <span className="text-xs text-gray-400">หรือ</span>
-          <div className="flex-1 h-px bg-gray-100" />
-        </div>
-
-        <Link to="/chat" className="mt-4 flex items-center justify-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ดำเนินต่อโดยไม่เข้าสู่ระบบ
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
       )}
     </div>
