@@ -104,31 +104,16 @@ def chat(
             "sources": [],
         }
 
-    # ---- RAG ปกติ (ส่งประวัติ N เทิร์นล่าสุดของ session นี้) ----
+    # ---- RAG ปกติ ----
+    # ไม่ส่งประวัติแชทเข้าโมเดล — คำตอบเก่าที่สั้น/ไม่ครบจะถูกเลียนแบบ (โดยเฉพาะโมเดลเล็ก)
     source = (body.source_channel or "web").lower()
     session_key = body.session_id or "web_user"
-
-    prior_rows = (
-        db.query(models.Conversation)
-        .filter(
-            models.Conversation.bot_id == bot.id,
-            models.Conversation.session_id == body.session_id,
-        )
-        .order_by(models.Conversation.created_at.desc())
-        .limit(6)
-        .all()
-    )
-    history = [
-        {"question": row.question, "answer": row.answer}
-        for row in reversed(prior_rows)
-        if row.question and row.answer
-    ]
 
     answer, sources = ask_rag(
         body.question,
         bot_id,
         user_system_prompt=bot.system_prompt,
-        history=history,
+        history=None,
     )
 
     # Web test chat: ไม่ auto-handoff — ให้พิมพ์ขอเจ้าหน้าที่เอง

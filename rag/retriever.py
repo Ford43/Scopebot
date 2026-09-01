@@ -24,7 +24,9 @@ def retrieve_docs(query, bot_id, score_threshold=1.05):
     """Return docs whose distance score is at or below threshold (lower = closer)."""
     db = get_vector_db(bot_id)
 
-    results = db.similarity_search_with_score(query, k=TOP_K)
+    # ดึงมากกว่า TOP_K เล็กน้อย กันหัวข้อยาวถูกตัดคนละ chunk
+    fetch_k = max(TOP_K, 8)
+    results = db.similarity_search_with_score(query, k=fetch_k)
 
     results = sorted(results, key=lambda x: x[1])
 

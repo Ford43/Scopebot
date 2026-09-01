@@ -3,17 +3,19 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456789}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ตั้ง POSTGRES_PASSWORD ใน .env}
       POSTGRES_DB: scopebot
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # production: ไม่เปิดพอร์ตออกนอกเครื่อง — เอา comment ออกถ้าต้อง debug จาก host
+    # ports:
+    #   - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d scopebot"]
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   api:
     build: .
@@ -21,8 +23,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-123456789}@db:5432/scopebot
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/scopebot
+      SECRET_KEY: ${SECRET_KEY:?ตั้ง SECRET_KEY ใน .env}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       MODEL_NAME: ${MODEL_NAME:-qwen2.5:1.5b}
@@ -30,9 +32,11 @@ services:
       VECTOR_DB_PATH: /app/vector_db
       DEBUG: ${DEBUG:-false}
       AUTO_CREATE_TABLES: "false"
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@scopebot.com}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ตั้ง ADMIN_PASSWORD ใน .env}
+      ADMIN_UPDATE_PASSWORD: ${ADMIN_UPDATE_PASSWORD:-false}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
@@ -44,18 +48,27 @@ services:
       - vectordb:/app/vector_db
     ports:
       - "8000:8000"
-    # Ollama ต้องรันแยกบน host หรือเพิ่ม service ollama เอง
+    # Ollama บน host (Windows/Mac/Linux Docker)
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    restart: unless-stopped
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
-      - "80:80"
+      - "${HTTP_PORT:-80}:80"
+    restart: unless-stopped
 
 volumes:
   pgdata:

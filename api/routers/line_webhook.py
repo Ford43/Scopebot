@@ -292,26 +292,12 @@ async def line_webhook(bot_id: str, request: Request):
                     )
                 )
 
-                prior_rows = (
-                    db.query(models.Conversation)
-                    .filter(
-                        models.Conversation.bot_id == bot.id,
-                        models.Conversation.session_id == line_user_id,
-                    )
-                    .order_by(models.Conversation.created_at.desc())
-                    .limit(6)
-                    .all()
-                )
-                history = [
-                    {"question": row.question, "answer": row.answer}
-                    for row in reversed(prior_rows)
-                    if row.question and row.answer
-                ]
+                # ไม่ส่งประวัติแชทเข้า RAG — โมเดลเล็กจะเลียนแบบคำตอบเก่าที่สั้น/ไม่ครบ
                 answer, _sources = ask_rag(
                     user_message,
                     bot_id,
                     user_system_prompt=bot.system_prompt,
-                    history=history,
+                    history=None,
                 )
                 if answer == "REQUIRE_HUMAN_HANDOFF":
                     answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"

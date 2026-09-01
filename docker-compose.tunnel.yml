@@ -1,0 +1,20 @@
+# Cloudflare Named Tunnel (แนะนำ — โดเมนคงที่ ใช้กับ LINE ได้)
+#
+# 1) สร้าง Tunnel ใน Cloudflare Zero Trust → ได้ token
+# 2) ใส่ CLOUDFLARE_TUNNEL_TOKEN ใน .env
+# 3) Public hostname ชี้ไป http://frontend:80 (ถ้า cloudflared อยู่ใน compose นี้)
+#    หรือ http://localhost:80 ถ้าเอา cloudflared ไปรันบน host
+#
+# รัน:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up --build -d
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?ตั้ง CLOUDFLARE_TUNNEL_TOKEN ใน .env}
+    # ให้ resolve ชื่อ service frontend ได้
+    networks:
+      - default

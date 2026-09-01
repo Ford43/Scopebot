@@ -1,0 +1,17 @@
+# Cloudflare Quick Tunnel (ทดสอบชั่วคราว — URL เปลี่ยนทุกครั้งที่รันใหม่)
+#
+# รัน:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.quick.yml up --build -d
+# ดู URL:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.quick.yml logs -f cloudflared
+#
+# หลังได้ https://xxxx.trycloudflare.com ให้แก้ FRONTEND_URL + CORS_ORIGINS ใน .env
+# แล้ว: docker compose up -d api
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    command: tunnel --no-autoupdate --url http://frontend:80

@@ -129,18 +129,25 @@ Vite จะ proxy `/api` ไปที่ `http://127.0.0.1:8000` — **ต้อ
 4. จำกัด CORS เฉพาะ domain ที่ใช้
 5. รัน smoke test อีกครั้งหลัง deploy
 
-## Deploy ด้วย Docker
+## Deploy ด้วย Docker + Cloudflare Tunnel
+
+คู่มือเต็ม: [deploy/DEPLOY.md](deploy/DEPLOY.md)
 
 ```bash
-# สร้าง .env สำหรับ production (อย่างน้อย SECRET_KEY, POSTGRES_PASSWORD, CORS_ORIGINS)
-docker compose up --build -d
+copy .env.production.example .env
+# แก้ SECRET_KEY, POSTGRES_PASSWORD, ADMIN_PASSWORD,
+# FRONTEND_URL, CORS_ORIGINS, CLOUDFLARE_TUNNEL_TOKEN
+
+docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up --build -d
 ```
 
-- Frontend: http://localhost (พอร์ต 80)
-- API: http://localhost:8000
-- PostgreSQL: พอร์ต 5432
+- สาธารณะ: `https://YOUR_DOMAIN` (ผ่าน Cloudflare Tunnel)
+- ในเครื่อง: Frontend `http://localhost`, API `http://localhost:8000`
+- PostgreSQL อยู่ใน Docker network (ไม่เปิดพอร์ตออกนอกโดย default)
 
-**หมายเหตุ:** Ollama ต้องรันบน host (`host.docker.internal:11434`) หรือเพิ่ม service แยก — RAG จะใช้งานไม่ได้ถ้าไม่มี Ollama
+**หมายเหตุ:** Ollama ต้องรันบน host (`OLLAMA_HOST=http://host.docker.internal:11434`) — RAG จะใช้ไม่ได้ถ้าไม่มี Ollama
+
+หลังได้ HTTPS: อัปเดต LINE Webhook เป็น `https://YOUR_DOMAIN/api/line/webhook/{bot_id}`
 
 ## หมายเหตุเรื่อง venv
 

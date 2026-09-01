@@ -60,6 +60,30 @@ def extract_sources(docs, limit: int = 3) -> List[Dict]:
     return sources
 
 
+def _clean_llm_answer(answer: str) -> str:
+    """ตัดส่วนที่โมเดลวนซ้ำรูปแบบ คำถาม:/คำตอบ: จาก prompt"""
+    text = (answer or "").strip()
+    if not text:
+        return text
+
+    # ตัดตั้งแต่บรรทัด "คำถาม:" ที่โมเดลเขียนซ้ำท้ายคำตอบ
+    cut = re.split(r"\n\s*คำถาม\s*:", text, maxsplit=1)
+    text = cut[0].strip()
+
+    # ถ้าขึ้นต้นด้วย "คำตอบ:" ให้เหลือเฉพาะเนื้อหา
+    text = re.sub(r"^คำตอบ\s*:\s*", "", text).strip()
+
+    # กันกรณีมีคู่ คำตอบ: ซ้ำอีกครั้งในข้อความ
+    parts = re.split(r"\n\s*คำตอบ\s*:", text, maxsplit=1)
+    if len(parts) == 2 and parts[0].strip() and parts[1].strip():
+        # ถ้าสองฝั่งคล้ายกันมาก เหลือฝั่งแรก
+        a, b = parts[0].strip(), parts[1].strip()
+        if a == b or a in b or b in a:
+            text = a
+
+    return text.strip()
+
+
 def ask_rag(
     question: str,
     bot_id: str,
@@ -97,6 +121,8 @@ def ask_rag(
 คำสั่ง: ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น
 - ถ้าข้อมูลอ้างอิงไม่ได้ตอบคำถามนี้โดยตรง ให้ตอบว่า ไม่พบข้อมูล
 - ห้ามเดาวัน/วันที่/เวลาปัจจุบันจากตารางเวลาทำงานหรือคำที่คล้ายกันในเอกสาร
+- ตอบเป็นข้อความคำตอบอย่างเดียว ห้ามเขียนคำว่า คำถาม: หรือ คำตอบ: และห้ามถามซ้ำ
+- ถ้าคำถามถามภาพรวม/ระเบียบ/รายการ และในข้อมูลอ้างอิงมีหลายข้อ ให้ตอบครบทุกข้อที่เกี่ยวข้อง ห้ามสรุปเหลือเพียงบางข้อ
 
 คำตอบ:"""
 
@@ -128,10 +154,11 @@ def ask_rag(
                 "top_p": 0.9,
                 "repeat_penalty": 1.1,
                 "seed": 42,
-                "num_predict": 512,
+                # รายการนโยบายยาวๆ ต้องมีพื้นที่พอ ไม่ตัดกลางทาง
+                "num_predict": 1024,
             },
         )
-        answer = response["message"]["content"].strip()
+        answer = _clean_llm_answer(response["message"]["content"])
 
         if DEBUG:
             print(f"[DEBUG] System Prompt:\n {final_system_prompt}")
