@@ -14,13 +14,8 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
 
 
 def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
-    """Helper: ดึง bot และเช็คว่าเป็นของ user คนนี้"""
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id_str).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
-    if bot.owner_id != user.id and user.role == models.UserRole.user:
-        raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
-    return bot
+    return auth.assert_bot_access(user, bot)
 
 
 # =====================
@@ -30,7 +25,7 @@ def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
 def create_bot(
     body: schemas.BotCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     # เช็คจำนวน Bot ที่มีอยู่
     bot_count = db.query(models.Bot).filter(models.Bot.owner_id == current_user.id).count()
@@ -58,19 +53,18 @@ def create_bot(
 
 @router.get("/", response_model=list[schemas.BotOut])
 def list_my_bots(
+    scope: str = "all",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    if current_user.role == models.UserRole.admin:
-        return db.query(models.Bot).all()
-    return db.query(models.Bot).filter(models.Bot.owner_id == current_user.id).all()
+    return auth.visible_bots_query(db, current_user, scope).order_by(models.Bot.created_at.desc()).all()
 
 
 @router.get("/{bot_id}", response_model=schemas.BotOut)
 def get_bot(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     return _get_bot_or_404(bot_id, db, current_user)
 
@@ -80,7 +74,7 @@ def update_bot(
     bot_id: str,
     body: schemas.BotUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     for field, value in body.dict(exclude_unset=True).items():
@@ -94,7 +88,7 @@ def update_bot(
 def delete_bot(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
 
@@ -140,7 +134,7 @@ def delete_bot(
 def list_documents(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     return bot.documents
@@ -153,7 +147,7 @@ def list_documents(
 def toggle_line(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     bot.is_line_connected = not bot.is_line_connected
@@ -165,7 +159,7 @@ def toggle_line(
 def toggle_web(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     bot.is_web_connected = not bot.is_web_connected

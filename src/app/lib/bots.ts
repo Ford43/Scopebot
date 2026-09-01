@@ -9,8 +9,9 @@ export interface BotPayload {
   line_channel_secret?: string;
 }
 
-export async function fetchBots(): Promise<BotItem[]> {
-  return apiFetch<BotItem[]>("/api/bots/");
+export async function fetchBots(scope?: "all" | "mine"): Promise<BotItem[]> {
+  const q = scope ? `?scope=${encodeURIComponent(scope)}` : "";
+  return apiFetch<BotItem[]>(`/api/bots/${q}`);
 }
 
 export async function fetchBot(botId: string): Promise<BotItem> {

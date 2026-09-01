@@ -4,7 +4,8 @@ import { authHeaders } from "../lib/api";
 /** Poll active live sessions waiting for / with staff (for sidebar badge). */
 export function useWaitingQueueCount(
   enabled: boolean,
-  pollMs = 10000
+  pollMs = 10000,
+  scope: "all" | "mine" = "mine"
 ): number {
   const [count, setCount] = useState(0);
 
@@ -14,7 +15,7 @@ export function useWaitingQueueCount(
       return;
     }
     try {
-      const res = await fetch("/api/live/sessions", {
+      const res = await fetch(`/api/live/sessions?scope=${encodeURIComponent(scope)}`, {
         headers: authHeaders(),
       });
       if (!res.ok) return;
@@ -29,7 +30,7 @@ export function useWaitingQueueCount(
     } catch (error) {
       console.error("Failed to fetch waiting queue count", error);
     }
-  }, [enabled]);
+  }, [enabled, scope]);
 
   useEffect(() => {
     if (!enabled) {

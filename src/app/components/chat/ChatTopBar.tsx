@@ -13,6 +13,7 @@ import {
 import type { ActiveView } from "../../types/chat";
 import { VIEW_LABELS } from "../../constants/chat";
 import type { AppNotification } from "../../hooks/useNotifications";
+import { AdminScopeToggle } from "../../contexts/AdminScopeContext";
 
 interface ChatTopBarProps {
   activeView: ActiveView;
@@ -86,6 +87,9 @@ export default function ChatTopBar({
             {VIEW_LABELS[activeView]}
           </span>
         </p>
+        {isAdmin && activeView !== "user-management" && activeView !== "chat" && (
+          <AdminScopeToggle />
+        )}
         {!hideSearch && (
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />

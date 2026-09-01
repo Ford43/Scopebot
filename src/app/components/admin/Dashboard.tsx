@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { authHeaders } from "../../lib/api";
+import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 /* ─────────────── Types ─────────────── */
 interface DailyStats { date: string; total: number; line: number; web: number; }
@@ -146,16 +147,18 @@ export default function Dashboard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [days, setDays] = useState(7);
+  const { isAdmin, scope, scopeParam } = useAdminScope();
 
   const fetchAll = async (d: number) => {
     setLoading(true);
     setError(false);
     const headers = authHeaders();
+    const scopeQ = `scope=${encodeURIComponent(scopeParam)}`;
     try {
       const [statsRes, botsRes, topRes] = await Promise.all([
-        fetch(`/api/dashboard/stats?days=${d}`, { headers }),
-        fetch("/api/bots/", { headers }),
-        fetch(`/api/dashboard/top-questions?days=${d}`, { headers }),
+        fetch(`/api/dashboard/stats?days=${d}&${scopeQ}`, { headers }),
+        fetch(`/api/bots/?${scopeQ}`, { headers }),
+        fetch(`/api/dashboard/top-questions?days=${d}&${scopeQ}`, { headers }),
       ]);
       const statsData = await statsRes.json();
       const botsData = await botsRes.json();
@@ -179,7 +182,7 @@ export default function Dashboard({
     }
   };
 
-  useEffect(() => { fetchAll(days); }, [days]);
+  useEffect(() => { fetchAll(days); }, [days, scopeParam]);
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -206,8 +209,15 @@ export default function Dashboard({
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">ภาพรวมระบบ</h1>
-          <p className="text-xs text-gray-400 mt-0.5">อัปเดต: {new Date().toLocaleTimeString("th-TH")}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isAdmin && scope === "all" ? "ภาพรวมทั้งระบบ" : "ภาพรวมร้านค้า"}
+          </h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {isAdmin && scope === "all"
+              ? "ตัวเลขรวมทุกบัญชีในแพลตฟอร์ม — สลับเป็น «บอทของฉัน» เพื่อดูเฉพาะบัญชีทดลอง"
+              : "สถิติจากบอทในบัญชีนี้"}
+            {" · "}อัปเดต: {new Date().toLocaleTimeString("th-TH")}
+          </p>
         </div>
         <select
           aria-label="ช่วงเวลา"

@@ -16,6 +16,7 @@ export interface BotItem {
   system_prompt?: string;
   is_line_connected?: boolean;
   is_web_connected?: boolean;
+  owner_id?: number;
   created_at: string;
   documents?: BotDocument[];
 }

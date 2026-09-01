@@ -77,24 +77,43 @@ def _enrich_session(session: models.LiveSession, db: Session) -> dict:
     }
 
 
+def _session_for_operator(
+    db: Session, session_id: int, user: models.User, *, active_only: bool = False
+) -> models.LiveSession:
+    query = db.query(models.LiveSession).filter(models.LiveSession.id == session_id)
+    if active_only:
+        query = query.filter(models.LiveSession.is_active == True)
+    session = query.first()
+    if not session:
+        raise HTTPException(status_code=404, detail="ไม่พบ session")
+    bot = session.bot or db.query(models.Bot).filter(models.Bot.id == session.bot_id).first()
+    auth.assert_bot_access(user, bot)
+    return session
+
+
 @router.get("/sessions")
 def list_sessions(
     bot_id: str = None,
     mode: str = None,
+    scope: str = "all",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     query = db.query(models.LiveSession).filter(
         models.LiveSession.is_active == True
     )
 
     if bot_id:
-        bot = db.query(models.Bot).filter(
-            models.Bot.bot_id == bot_id,
-            models.Bot.owner_id == current_user.id
-        ).first()
-        if bot:
-            query = query.filter(models.LiveSession.bot_id == bot.id)
+        bot = auth.assert_bot_access(
+            current_user,
+            db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first(),
+        )
+        query = query.filter(models.LiveSession.bot_id == bot.id)
+    else:
+        bot_ids = [b.id for b in auth.visible_bots_query(db, current_user, scope).all()]
+        if not bot_ids:
+            return []
+        query = query.filter(models.LiveSession.bot_id.in_(bot_ids))
 
     if mode:
         query = query.filter(models.LiveSession.mode == mode)
@@ -107,13 +126,9 @@ def list_sessions(
 def get_session(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    session = db.query(models.LiveSession).filter(
-        models.LiveSession.id == session_id
-    ).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="ไม่พบ session")
+    session = _session_for_operator(db, session_id, current_user)
     return _enrich_session(session, db)
 
 
@@ -125,14 +140,9 @@ def staff_reply(
     session_id: int,
     body: schemas.StaffReply,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    session = db.query(models.LiveSession).filter(
-        models.LiveSession.id == session_id,
-        models.LiveSession.is_active == True
-    ).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="ไม่พบ session")
+    session = _session_for_operator(db, session_id, current_user, active_only=True)
 
     if session.mode not in [models.SessionMode.human, models.SessionMode.waiting]:
         raise HTTPException(status_code=400, detail="session นี้ยังไม่ได้อยู่ใน mode human")
@@ -187,14 +197,9 @@ def staff_reply(
 def end_session(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    session = db.query(models.LiveSession).filter(
-        models.LiveSession.id == session_id,
-        models.LiveSession.is_active == True
-    ).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="ไม่พบ session")
+    session = _session_for_operator(db, session_id, current_user, active_only=True)
 
     from datetime import datetime
     session.mode = models.SessionMode.bot

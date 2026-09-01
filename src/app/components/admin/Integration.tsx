@@ -15,6 +15,7 @@ import {
   toggleBotWeb,
   updateBot,
 } from "../../lib/bots";
+import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 const LineIcon = () => (
   <svg
@@ -266,13 +267,17 @@ export default function Integration() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<"line" | "web" | null>(null);
   const [expanded, setExpanded] = useState<"line" | "website" | null>("line");
+  const { scopeParam } = useAdminScope();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchBots();
+      const data = await fetchBots(scopeParam);
       setBots(data);
-      setSelectedId((prev) => prev || data[0]?.bot_id || "");
+      setSelectedId((prev) => {
+        if (prev && data.some((b) => b.bot_id === prev)) return prev;
+        return data[0]?.bot_id || "";
+      });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "โหลดรายการบอทไม่สำเร็จ"
@@ -280,7 +285,7 @@ export default function Integration() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [scopeParam]);
 
   useEffect(() => {
     load();

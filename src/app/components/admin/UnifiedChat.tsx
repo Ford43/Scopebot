@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Send, CheckCircle, Clock, User, Bot, Headphones, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { authHeaders } from "../../lib/api";
+import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 // Types อ้างอิงตามโครงสร้าง DB ใน README
 interface LiveSession {
@@ -26,13 +27,14 @@ export default function UnifiedChat() {
   const [replyText, setReplyText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { scopeParam } = useAdminScope();
 
   // 1. ดึงรายการ Session ที่กำลังรอเจ้าหน้าที่หรือคุยอยู่ (Polling ทุก 5 วินาที)
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         // ดึง session ทั้งหมดที่ยัง active อยู่ 
-        const res = await fetch("/api/live/sessions", {
+        const res = await fetch(`/api/live/sessions?scope=${encodeURIComponent(scopeParam)}`, {
           headers: authHeaders(),
         });
         if (res.ok) {
@@ -48,7 +50,7 @@ export default function UnifiedChat() {
     fetchSessions(); // ดึงครั้งแรก
     const interval = setInterval(fetchSessions, 5000); // อัปเดตทุก 5 วินาที
     return () => clearInterval(interval);
-  }, []);
+  }, [scopeParam]);
 
   // 2. ดึงประวัติแชทเมื่อคลิกเลือก Session
   useEffect(() => {

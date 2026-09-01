@@ -34,7 +34,7 @@ async def upload_document(
     file: UploadFile = File(...),
     category: str = "ทั่วไป",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     # เช็คนามสกุลไฟล์
     ext = os.path.splitext(file.filename or "")[1].lower()
@@ -101,7 +101,7 @@ async def upload_document(
 def list_documents(
     category: str = None,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     query = db.query(models.Document).filter(
         models.Document.owner_id == current_user.id
@@ -117,7 +117,7 @@ def list_documents(
 @router.get("/categories")
 def list_categories(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     results = db.query(models.Document.category).filter(
         models.Document.owner_id == current_user.id
@@ -133,7 +133,7 @@ def update_document(
     doc_id: int,
     body: schemas.DocumentUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     doc = db.query(models.Document).filter(
         models.Document.id == doc_id,
@@ -156,7 +156,7 @@ def update_document(
 def delete_document(
     doc_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     doc = db.query(models.Document).filter(
         models.Document.id == doc_id,
@@ -208,7 +208,7 @@ def assign_to_bot(
     bot_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     doc = db.query(models.Document).filter(
         models.Document.id == doc_id,
@@ -256,7 +256,7 @@ def unassign_from_bot(
     bot_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     doc = db.query(models.Document).filter(
         models.Document.id == doc_id,

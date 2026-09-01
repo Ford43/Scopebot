@@ -78,8 +78,8 @@ export function useChatSession({
     }
     try {
       const qs = activeBot?.bot_id
-        ? `?bot_id_filter=${encodeURIComponent(activeBot.bot_id)}&limit=30`
-        : "?limit=30";
+        ? `?bot_id_filter=${encodeURIComponent(activeBot.bot_id)}&limit=30&scope=mine`
+        : "?limit=30&scope=mine";
       const res = await fetch(`/api/chat/sessions/all${qs}`, {
         headers: authHeaders(),
       });

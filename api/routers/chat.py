@@ -14,17 +14,10 @@ def chat(
     bot_id: str,
     body: schemas.ChatRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user),
+    current_user: models.User = Depends(auth.require_shop_operator),
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
-
-    if (
-        current_user.role == models.UserRole.user
-        and bot.owner_id != current_user.id
-    ):
-        raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
+    auth.assert_bot_access(current_user, bot)
 
     if bot.status != models.BotStatus.active:
         raise HTTPException(status_code=400, detail="Bot ยังไม่พร้อมใช้งาน")
@@ -196,11 +189,10 @@ def get_history(
     limit: int = 20,
     source_channel: str = None,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
+    auth.assert_bot_access(current_user, bot)
 
     query = db.query(models.Conversation).filter(
         models.Conversation.bot_id == bot.id
@@ -221,11 +213,10 @@ def get_history(
 def get_unanswered(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
+    auth.assert_bot_access(current_user, bot)
 
     return db.query(models.Conversation).filter(
         models.Conversation.bot_id == bot.id,
@@ -239,13 +230,16 @@ def resolve_conversation(
     conv_id: int,
     answer: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     conv = db.query(models.Conversation).filter(
         models.Conversation.id == conv_id
     ).first()
     if not conv:
         raise HTTPException(status_code=404, detail="ไม่พบ Conversation")
+
+    bot = db.query(models.Bot).filter(models.Bot.id == conv.bot_id).first()
+    auth.assert_bot_access(current_user, bot)
 
     conv.answer = answer
     conv.is_resolved = True
@@ -259,10 +253,14 @@ def get_session_updates(
     bot_id: str,
     session_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user),
+    current_user: models.User = Depends(auth.require_shop_operator),
 ):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     if not bot:
+        return []
+    try:
+        auth.assert_bot_access(current_user, bot)
+    except HTTPException:
         return []
 
     active_session = db.query(models.LiveSession).filter(
@@ -292,32 +290,25 @@ def get_all_sessions(
     page: int = 1,
     limit: int = 20,
     bot_id_filter: str = None,
+    scope: str = "all",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     """ดึงประวัติแบบ session — 1 session = 1 แถว"""
 
-    # หา bot ของ user นี้
-    if current_user.role == models.UserRole.admin:
-        bots = db.query(models.Bot).all()
-    else:
-        bots = db.query(models.Bot).filter(
-            models.Bot.owner_id == current_user.id
-        ).all()
-
+    bots = auth.visible_bots_query(db, current_user, scope).all()
     bot_map = {b.id: b for b in bots}
     bot_ids = list(bot_map.keys())
 
     if not bot_ids:
         return []
 
-    # filter by bot
+    # filter by bot — ต้องอยู่ในชุดที่ผู้ใช้มีสิทธิ์เห็น
     if bot_id_filter:
-        bot_obj = db.query(models.Bot).filter(
-            models.Bot.bot_id == bot_id_filter
-        ).first()
-        if bot_obj:
-            bot_ids = [bot_obj.id]
+        bot_obj = next((b for b in bots if b.bot_id == bot_id_filter), None)
+        if not bot_obj:
+            return []
+        bot_ids = [bot_obj.id]
 
     # ดึง unique session_ids
     session_rows = db.query(

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct
 from api.database import get_db
@@ -39,17 +39,12 @@ def _waiting_queue_count(db: Session, bot_ids: list) -> int:
 
 @router.get("/stats")
 def get_stats(
-    days: int = 7,  # ← user เลือกได้ผ่าน ?days=7 หรือ ?days=30
+    days: int = 7,
+    scope: str = "all",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    # กรอง bot ของ user นี้
-    if current_user.role == models.UserRole.admin:
-        bots = db.query(models.Bot).all()
-    else:
-        bots = db.query(models.Bot).filter(
-            models.Bot.owner_id == current_user.id
-        ).all()
+    bots = auth.visible_bots_query(db, current_user, scope).all()
 
     bot_ids = [b.id for b in bots]
     total_bots = len(bots)
@@ -89,7 +84,7 @@ def get_stats(
         if total_conversations > 0 else 0, 1
     )
 
-    if current_user.role == models.UserRole.admin:
+    if current_user.role == models.UserRole.admin and auth.normalize_scope(scope) == "all":
         total_documents = db.query(models.Document).count()
     else:
         total_documents = db.query(models.Document).filter(
@@ -199,6 +194,7 @@ def get_stats(
         },
         # Daily chart
         "daily_stats": daily_stats,
+        "scope": auth.normalize_scope(scope) if current_user.role == models.UserRole.admin else "mine",
         "days": days,
     }
 
@@ -207,12 +203,10 @@ def get_stats(
 def get_bot_stats(
     bot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    from fastapi import HTTPException
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
+    auth.assert_bot_access(current_user, bot)
 
     total = db.query(models.Conversation).filter(
         models.Conversation.bot_id == bot.id
@@ -255,26 +249,16 @@ def get_top_questions(
     days: int = 7,
     limit: int = 5,
     bot_id: str = None,
+    scope: str = "all",
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_approved_user)
+    current_user: models.User = Depends(auth.require_shop_operator)
 ):
     if bot_id:
         bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
-        if not bot:
-            return []
-        if (
-            current_user.role == models.UserRole.user
-            and bot.owner_id != current_user.id
-        ):
-            raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
+        auth.assert_bot_access(current_user, bot)
         bot_ids = [bot.id]
-    elif current_user.role == models.UserRole.admin:
-        bots = db.query(models.Bot).all()
-        bot_ids = [b.id for b in bots]
     else:
-        bots = db.query(models.Bot).filter(
-            models.Bot.owner_id == current_user.id
-        ).all()
+        bots = auth.visible_bots_query(db, current_user, scope).all()
         bot_ids = [b.id for b in bots]
 
     if not bot_ids:

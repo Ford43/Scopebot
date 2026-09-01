@@ -3,20 +3,14 @@ import { Link } from "react-router";
 import {
   LogOut,
   User,
-  History,
-  Clock,
   Menu,
   Zap,
   Crown,
   Headphones,
   UserCircle2,
-  Bot,
 } from "lucide-react";
-import type { ActiveView, HistoryItem } from "../../types/chat";
-import {
-  ADMIN_MENU_ITEMS,
-  SUPPORT_MENU_ITEMS,
-} from "../../constants/chat";
+import type { ActiveView } from "../../types/chat";
+import { menuItemsForRole } from "../../constants/chat";
 
 interface ChatSidebarProps {
   activeView: ActiveView;
@@ -26,12 +20,9 @@ interface ChatSidebarProps {
   isSupport: boolean;
   role: string;
   userName?: string;
-  historyItems: HistoryItem[];
   unreadCount?: number;
   onToggleCollapse: () => void;
   onViewChange: (view: ActiveView) => void;
-  onShowHistory: () => void;
-  onHistoryClick: (item: HistoryItem) => void;
   onLogout: () => void;
 }
 
@@ -43,12 +34,9 @@ export default function ChatSidebar({
   isSupport,
   role,
   userName,
-  historyItems,
   unreadCount = 0,
   onToggleCollapse,
   onViewChange,
-  onShowHistory,
-  onHistoryClick,
   onLogout,
 }: ChatSidebarProps) {
   const profileConfig = isAdmin
@@ -75,6 +63,7 @@ export default function ChatSidebar({
           label: "User",
         };
   const ProfileIcon = profileConfig.icon;
+  const menuItems = menuItemsForRole(role);
 
   return (
     <>
@@ -173,12 +162,6 @@ export default function ChatSidebar({
       <nav
         className={`flex-1 overflow-y-auto py-3 space-y-0.5 ${sidebarCollapsed ? "px-2" : "px-3"}`}
       >
-        {!sidebarCollapsed && role !== "admin" && (
-          <p className="text-[10px] text-gray-600 uppercase tracking-wider px-3 mb-1.5">
-            ผู้ใช้งาน
-          </p>
-        )}
-
         {isAuthenticated && (
           <>
             {sidebarCollapsed ? (
@@ -191,86 +174,22 @@ export default function ChatSidebar({
               </div>
             )}
 
-            {role === "user" && (
-              <>
-                <NavButton
-                  id="bots"
-                  label="บอท"
-                  icon={Bot}
-                  activeView={activeView}
-                  sidebarCollapsed={sidebarCollapsed}
-                  onClick={() => onViewChange("bots")}
-                />
-                <HistoryNavButton
-                  sidebarCollapsed={sidebarCollapsed}
-                  historyCount={historyItems.length}
-                  onShowHistory={onShowHistory}
-                />
-                {!sidebarCollapsed &&
-                  historyItems.slice(0, 4).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => onHistoryClick(item)}
-                      className="w-full flex items-center gap-2.5 pl-10 pr-3 py-2 rounded-lg text-xs text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"
-                    >
-                      <Clock className="w-3 h-3 flex-shrink-0 text-gray-600" />
-                      <span className="truncate">{item.query}</span>
-                    </button>
-                  ))}
-                {!sidebarCollapsed && historyItems.length > 4 && (
-                  <button
-                    onClick={onShowHistory}
-                    className="pl-10 pr-3 py-1.5 text-[10px] text-amber-400 hover:text-amber-300"
-                  >
-                    ดูทั้งหมด ({historyItems.length}) →
-                  </button>
-                )}
-              </>
-            )}
-
-            {role === "support" && (
-              <>
-                {SUPPORT_MENU_ITEMS.map((item) => (
-                  <NavButton
-                    key={item.id}
-                    id={item.id}
-                    label={item.label}
-                    icon={item.icon}
-                    badgeCount={
-                      item.showUnreadBadge && unreadCount > 0
-                        ? unreadCount
-                        : undefined
-                    }
-                    activeView={activeView}
-                    sidebarCollapsed={sidebarCollapsed}
-                    onClick={() => onViewChange(item.id)}
-                  />
-                ))}
-                <HistoryNavButton
-                  sidebarCollapsed={sidebarCollapsed}
-                  historyCount={historyItems.length}
-                  onShowHistory={onShowHistory}
-                />
-              </>
-            )}
-
-            {role === "admin" &&
-              ADMIN_MENU_ITEMS.map((item) => (
-                <NavButton
-                  key={item.id}
-                  id={item.id}
-                  label={item.label}
-                  icon={item.icon}
-                  badgeCount={
-                    item.showUnreadBadge && unreadCount > 0
-                      ? unreadCount
-                      : undefined
-                  }
-                  activeView={activeView}
-                  sidebarCollapsed={sidebarCollapsed}
-                  onClick={() => onViewChange(item.id)}
-                />
-              ))}
+            {menuItems.map((item) => (
+              <NavButton
+                key={item.id}
+                id={item.id}
+                label={item.label}
+                icon={item.icon}
+                badgeCount={
+                  item.showUnreadBadge && unreadCount > 0
+                    ? unreadCount
+                    : undefined
+                }
+                activeView={activeView}
+                sidebarCollapsed={sidebarCollapsed}
+                onClick={() => onViewChange(item.id)}
+              />
+            ))}
           </>
         )}
       </nav>
@@ -341,36 +260,6 @@ function NavButton({
           {!!badgeCount && !active && (
             <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-gray-900 text-[10px] flex items-center justify-center">
               {badgeCount > 9 ? "9+" : badgeCount}
-            </span>
-          )}
-        </>
-      )}
-    </button>
-  );
-}
-
-function HistoryNavButton({
-  sidebarCollapsed,
-  historyCount,
-  onShowHistory,
-}: {
-  sidebarCollapsed: boolean;
-  historyCount: number;
-  onShowHistory: () => void;
-}) {
-  return (
-    <button
-      onClick={onShowHistory}
-      title={sidebarCollapsed ? "ประวัติการสนทนา" : undefined}
-      className={`w-full flex items-center rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ${sidebarCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"}`}
-    >
-      <History className="w-4 h-4 flex-shrink-0 text-gray-500" />
-      {!sidebarCollapsed && (
-        <>
-          <span className="flex-1">ประวัติการค้นหา</span>
-          {historyCount > 0 && (
-            <span className="text-[10px] bg-amber-400/20 text-amber-400 px-1.5 py-0.5 rounded-full">
-              {historyCount}
             </span>
           )}
         </>

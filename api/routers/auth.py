@@ -218,6 +218,15 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบ User")
 
+    if (
+        current_user.role == models.UserRole.support
+        and user.role == models.UserRole.admin
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Support ไม่สามารถแก้ไขบัญชี Admin ได้",
+        )
+
     if body.is_active is False and user.id == current_user.id:
         raise HTTPException(status_code=400, detail="ไม่สามารถระงับบัญชีของตัวเองได้")
 
@@ -228,7 +237,15 @@ def approve_user(
     if body.max_bots is not None:
         user.max_bots = body.max_bots
     if body.role is not None:
-        user.role = body.role
+        if current_user.role != models.UserRole.admin:
+            raise HTTPException(
+                status_code=403,
+                detail="เฉพาะ Admin ที่เปลี่ยนบทบาทได้",
+            )
+        try:
+            user.role = models.UserRole(body.role)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="บทบาทไม่ถูกต้อง")
 
     db.commit()
     db.refresh(user)
@@ -252,6 +269,22 @@ def delete_user(
 
     if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="ไม่สามารถลบบัญชีของตัวเองได้")
+
+    if (
+        current_user.role == models.UserRole.support
+        and user.role == models.UserRole.admin
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Support ไม่สามารถลบบัญชี Admin ได้",
+        )
+
+    # Support ปฏิเสธได้เฉพาะคำขอที่ยังไม่อนุมัติ — ลบถาวรเป็นสิทธิ์ Admin
+    if current_user.role == models.UserRole.support and user.is_approved:
+        raise HTTPException(
+            status_code=403,
+            detail="เฉพาะ Admin ที่ลบบัญชีถาวรได้ — Support ปฏิเสธได้เฉพาะคำขอที่ยังไม่อนุมัติ",
+        )
 
     # บัญชีที่อนุมัติแล้วต้องระงับก่อน จึงจะลบถาวรได้ (คำขอ Pending ยังปฏิเสธ/ลบได้)
     if user.is_approved and user.is_active:

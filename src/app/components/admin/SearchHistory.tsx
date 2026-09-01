@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Clock, MessageSquare, ChevronDown, ChevronUp, Smartphone, Globe, Bot } from "lucide-react";
 import { authHeaders } from "../../lib/api";
+import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 interface ChatMessage { id: number; question: string; answer: string; is_answered_by_bot: boolean; created_at: string; }
 interface ChatSession {
@@ -32,6 +33,7 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 20;
+  const { scopeParam } = useAdminScope();
 
   useEffect(() => {
     setSearchQuery(initialQuery);
@@ -39,21 +41,25 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
 
   // โหลด Bot list
   useEffect(() => {
-    fetch("/api/bots/", { headers: authHeaders() })
+    fetch(`/api/bots/?scope=${encodeURIComponent(scopeParam)}`, {
+      headers: authHeaders(),
+    })
       .then((r) => r.json())
       .then((data) => setBots(Array.isArray(data) ? data : []));
-  }, []);
+    setSelectedBot("all");
+    setPage(1);
+  }, [scopeParam]);
 
   useEffect(() => {
     setLoading(true);
-    let url = `/api/chat/sessions/all?page=${page}&limit=${LIMIT}`;
+    let url = `/api/chat/sessions/all?page=${page}&limit=${LIMIT}&scope=${encodeURIComponent(scopeParam)}`;
     if (selectedBot !== "all") url += `&bot_id_filter=${selectedBot}`;
 
     fetch(url, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { setSessions(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [selectedBot, page]);
+  }, [selectedBot, page, scopeParam]);
 
   const filtered = sessions.filter(s =>
     s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

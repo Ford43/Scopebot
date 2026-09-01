@@ -37,6 +37,22 @@ export const VIEW_LABELS: Record<ActiveView, string> = {
   "user-management": "จัดการผู้ใช้งาน",
 };
 
+export const PRODUCT_MENU_ITEMS: MenuItem[] = [
+  { id: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard },
+  { id: "bots", label: "บอท", icon: Bot },
+  {
+    id: "unified-chat",
+    label: "แชทรวม",
+    icon: MessageSquare,
+    showUnreadBadge: true,
+  },
+  { id: "search-history", label: "ประวัติการสนทนา", icon: History },
+  { id: "integration", label: "การเชื่อมต่อ", icon: Puzzle },
+];
+
+/** เจ้าของร้าน — เมนูสินค้าทั้งหมด ยกเว้นจัดการผู้ใช้ */
+export const USER_MENU_ITEMS: MenuItem[] = PRODUCT_MENU_ITEMS;
+
 export const ADMIN_MENU_ITEMS: MenuItem[] = [
   { id: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard },
   { id: "bots", label: "บอท", icon: Bot },
@@ -51,14 +67,27 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
   { id: "integration", label: "การเชื่อมต่อ", icon: Puzzle },
 ];
 
+/** ซัพพอร์ตแพลตฟอร์ม — คุมบัญชีอย่างเดียว */
 export const SUPPORT_MENU_ITEMS: MenuItem[] = [
-  {
-    id: "unified-chat",
-    label: "แชทรวม",
-    icon: MessageSquare,
-    showUnreadBadge: true,
-  },
+  { id: "user-management", label: "จัดการผู้ใช้งาน", icon: User },
 ];
+
+export function menuItemsForRole(role: string): MenuItem[] {
+  if (role === "admin") return ADMIN_MENU_ITEMS;
+  if (role === "support") return SUPPORT_MENU_ITEMS;
+  return USER_MENU_ITEMS;
+}
+
+export function defaultViewForRole(role: string): ActiveView {
+  if (role === "admin") return "dashboard";
+  if (role === "support") return "user-management";
+  return "bots";
+}
+
+export function roleCanAccessView(role: string, view: ActiveView): boolean {
+  if (view === "chat") return role === "admin" || role === "user";
+  return menuItemsForRole(role).some((item) => item.id === view);
+}
 
 /** Build suggested prompt chips from bot description when no top-questions yet */
 export function promptsFromDescription(description?: string): string[] {

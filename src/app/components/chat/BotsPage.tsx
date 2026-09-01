@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Plus, Bot, Edit2, X, Clock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAdminScope } from "../../contexts/AdminScopeContext";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
 import type { BotItem } from "../../types/bot";
 import { fetchBots } from "../../lib/bots";
@@ -31,21 +32,25 @@ export default function BotsPage({
   const [editNotice, setEditNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { isAdmin, scopeParam } = useAdminScope();
 
   const maxBots = user?.max_bots || 5;
-  const isLimitReached = bots.length >= maxBots;
+  const ownBotCount = bots.filter(
+    (b) => Number(b.owner_id) === Number(user?.id)
+  ).length;
+  const isLimitReached = ownBotCount >= maxBots;
 
   const loadBots = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await fetchBots();
+      const data = await fetchBots(scopeParam);
       setBots(data);
     } catch (error) {
       console.error("Fetch bots error", error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [scopeParam]);
 
   useEffect(() => {
     loadBots();
@@ -219,6 +224,10 @@ export default function BotsPage({
                               ? "กำลังประมวลผล"
                               : "ยังไม่พร้อม"}
                         </span>
+                        {isAdmin &&
+                          Number(bot.owner_id) !== Number(user?.id) && (
+                            <span className="ml-1.5 text-amber-600">· ร้านอื่น</span>
+                          )}
                       </p>
                     </div>
                   </div>

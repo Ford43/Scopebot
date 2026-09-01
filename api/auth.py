@@ -76,3 +76,47 @@ def require_role(*roles):
             raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง")
         return current_user
     return checker
+
+
+SUPPORT_PRODUCT_FORBIDDEN = "บัญชี Support เข้าถึงได้เฉพาะเมนูจัดการผู้ใช้งาน"
+
+
+def require_shop_operator(
+    current_user: models.User = Depends(get_approved_user),
+):
+    """เจ้าของร้านหรือแอดมินเท่านั้น — ซัพพอร์ตแพลตฟอร์มใช้เมนูสินค้าไม่ได้"""
+    if current_user.role == models.UserRole.support:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=SUPPORT_PRODUCT_FORBIDDEN,
+        )
+    return current_user
+
+
+def normalize_scope(scope: Optional[str]) -> str:
+    if (scope or "").strip().lower() == "mine":
+        return "mine"
+    return "all"
+
+
+def visible_bots_query(db: Session, user: models.User, scope: Optional[str] = None):
+    """บอทที่ผู้ใช้มีสิทธิ์เห็น: ร้าน = ของตัวเอง, แอดมิน = ทั้งระบบหรือเฉพาะบัญชีนี้"""
+    query = db.query(models.Bot)
+    if user.role == models.UserRole.admin and normalize_scope(scope) == "all":
+        return query
+    return query.filter(models.Bot.owner_id == user.id)
+
+
+def assert_bot_access(user: models.User, bot: Optional[models.Bot]) -> models.Bot:
+    if bot is None:
+        raise HTTPException(status_code=404, detail="ไม่พบ Bot")
+    if user.role == models.UserRole.support:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=SUPPORT_PRODUCT_FORBIDDEN,
+        )
+    if user.role == models.UserRole.admin:
+        return bot
+    if bot.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="ไม่มีสิทธิ์เข้าถึง Bot นี้")
+    return bot

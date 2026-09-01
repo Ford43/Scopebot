@@ -1,12 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
+import {
+  AdminScopeProvider,
+  useAdminScope,
+} from "../../contexts/AdminScopeContext";
 import { useChatSession } from "../../hooks/useChatSession";
 import {
   resolveNotificationView,
   useNotifications,
 } from "../../hooks/useNotifications";
 import { useWaitingQueueCount } from "../../hooks/useWaitingQueueCount";
+import {
+  defaultViewForRole,
+  roleCanAccessView,
+} from "../../constants/chat";
 import type { ActiveView, HistoryItem } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
 import Dashboard from "../admin/Dashboard";
@@ -21,17 +29,29 @@ import ChatTopBar from "./ChatTopBar";
 import HistoryDrawer from "./HistoryDrawer";
 
 export default function ChatInterface() {
+  const { isAdmin } = useAuth();
+  return (
+    <AdminScopeProvider isAdmin={!!isAdmin}>
+      <ChatShell />
+    </AdminScopeProvider>
+  );
+}
+
+function ChatShell() {
+  const { user, logout, isAuthenticated, isAdmin, isSupport } = useAuth();
+  const { scopeParam } = useAdminScope();
+  const navigate = useNavigate();
+  const role = user?.role ?? "guest";
+
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-  const [activeView, setActiveView] = useState<ActiveView>("bots");
+  const [activeView, setActiveView] = useState<ActiveView>(() =>
+    defaultViewForRole(user?.role ?? "user")
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeBot, setActiveBot] = useState<BotItem | null>(null);
   const [forceEditBot, setForceEditBot] = useState<string | null>(null);
   const [forceEditReason, setForceEditReason] = useState<string | null>(null);
-
   const prevRoleRef = useRef<string | undefined>(undefined);
-  const { user, logout, isAuthenticated, isAdmin, isSupport } = useAuth();
-  const navigate = useNavigate();
-  const role = user?.role ?? "guest";
 
   const {
     unreadCount: unreadNotifs,
@@ -40,7 +60,9 @@ export default function ChatInterface() {
     markAllRead,
   } = useNotifications(isAuthenticated);
   const waitingQueueCount = useWaitingQueueCount(
-    isAuthenticated && (isAdmin || isSupport)
+    isAuthenticated && !isSupport,
+    10000,
+    scopeParam
   );
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
@@ -67,11 +89,16 @@ export default function ChatInterface() {
   useEffect(() => {
     if (user?.role !== prevRoleRef.current) {
       prevRoleRef.current = user?.role;
-      if (user?.role === "admin") setActiveView("dashboard");
-      else if (user?.role === "support") setActiveView("unified-chat");
-      else setActiveView("bots");
+      if (user?.role) setActiveView(defaultViewForRole(user.role));
     }
   }, [user?.role]);
+
+  useEffect(() => {
+    if (!user?.role) return;
+    if (!roleCanAccessView(user.role, activeView)) {
+      setActiveView(defaultViewForRole(user.role));
+    }
+  }, [user?.role, activeView]);
 
   const handleHistorySelect = (item: HistoryItem) => {
     setShowHistoryDrawer(false);
@@ -170,12 +197,9 @@ export default function ChatInterface() {
           isSupport={isSupport}
           role={role}
           userName={user?.name}
-          historyItems={historyItems}
           unreadCount={waitingQueueCount}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           onViewChange={setActiveView}
-          onShowHistory={() => setShowHistoryDrawer(true)}
-          onHistoryClick={handleHistorySelect}
           onLogout={handleLogout}
         />
       </aside>
@@ -189,14 +213,21 @@ export default function ChatInterface() {
           isSupport={isSupport}
           unreadNotifs={unreadNotifs}
           notifications={notifications}
+          searchPlaceholder={
+            isSupport ? "ค้นหาผู้ใช้งาน..." : "ค้นหาบอทหรือประวัติ..."
+          }
           hideSearch={activeView === "chat"}
           onMarkRead={markRead}
           onMarkAllRead={markAllRead}
           onNotificationClick={(n) => {
+            if (isSupport) {
+              setActiveView("user-management");
+              return;
+            }
             const target = resolveNotificationView(n);
-            if (target === "unified-chat" && (isAdmin || isSupport)) {
+            if (target === "unified-chat") {
               setActiveView("unified-chat");
-            } else if (target === "dashboard" && isAdmin) {
+            } else if (target === "dashboard") {
               setActiveView("dashboard");
             } else {
               setActiveView("bots");
@@ -204,17 +235,15 @@ export default function ChatInterface() {
           }}
           onSearch={(query) => {
             setGlobalSearchQuery(query);
-            if (isAdmin || isSupport) {
-              if (activeView === "user-management") {
-                setActiveView("user-management");
-              } else if (activeView === "bots") {
-                setActiveView("bots");
-              } else {
-                setActiveView("search-history");
-              }
+            if (isSupport) {
+              setActiveView("user-management");
+            } else if (activeView === "user-management") {
+              setActiveView("user-management");
+            } else if (activeView === "bots") {
+              setActiveView("bots");
             } else {
+              setActiveView("search-history");
               setHistorySearchQuery(query);
-              setShowHistoryDrawer(true);
             }
           }}
           onNavigateBots={() => setActiveView("bots")}

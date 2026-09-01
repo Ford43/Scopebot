@@ -65,6 +65,16 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
 
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === "admin";
+  const isSupport = currentUser?.role === "support";
+  const canChangeRole = isAdmin;
+  const canPermanentDelete = isAdmin;
+
+  const canEditUser = (target: { role?: string } | null) => {
+    if (!target) return false;
+    if (isAdmin) return true;
+    if (isSupport && target.role !== "admin") return true;
+    return false;
+  };
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -200,7 +210,9 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">จัดการผู้ใช้งาน</h1>
           <p className="mt-2 text-sm text-slate-500 max-w-2xl">
-            จัดการบัญชีผู้ใช้งานทั้งหมด อนุมัติการเข้าถึง และตรวจสอบสถานะระบบ
+            {isSupport
+              ? "อนุมัติ ปฏิเสธ ระงับ และปลดระงับบัญชีได้ — การเปลี่ยนบทบาทเป็น Admin และการลบถาวรเป็นสิทธิ์ของผู้ดูแลระบบ"
+              : "จัดการบัญชีผู้ใช้งานทั้งหมด อนุมัติการเข้าถึง และตรวจสอบสถานะระบบ"}
           </p>
         </div>
       </div>
@@ -375,7 +387,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b pb-4">
               <h2 className="text-xl font-bold text-slate-900">
-                {isAdmin ? "แก้ไขข้อมูลผู้ใช้งาน" : "รายละเอียดผู้ใช้งาน"}
+                {canEditUser(editModalUser) ? "แก้ไขข้อมูลผู้ใช้งาน" : "รายละเอียดผู้ใช้งาน"}
               </h2>
               <button
                 onClick={() => setEditModalUser(null)}
@@ -410,7 +422,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                   บทบาท (Role)
                 </label>
                 <select
-                  disabled={!isAdmin}
+                  disabled={!canChangeRole}
                   value={editFormData.role}
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, role: e.target.value })
@@ -427,9 +439,9 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                 <label className="text-xs font-semibold uppercase text-slate-400">
                   จำนวนบอทสูงสุด (Max Bots)
                 </label>
-                <input
+                  <input
                   type="number"
-                  disabled={!isAdmin}
+                  disabled={!canEditUser(editModalUser)}
                   value={editFormData.max_bots}
                   onChange={(e) =>
                     setEditFormData({
@@ -455,7 +467,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                 >
                   <button
                     type="button"
-                    disabled={!isAdmin || isEditingSelf}
+                    disabled={!canEditUser(editModalUser) || isEditingSelf}
                     onClick={() =>
                       setEditFormData({ ...editFormData, is_active: true })
                     }
@@ -470,7 +482,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                   </button>
                   <button
                     type="button"
-                    disabled={!isAdmin || isEditingSelf}
+                    disabled={!canEditUser(editModalUser) || isEditingSelf}
                     onClick={() =>
                       setEditFormData({ ...editFormData, is_active: false })
                     }
@@ -488,8 +500,12 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                   {isEditingSelf
                     ? "ไม่สามารถระงับบัญชีของตัวเองได้"
                     : editFormData.is_active
-                      ? "บัญชีใช้งานได้ตามปกติ หากต้องการลบถาวร ให้ระงับบัญชีก่อน แล้วไปที่รายการบัญชีที่ระงับ"
-                      : "บัญชีถูกระงับ — ผู้ใช้จะเข้าสู่ระบบไม่ได้ ลบถาวรได้จากรายการบัญชีที่ระงับเท่านั้น"}
+                      ? canPermanentDelete
+                        ? "บัญชีใช้งานได้ตามปกติ หากต้องการลบถาวร ให้ระงับบัญชีก่อน แล้วไปที่รายการบัญชีที่ระงับ"
+                        : "บัญชีใช้งานได้ตามปกติ สามารถระงับได้ถ้าผู้ใช้ผิดเงื่อนไข"
+                      : canPermanentDelete
+                        ? "บัญชีถูกระงับ — ผู้ใช้จะเข้าสู่ระบบไม่ได้ ลบถาวรได้จากรายการบัญชีที่ระงับเท่านั้น"
+                        : "บัญชีถูกระงับ — ผู้ใช้จะเข้าสู่ระบบไม่ได้"}
                 </p>
               </div>
 
@@ -508,15 +524,23 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                 onClick={() => setEditModalUser(null)}
                 className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
               >
-                {isAdmin ? "ยกเลิก" : "ปิดหน้าต่าง"}
+                {canEditUser(editModalUser) ? "ยกเลิก" : "ปิดหน้าต่าง"}
               </button>
-              {isAdmin && (
+              {canEditUser(editModalUser) && (
                 <button
                   disabled={isSaving}
                   className="flex-1 rounded-xl bg-amber-400 py-3 text-sm font-semibold text-slate-900 hover:bg-amber-500 transition-colors disabled:opacity-60"
                   onClick={async () => {
                     setIsSaving(true);
                     try {
+                      const payload: Record<string, unknown> = {
+                        is_approved: true,
+                        is_active: editFormData.is_active,
+                        max_bots: editFormData.max_bots,
+                      };
+                      if (canChangeRole) {
+                        payload.role = editFormData.role;
+                      }
                       const res = await fetch(
                         `/api/auth/users/${editModalUser.id}/approve`,
                         {
@@ -525,12 +549,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                             ...authHeaders(),
                             "Content-Type": "application/json",
                           },
-                          body: JSON.stringify({
-                            is_approved: true,
-                            is_active: editFormData.is_active,
-                            max_bots: editFormData.max_bots,
-                            role: editFormData.role,
-                          }),
+                          body: JSON.stringify(payload),
                         }
                       );
 
@@ -541,7 +560,9 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                         setEditModalUser(null);
                         toast.success(
                           wasSuspended
-                            ? "ระงับบัญชีเรียบร้อย — ลบถาวรได้จากรายการบัญชีที่ระงับ"
+                            ? canPermanentDelete
+                              ? "ระงับบัญชีเรียบร้อย — ลบถาวรได้จากรายการบัญชีที่ระงับ"
+                              : "ระงับบัญชีเรียบร้อย"
                             : "บันทึกข้อมูลผู้ใช้เรียบร้อย"
                         );
                       } else {
@@ -683,32 +704,32 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-2">
-                      {isAdmin && (
-                        <>
-                          <button
-                            onClick={() => restoreUser(user.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            ปลดระงับ
-                          </button>
-                          <button
-                            disabled={deletingId === user.id}
-                            onClick={async () => {
-                              if (
-                                !window.confirm(
-                                  `ลบผู้ใช้ "${user.username}" อย่างถาวร? บอทและเอกสารของคนนี้จะถูกลบด้วย และกู้คืนไม่ได้`
-                                )
+                      {canEditUser(user) && (
+                        <button
+                          onClick={() => restoreUser(user.id)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          ปลดระงับ
+                        </button>
+                      )}
+                      {canPermanentDelete && (
+                        <button
+                          disabled={deletingId === user.id}
+                          onClick={async () => {
+                            if (
+                              !window.confirm(
+                                `ลบผู้ใช้ "${user.username}" อย่างถาวร? บอทและเอกสารของคนนี้จะถูกลบด้วย และกู้คืนไม่ได้`
                               )
-                                return;
-                              await deleteUserById(user.id, "ลบผู้ใช้เรียบร้อย");
-                            }}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500 px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-rose-200 transition-all hover:bg-rose-600 disabled:opacity-60"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            {deletingId === user.id ? "กำลังลบ..." : "ลบถาวร"}
-                          </button>
-                        </>
+                            )
+                              return;
+                            await deleteUserById(user.id, "ลบผู้ใช้เรียบร้อย");
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500 px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-rose-200 transition-all hover:bg-rose-600 disabled:opacity-60"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {deletingId === user.id ? "กำลังลบ..." : "ลบถาวร"}
+                        </button>
                       )}
                     </div>
                   </div>
