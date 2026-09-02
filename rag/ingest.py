@@ -4,6 +4,12 @@ import shutil
 import gc
 import chromadb # เพิ่ม chromadb เพื่อเข้าถึงคำสั่งเคลียร์แคช
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from config import EMBEDDING_MODEL
@@ -45,7 +51,7 @@ def ingest(bot_id) -> bool:
 
     # guard — ถ้าไม่มีเอกสารให้หยุดเลย
     if not docs:
-        print(f"❌ ไม่พบเอกสารสำหรับ bot: {bot_id} — กรุณาตรวจสอบโฟลเดอร์ data/{bot_id}/")
+        print(f"[ingest] no documents for bot: {bot_id} (check data/{bot_id}/)")
         return False
 
     print("Splitting documents...")
@@ -70,7 +76,7 @@ def ingest(bot_id) -> bool:
     return True
 
 if __name__ == "__main__":
-    print("🔥 INGEST START")
+    print("INGEST START")
 
     bot_id = sys.argv[1] if len(sys.argv) > 1 else "bot_nt"
 

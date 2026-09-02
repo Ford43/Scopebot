@@ -39,8 +39,8 @@ export async function deleteBot(botId: string): Promise<void> {
   await apiFetch(`/api/bots/${botId}`, { method: "DELETE" });
 }
 
-export async function fetchBotDocuments(botId: string): Promise<BotDocument[]> {
-  return apiFetch<BotDocument[]>(`/api/bots/${botId}/documents`);
+export async function reindexBot(botId: string): Promise<void> {
+  await apiFetch(`/api/bots/${botId}/reindex`, { method: "POST" });
 }
 
 export async function toggleBotLine(botId: string): Promise<boolean> {

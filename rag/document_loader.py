@@ -51,7 +51,7 @@ def load_md(path):
 def load_documents(bot_id):
 
     data_path = os.path.join(BASE_DIR, "data", bot_id)
-    print(f"📂 Looking in: {data_path}")
+    print(f"[loader] Looking in: {data_path}")
 
     documents = []
 
@@ -79,7 +79,7 @@ def load_documents(bot_id):
             elif file.endswith(".md"):
                 text = load_md(path)
             else:
-                print(f"❌ Unsupported file: {file}")
+                print(f"[loader] Unsupported file: {file}")
                 continue
 
             documents.append(
@@ -91,7 +91,7 @@ def load_documents(bot_id):
             print(f"Loaded: {file}")
 
         except Exception as e:
-            print(f"❌ Error loading {file}: {e}")
+            print(f"[loader] Error loading {file}: {e}")
 
     print(f"Total docs: {len(documents)}")
     return documents

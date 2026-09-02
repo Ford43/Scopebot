@@ -2,10 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
-from linebot.v3.messaging import (
-    Configuration, ApiClient, MessagingApi,
-    PushMessageRequest, TextMessage
-)
 
 router = APIRouter(prefix="/api/live", tags=["Live Chat"])
 
@@ -13,7 +9,14 @@ router = APIRouter(prefix="/api/live", tags=["Live Chat"])
 def _push_line_message(token: str, line_user_id: str, text: str):
     """ส่งข้อความหาลูกค้าผ่าน Line Push Message"""
     try:
-        # normalize line break ก่อนส่ง
+        from linebot.v3.messaging import (
+            Configuration,
+            ApiClient,
+            MessagingApi,
+            PushMessageRequest,
+            TextMessage,
+        )
+
         text = text.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n")
         configuration = Configuration(access_token=token)
         with ApiClient(configuration) as api_client:
@@ -24,8 +27,10 @@ def _push_line_message(token: str, line_user_id: str, text: str):
                     messages=[TextMessage(text=text)]
                 )
             )
+    except ImportError:
+        print("[live] LINE SDK not installed; skip push")
     except Exception as e:
-        print(f"❌ Push message error: {e}")
+        print(f"[live] Push message error: {e}")
 
 
 def _get_or_create_session(db: Session, line_user_id: str, bot_db_id: int, display_name: str = None):

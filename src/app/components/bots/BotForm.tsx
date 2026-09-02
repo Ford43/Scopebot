@@ -16,6 +16,7 @@ import {
   deleteBot,
   fetchBot,
   fetchBotDocuments,
+  reindexBot,
   updateBot,
 } from "../../lib/bots";
 import {
@@ -81,10 +82,11 @@ export default function BotForm({
   const [botStatus, setBotStatus] = useState<string>(
     existing?.status || "inactive"
   );
+  const [processingStuck, setProcessingStuck] = useState(false);
   const prevStatusRef = useRef<string>(existing?.status || "inactive");
 
   const isNewBot = !currentBot;
-  const isProcessing = botStatus === "processing";
+  const isProcessing = botStatus === "processing" && !processingStuck;
   const canCreate = !!name.trim() && docs.length > 0;
   const canSave =
     !isSaving &&
@@ -143,17 +145,23 @@ export default function BotForm({
 
     checkBotStatus();
     const interval = setInterval(checkBotStatus, 2000);
-    return () => clearInterval(interval);
+    const stuckTimer = setTimeout(() => setProcessingStuck(true), 90000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(stuckTimer);
+    };
   }, [currentBot?.bot_id, botStatus, fetchDocs]);
 
   // Toast when ingest finishes
   useEffect(() => {
     const prev = prevStatusRef.current;
     if (prev === "processing" && botStatus === "active") {
+      setProcessingStuck(false);
       toast.success("บอทพร้อมใช้งานแล้ว", {
         description: "ฐานความรู้ประมวลผลเสร็จ สามารถเข้าแชทได้",
       });
     } else if (prev === "processing" && botStatus === "inactive") {
+      setProcessingStuck(false);
       toast.error("ประมวลผลเอกสารไม่สำเร็จ", {
         description: "บอทยังไม่พร้อมใช้งาน — ตรวจสอบเอกสารแล้วลองใหม่",
       });
@@ -324,6 +332,7 @@ export default function BotForm({
     }
 
     if (bot?.bot_id && assignedAny) {
+      setProcessingStuck(false);
       setBotStatus("processing");
       prevStatusRef.current = "processing";
       await fetchDocs();
@@ -343,6 +352,21 @@ export default function BotForm({
         error instanceof Error ? error.message : "เปลี่ยนหมวดหมู่ไม่สำเร็จ"
       );
       fetchDocs();
+    }
+  };
+
+  const handleReindex = async () => {
+    if (!currentBot?.bot_id) return;
+    try {
+      setProcessingStuck(false);
+      setBotStatus("processing");
+      prevStatusRef.current = "processing";
+      await reindexBot(currentBot.bot_id);
+      toast.success("เริ่มประมวลผลเอกสารใหม่แล้ว");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "เริ่มประมวลผลใหม่ไม่สำเร็จ"
+      );
     }
   };
 
@@ -600,6 +624,24 @@ export default function BotForm({
                     “พร้อมใช้งาน” เมื่อเสร็จ
                   </p>
                 </div>
+              </div>
+            )}
+
+            {processingStuck && botStatus === "processing" && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">ประมวลผลเอกสารค้างอยู่</p>
+                  <p className="text-xs opacity-80 mt-0.5">
+                    มักเกิดจากคอนโซล Windows หรือไฟล์ที่อ่านไม่ได้ — กดลองใหม่ได้เลย
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReindex}
+                  className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex-shrink-0"
+                >
+                  ลองประมวลผลใหม่
+                </button>
               </div>
             )}
 

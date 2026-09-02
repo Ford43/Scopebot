@@ -1,14 +1,28 @@
+import sys
+
+# Windows consoles default to cp1252 — emoji/Thai in print() crash ingest
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.database import engine, Base
 from api.routers import auth, bots, chat
-from api.routers import line_webhook
 from api.routers import documents
 from api.routers import notifications
 from api.routers import dashboard
 from api.routers import live_chat
 import os
 from dotenv import load_dotenv
+
+try:
+    from api.routers import line_webhook
+except ImportError as exc:
+    line_webhook = None
+    print(f"LINE webhook disabled (missing package): {exc}")
 
 load_dotenv()
 
@@ -39,7 +53,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(bots.router)
 app.include_router(chat.router)
-app.include_router(line_webhook.router)
+if line_webhook is not None:
+    app.include_router(line_webhook.router)
 app.include_router(documents.router)
 app.include_router(notifications.router)
 app.include_router(dashboard.router)

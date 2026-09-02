@@ -5,7 +5,7 @@ import shutil
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
 router = APIRouter(prefix="/api/bots", tags=["Bots"])
 
@@ -138,6 +138,33 @@ def list_documents(
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     return bot.documents
+
+
+@router.post("/{bot_id}/reindex")
+def reindex_bot(
+    bot_id: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_shop_operator),
+):
+    """ลองประมวลผลเอกสารใหม่ เมื่อ ingest ค้างหรือพัง"""
+    from api.routers.documents import _run_ingest_and_notify
+
+    bot = _get_bot_or_404(bot_id, db, current_user)
+    if not bot.documents:
+        raise HTTPException(status_code=400, detail="ยังไม่มีเอกสารในบอทนี้")
+
+    bot.status = models.BotStatus.processing
+    db.commit()
+    first_name = bot.documents[0].filename if bot.documents else "documents"
+    background_tasks.add_task(
+        _run_ingest_and_notify,
+        bot.bot_id,
+        bot.id,
+        first_name,
+        current_user.id,
+    )
+    return {"message": "กำลังประมวลผลเอกสารใหม่", "status": bot.status}
 
 
 # =====================

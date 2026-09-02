@@ -359,12 +359,6 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
                 "warning",
             )
     except Exception as e:
-        import traceback
-        print(f"\n{'='*50}")
-        print(f"❌ ERROR INGESTING FILE: {filename}")
-        traceback.print_exc()
-        print(f"{'='*50}\n")
-
         try:
             bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
             if bot:
@@ -378,5 +372,13 @@ def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_
             )
         except Exception:
             db.rollback()
+        import traceback
+        try:
+            print(f"\n{'='*50}")
+            print(f"[ingest] ERROR ingesting file: {filename}")
+            traceback.print_exc()
+            print(f"{'='*50}\n")
+        except Exception:
+            traceback.print_exc()
     finally:
         db.close()

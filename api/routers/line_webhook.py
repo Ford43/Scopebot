@@ -348,7 +348,7 @@ async def line_webhook(bot_id: str, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Line webhook error: {e}")
+        print(f"[LINE] webhook error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
