@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
 import path from 'path'
+import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-
 
 function figmaAssetResolver() {
   return {
@@ -34,7 +33,16 @@ export default defineConfig({
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
+  optimizeDeps: {
+    entries: ['index.html', 'src/main.tsx'],
+  },
+
   server: {
+    port: 5173,
+    strictPort: true,
+    fs: {
+      deny: ['**/venv/**', '**/.venv/**'],
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000', // ชี้ไปที่พอร์ตของ FastAPI

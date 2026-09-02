@@ -7,8 +7,9 @@ try:
 except Exception:
     pass
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from api.database import engine, Base
 from api.routers import auth, bots, chat
 from api.routers import documents
@@ -62,8 +63,20 @@ app.include_router(live_chat.router)
 
 
 @app.get("/")
-def root():
-    return {"message": "Scope Bot API is running 🚀"}
+def root(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return HTMLResponse(
+            """<!doctype html>
+<meta charset="utf-8">
+<title>Scopebot API</title>
+<body style="font-family:sans-serif;padding:2rem;line-height:1.6">
+  <p>นี่คือ Backend API (พอร์ต 8000) ไม่ใช่หน้าเว็บของแอป</p>
+  <p>เปิดแอปที่ <a href="http://localhost:5173">http://localhost:5173</a>
+  หรือ <a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a></p>
+</body>"""
+        )
+    return {"message": "Scope Bot API is running. Open the app at http://localhost:5173"}
 
 
 @app.get("/api/health")

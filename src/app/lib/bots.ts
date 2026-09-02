@@ -18,6 +18,10 @@ export async function fetchBot(botId: string): Promise<BotItem> {
   return apiFetch<BotItem>(`/api/bots/${botId}`);
 }
 
+export async function fetchBotDocuments(botId: string): Promise<BotDocument[]> {
+  return apiFetch<BotDocument[]>(`/api/bots/${botId}/documents`);
+}
+
 export async function createBot(payload: BotPayload): Promise<BotItem> {
   return apiFetch<BotItem>("/api/bots/", {
     method: "POST",
