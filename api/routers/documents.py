@@ -9,7 +9,8 @@ from rag.ingest import ingest
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
 
 UPLOAD_BASE = "data/library"
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
+ALLOWED_EXTENSIONS_LABEL = "PDF, DOCX, TXT, CSV"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
@@ -39,10 +40,9 @@ async def upload_document(
     # เช็คนามสกุลไฟล์
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        allowed = ", ".join(sorted(ALLOWED_EXTENSIONS))
         raise HTTPException(
             status_code=400,
-            detail=f"ไฟล์ประเภท {ext or '(ไม่มีนามสกุล)'} ไม่รองรับ (รองรับ: {allowed})",
+            detail=f"ไฟล์ประเภท {ext or '(ไม่มีนามสกุล)'} ไม่รองรับ (รองรับ: {ALLOWED_EXTENSIONS_LABEL})",
         )
 
     # เช็คชื่อไฟล์ซ้ำ

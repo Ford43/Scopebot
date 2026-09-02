@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 router = APIRouter(prefix="/api/bots", tags=["Bots"])
 
 UPLOAD_BASE = "data"
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".html", ".md"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
 
 
 def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):

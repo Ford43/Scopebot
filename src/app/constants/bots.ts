@@ -9,12 +9,9 @@ export const BOT_AVATAR_COLOURS = [
 /** Must match api/routers/documents.py ALLOWED_EXTENSIONS */
 export const ALLOWED_DOC_EXTENSIONS = [
   ".pdf",
-  ".txt",
   ".docx",
+  ".txt",
   ".csv",
-  ".json",
-  ".html",
-  ".md",
 ] as const;
 
 export const ALLOWED_DOC_ACCEPT = ALLOWED_DOC_EXTENSIONS.join(",");
@@ -22,7 +19,7 @@ export const ALLOWED_DOC_ACCEPT = ALLOWED_DOC_EXTENSIONS.join(",");
 export const MAX_DOC_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export const ALLOWED_DOC_LABEL =
-  "PDF, DOCX, CSV, TXT, JSON, HTML, MD (สูงสุด 10 MB / ไฟล์)";
+  "PDF, Word (DOCX), TXT, CSV (สูงสุด 10 MB / ไฟล์)";
 
 /** หมวดหมู่เอกสาร — ใช้กรอง/ค้นหาเมื่อบอทมีหลายไฟล์ */
 export const DOC_CATEGORIES = [
