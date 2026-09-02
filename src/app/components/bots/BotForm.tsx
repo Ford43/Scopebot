@@ -7,6 +7,7 @@ import {
   Upload,
   FileText,
   Clock,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { BotDocument, BotItem } from "../../types/bot";
@@ -21,10 +22,12 @@ import {
   assignDocumentToBot,
   unassignDocumentFromBot,
   uploadDocument,
+  updateDocumentCategory,
 } from "../../lib/documents";
 import {
   ALLOWED_DOC_ACCEPT,
   ALLOWED_DOC_LABEL,
+  DOC_CATEGORIES,
   isAllowedDocFile,
 } from "../../constants/bots";
 import { formatBytes } from "../../utils/format";
@@ -69,6 +72,9 @@ export default function BotForm({
   const [isSaving, setIsSaving] = useState(false);
   const [docs, setDocs] = useState<BotDocument[]>([]);
   const [docSearch, setDocSearch] = useState("");
+  const [uploadCategory, setUploadCategory] = useState("ทั่วไป");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [customCategory, setCustomCategory] = useState("");
   const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -155,9 +161,27 @@ export default function BotForm({
     prevStatusRef.current = botStatus;
   }, [botStatus]);
 
-  const filteredDocs = docs.filter((d) =>
-    d.filename.toLowerCase().includes(docSearch.toLowerCase())
+  const usedCategories = Array.from(
+    new Set(docs.map((d) => d.category || "ทั่วไป"))
   );
+  const categoryOptions = Array.from(
+    new Set([...DOC_CATEGORIES, ...usedCategories])
+  );
+  const resolvedUploadCategory =
+    uploadCategory === "__custom__"
+      ? customCategory.trim() || "ทั่วไป"
+      : uploadCategory;
+
+  const filteredDocs = docs.filter((d) => {
+    const q = docSearch.trim().toLowerCase();
+    const cat = d.category || "ทั่วไป";
+    const matchSearch =
+      !q ||
+      d.filename.toLowerCase().includes(q) ||
+      cat.toLowerCase().includes(q);
+    const matchCat = categoryFilter === "all" || cat === categoryFilter;
+    return matchSearch && matchCat;
+  });
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -195,13 +219,13 @@ export default function BotForm({
         setBotStatus("processing");
         prevStatusRef.current = "processing";
         toast.success("สร้างบอทแล้ว", {
-          description: "กำลังประมวลผลเอกสาร — อยู่หน้านี้จนกว่าจะพร้อมใช้งาน",
+          description: "กำลังประมวลผลเอกสาร — ดูสถานะได้ที่หน้าจัดการบอท",
         });
       } else {
         setCurrentBot(savedBot);
         toast.success("บันทึกการตั้งค่าเรียบร้อย");
       }
-      onSaveSuccess({ leave: false });
+      onSaveSuccess({ leave: true });
     } catch (error) {
       console.error("Save bot error:", error);
       toast.error(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
@@ -235,6 +259,28 @@ export default function BotForm({
     setIsUploading(true);
     setErrors((p) => ({ ...p, docs: "" }));
 
+    let bot = currentBot;
+    if (!bot && name.trim()) {
+      try {
+        bot = await createBot({
+          name: name.trim(),
+          description: desc.trim(),
+          system_prompt: systemPrompt.trim(),
+        });
+        setCurrentBot(bot);
+        onSaveSuccess({ leave: false });
+        toast.success("สร้างบอทแล้ว", {
+          description: "กำลังอัปโหลดเอกสารเข้าฐานความรู้",
+        });
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "สร้างบอทไม่สำเร็จ — จะอัปโหลดไฟล์ไว้ก่อน แล้วกดสร้างบอทอีกครั้ง"
+        );
+      }
+    }
+
     let assignedAny = false;
 
     for (const file of Array.from(files)) {
@@ -245,13 +291,13 @@ export default function BotForm({
       }
 
       try {
-        const docData = await uploadDocument(file);
+        const docData = await uploadDocument(file, resolvedUploadCategory);
 
-        if (currentBot?.bot_id) {
-          await assignDocumentToBot(docData.id, currentBot.bot_id);
+        if (bot?.bot_id) {
+          await assignDocumentToBot(docData.id, bot.bot_id);
           assignedAny = true;
           toast.success(`อัปโหลด ${file.name} แล้ว`, {
-            description: "กำลังประมวลผลเข้าฐานความรู้",
+            description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,
           });
         } else {
           setDocs((prev) => {
@@ -261,7 +307,11 @@ export default function BotForm({
             }
             return [...prev, docData];
           });
-          toast.success(`เพิ่มไฟล์ ${file.name}`);
+          toast.success(`อัปโหลด ${file.name} แล้ว`, {
+            description: name.trim()
+              ? undefined
+              : "กรอกชื่อบอทแล้วกดสร้างบอท เพื่อเริ่มประมวลผลฐานความรู้",
+          });
         }
       } catch (error) {
         console.error("File processing error", error);
@@ -273,12 +323,27 @@ export default function BotForm({
       }
     }
 
-    if (currentBot?.bot_id && assignedAny) {
+    if (bot?.bot_id && assignedAny) {
       setBotStatus("processing");
       prevStatusRef.current = "processing";
       await fetchDocs();
     }
     setIsUploading(false);
+  };
+
+  const handleCategoryChange = async (docId: number, category: string) => {
+    const next = category.trim().slice(0, 40) || "ทั่วไป";
+    setDocs((prev) =>
+      prev.map((d) => (d.id === docId ? { ...d, category: next } : d))
+    );
+    try {
+      await updateDocumentCategory(docId, next);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "เปลี่ยนหมวดหมู่ไม่สำเร็จ"
+      );
+      fetchDocs();
+    }
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -351,7 +416,7 @@ export default function BotForm({
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          กลับหน้าหลัก
+          กลับไปจัดการบอท
         </button>
         <div className="flex items-center gap-3">
           {isNewBot && docs.length === 0 && (
@@ -488,7 +553,7 @@ export default function BotForm({
 
             {isNewBot && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                ขั้นตอนถัดไป: ไปที่แท็บ{" "}
+                กรอกชื่อบอท แล้วไปที่แท็บ{" "}
                 <button
                   type="button"
                   onClick={() => setActiveTab("knowledge")}
@@ -496,7 +561,7 @@ export default function BotForm({
                 >
                   ฐานความรู้ (เอกสาร)
                 </button>{" "}
-                แล้วอัปโหลดเอกสารอย่างน้อย 1 ไฟล์ก่อนกดสร้างบอท
+                เลือกไฟล์ — ระบบจะเริ่มอัปโหลดทันที
               </div>
             )}
 
@@ -538,12 +603,75 @@ export default function BotForm({
               </div>
             )}
 
-            {isNewBot && docs.length === 0 && !errors.docs && (
-              <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-sm">
-                อัปโหลดเอกสารอย่างน้อย 1 ไฟล์ จากนั้นกรอกชื่อบอทแล้วกด
-                “สร้างบอท”
+            {isNewBot && (
+              <div className="space-y-2">
+                <label
+                  className="block text-sm text-gray-800"
+                  style={{ fontWeight: 600 }}
+                >
+                  ชื่อบอท
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((p) => ({ ...p, name: "" }));
+                  }}
+                  placeholder="กรอกชื่อบอท แล้วเลือกไฟล์ — ระบบจะอัปโหลดทันที"
+                  className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-amber-400 ${errors.name ? "border-red-400" : "border-gray-200"}`}
+                />
+                <p className="text-xs text-gray-500">
+                  {name.trim()
+                    ? "เลือกไฟล์แล้วระบบจะสร้างบอทและเริ่มอัปโหลดให้เลย"
+                    : "กรอกชื่อบอทก่อน แล้วเลือกไฟล์เพื่อเริ่มอัปโหลดทันที"}
+                </p>
               </div>
             )}
+
+            {isNewBot && docs.length === 0 && !errors.docs && (
+              <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-sm">
+                เลือกไฟล์แล้วระบบจะเริ่มอัปโหลดทันที
+                {name.trim()
+                  ? " และประมวลผลเข้าฐานความรู้"
+                  : " — กรอกชื่อบอทด้านบนเพื่อให้เริ่มประมวลผลเลย"}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1">
+                <label
+                  className="flex items-center gap-1.5 text-sm text-gray-800 mb-2"
+                  style={{ fontWeight: 600 }}
+                >
+                  <Tag className="w-3.5 h-3.5 text-amber-500" />
+                  หมวดหมู่ไฟล์ที่อัปโหลด
+                </label>
+                <select
+                  value={uploadCategory}
+                  onChange={(e) => setUploadCategory(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                  <option value="__custom__">กำหนดเอง...</option>
+                </select>
+              </div>
+              {uploadCategory === "__custom__" && (
+                <input
+                  type="text"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="เช่น สัญญา, ราคา"
+                  maxLength={40}
+                  className="sm:w-56 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              )}
+            </div>
 
             <div
               onDragOver={onDragOver}
@@ -593,26 +721,71 @@ export default function BotForm({
                 multiple
                 accept={ALLOWED_DOC_ACCEPT}
                 className="hidden"
-                onChange={(e) => addFiles(e.target.files)}
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }}
                 disabled={isUploading || isProcessing}
               />
             </div>
 
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                value={docSearch}
-                onChange={(e) => setDocSearch(e.target.value)}
-                placeholder="ค้นหาเอกสารในบอทนี้..."
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
+            <div className="space-y-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={docSearch}
+                  onChange={(e) => setDocSearch(e.target.value)}
+                  placeholder="ค้นหาชื่อไฟล์หรือหมวดหมู่..."
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+              {usedCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilter("all")}
+                    className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                      categoryFilter === "all"
+                        ? "bg-amber-400 border-amber-400 text-gray-900"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-amber-300"
+                    }`}
+                  >
+                    ทั้งหมด ({docs.length})
+                  </button>
+                  {usedCategories.map((c) => {
+                    const count = docs.filter(
+                      (d) => (d.category || "ทั่วไป") === c
+                    ).length;
+                    return (
+                      <button
+                        type="button"
+                        key={c}
+                        onClick={() =>
+                          setCategoryFilter((prev) => (prev === c ? "all" : c))
+                        }
+                        className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                          categoryFilter === c
+                            ? "bg-amber-400 border-amber-400 text-gray-900"
+                            : "bg-white border-gray-200 text-gray-600 hover:border-amber-300"
+                        }`}
+                      >
+                        {c} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {filteredDocs.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
                 <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-400">ยังไม่มีเอกสารในบอทนี้</p>
+                <p className="text-sm text-gray-400">
+                  {docs.length === 0
+                    ? "ยังไม่มีเอกสารในบอทนี้"
+                    : "ไม่พบเอกสารตามคำค้นหาหรือหมวดหมู่ที่เลือก"}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -631,9 +804,24 @@ export default function BotForm({
                           >
                             {doc.filename}
                           </p>
-                          <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                            {doc.category || "ทั่วไป"}
-                          </span>
+                          <select
+                            value={doc.category || "ทั่วไป"}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              handleCategoryChange(doc.id, e.target.value)
+                            }
+                            disabled={isProcessing}
+                            className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border-0 outline-none focus:ring-1 focus:ring-amber-400 max-w-[140px] cursor-pointer disabled:opacity-50"
+                            title="เปลี่ยนหมวดหมู่"
+                          >
+                            {Array.from(
+                              new Set([doc.category || "ทั่วไป", ...categoryOptions])
+                            ).map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
                           <p className="text-[11px] text-gray-400">

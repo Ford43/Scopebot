@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Form
 from sqlalchemy.orm import Session
 from api.database import get_db, SessionLocal
 from api import models, schemas, auth
@@ -32,7 +32,7 @@ def _create_notification(db: Session, user_id: int, title: str, message: str, ty
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    category: str = "ทั่วไป",
+    category: str = Form("ทั่วไป"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
@@ -51,9 +51,15 @@ async def upload_document(
         models.Document.owner_id == current_user.id
     ).first()
 
+    category = (category or "ทั่วไป").strip()[:40] or "ทั่วไป"
+
     if existing:
         # หากมีไฟล์ชื่อนี้อยู่แล้วใน Library ของ User คนนี้
         # ให้ส่งข้อมูลไฟล์เดิมกลับไปเลย โดยไม่ต้องบันทึกใหม่และไม่เกิด Error
+        if existing.category != category:
+            existing.category = category
+            db.commit()
+            db.refresh(existing)
         return existing 
 
     # บันทึกไฟล์

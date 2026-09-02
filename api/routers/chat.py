@@ -8,6 +8,40 @@ from sqlalchemy.types import Integer
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
+HANDOFF_KEYWORDS = (
+    "ขอคุยกับเจ้าหน้าที่",
+    "ติดต่อเจ้าหน้าที่",
+    "ติดต่อแอดมิน",
+    "คุยกับคน",
+    "contact_staff",
+)
+
+
+def _mode_str(session: models.LiveSession | None) -> str:
+    if not session:
+        return "bot"
+    mode = session.mode
+    return mode.value if hasattr(mode, "value") else str(mode)
+
+
+def _chat_payload(
+    *,
+    answer: str,
+    is_answered_by_bot: bool,
+    conversation_id: int = 0,
+    sources: list | None = None,
+    session_mode: str = "bot",
+    offer_handoff: bool = False,
+) -> dict:
+    return {
+        "answer": answer,
+        "is_answered_by_bot": is_answered_by_bot,
+        "conversation_id": conversation_id,
+        "sources": sources or [],
+        "session_mode": session_mode,
+        "offer_handoff": offer_handoff,
+    }
+
 
 @router.post("/{bot_id}", response_model=schemas.ChatResponse)
 def chat(
@@ -24,16 +58,16 @@ def chat(
 
     # กรอง question สั้นเกินไป
     if len(body.question.strip()) < 2:
-        return {
-            "answer": "กรุณาพิมพ์คำถามให้ครบถ้วน",
-            "is_answered_by_bot": True,
-            "conversation_id": 0,
-            "sources": [],
-        }
+        return _chat_payload(
+            answer="กรุณาพิมพ์คำถามให้ครบถ้วน",
+            is_answered_by_bot=True,
+        )
+
+    session_key = body.session_id or "web_user"
 
     # ---- เช็คว่า session นี้อยู่ในโหมด human/waiting อยู่แล้วไหม ----
     active_session = db.query(models.LiveSession).filter(
-        models.LiveSession.line_user_id == (body.session_id or "web_user"),
+        models.LiveSession.line_user_id == session_key,
         models.LiveSession.bot_id == bot.id,
         models.LiveSession.is_active == True
     ).first()
@@ -41,7 +75,6 @@ def chat(
     if active_session and active_session.mode in [
         models.SessionMode.waiting, models.SessionMode.human
     ]:
-        # บันทึกข้อความลูกค้าลง LiveMessage
         db.add(models.LiveMessage(
             message=body.question,
             sender_type=models.SenderType.customer,
@@ -49,31 +82,29 @@ def chat(
             session_id=active_session.id
         ))
         db.commit()
-        return {
-            "answer": "เจ้าหน้าที่กำลังดูแลอยู่นะครับ/ค่ะ กรุณารอสักครู่ 🙏",
-            "is_answered_by_bot": False,
-            "conversation_id": 0,
-            "sources": [],
-        }
+        waiting = active_session.mode == models.SessionMode.waiting
+        return _chat_payload(
+            answer=(
+                "ข้อความถูกส่งถึงเจ้าหน้าที่แล้ว กรุณารอสักครู่ 🙏"
+                if waiting
+                else "ส่งถึงเจ้าหน้าที่แล้วครับ/ค่ะ"
+            ),
+            is_answered_by_bot=False,
+            session_mode=_mode_str(active_session),
+        )
 
     # ---- เช็คคำขอติดต่อเจ้าหน้าที่ ----
-    handoff_keywords = [
-        "ขอคุยกับเจ้าหน้าที่", "ติดต่อเจ้าหน้าที่",
-        "ติดต่อแอดมิน", "คุยกับคน", "contact_staff"
-    ]
-    if any(kw in body.question.strip().lower() for kw in handoff_keywords):
-        # สร้าง LiveSession ใหม่
+    if any(kw in body.question.strip().lower() for kw in HANDOFF_KEYWORDS):
         new_session = models.LiveSession(
-            line_user_id=body.session_id or "web_user",
-            line_display_name=f"Web User ({(body.session_id or 'web')[:4]})",
+            line_user_id=session_key,
+            line_display_name=f"Web User ({session_key[:8]})",
             mode=models.SessionMode.waiting,
             is_active=True,
             bot_id=bot.id
         )
         db.add(new_session)
-        db.flush()  # เพื่อให้ได้ id ก่อน commit
+        db.flush()
 
-        # บันทึกข้อความแรกของลูกค้า
         db.add(models.LiveMessage(
             message=body.question,
             sender_type=models.SenderType.customer,
@@ -81,7 +112,6 @@ def chat(
             session_id=new_session.id
         ))
 
-        # แจ้งเตือนเจ้าหน้าที่
         db.add(models.Notification(
             title="มีลูกค้ารอคิวใหม่",
             message=f"ต้องการติดต่อเจ้าหน้าที่จากบอท: {bot.name}",
@@ -90,17 +120,15 @@ def chat(
         ))
         db.commit()
 
-        return {
-            "answer": "รับทราบครับ/ค่ะ 🙏 กรุณารอสักครู่ เจ้าหน้าที่กำลังเข้ามาช่วยเหลือ",
-            "is_answered_by_bot": False,
-            "conversation_id": 0,
-            "sources": [],
-        }
+        return _chat_payload(
+            answer="รับทราบครับ/ค่ะ 🙏 กรุณารอสักครู่ เจ้าหน้าที่กำลังเข้ามาช่วยเหลือ",
+            is_answered_by_bot=False,
+            session_mode="waiting",
+        )
 
     # ---- RAG ปกติ ----
     # ไม่ส่งประวัติแชทเข้าโมเดล — คำตอบเก่าที่สั้น/ไม่ครบจะถูกเลียนแบบ (โดยเฉพาะโมเดลเล็ก)
     source = (body.source_channel or "web").lower()
-    session_key = body.session_id or "web_user"
 
     answer, sources = ask_rag(
         body.question,
@@ -109,16 +137,18 @@ def chat(
         history=None,
     )
 
-    # Web test chat: ไม่ auto-handoff — ให้พิมพ์ขอเจ้าหน้าที่เอง
+    # Web: ไม่ auto-handoff — แสดงปุ่มติดต่อเจ้าหน้าที่ให้ลูกค้ากดเอง
     # LINE / ช่องทางอื่น: สร้าง LiveSession เมื่อบอทตอบไม่ได้
     create_live = False
+    offer_handoff = False
     if answer == "REQUIRE_HUMAN_HANDOFF":
         if source == "web":
             answer = (
                 "ไม่พบข้อมูลที่เกี่ยวข้องในฐานความรู้ "
-                "หากต้องการคุยกับเจ้าหน้าที่ พิมพ์ว่า \"ขอคุยกับเจ้าหน้าที่\""
+                "สามารถกดปุ่มติดต่อเจ้าหน้าที่ด้านล่างได้เลย"
             )
             is_bot_answered = False
+            offer_handoff = True
             sources = []
         else:
             answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
@@ -127,6 +157,7 @@ def chat(
     else:
         is_bot_answered = "ไม่พบข้อมูล" not in answer
         create_live = not is_bot_answered
+        offer_handoff = source == "web" and not is_bot_answered
 
     if create_live:
         existing = db.query(models.LiveSession).filter(
@@ -174,12 +205,14 @@ def chat(
     db.commit()
     db.refresh(conversation)
 
-    return {
-        "answer": answer,
-        "is_answered_by_bot": is_bot_answered,
-        "conversation_id": conversation.id,
-        "sources": sources if is_bot_answered else [],
-    }
+    return _chat_payload(
+        answer=answer,
+        is_answered_by_bot=is_bot_answered,
+        conversation_id=conversation.id,
+        sources=sources if is_bot_answered else [],
+        session_mode="waiting" if create_live else "bot",
+        offer_handoff=offer_handoff,
+    )
 
 
 @router.get("/{bot_id}/history", response_model=list[schemas.ConversationOut])
@@ -263,28 +296,48 @@ def get_session_updates(
     except HTTPException:
         return []
 
-    active_session = db.query(models.LiveSession).filter(
-        models.LiveSession.line_user_id == session_id,
-        models.LiveSession.bot_id == bot.id,
-        models.LiveSession.is_active == True
-    ).first()
+    session = (
+        db.query(models.LiveSession)
+        .filter(
+            models.LiveSession.line_user_id == session_id,
+            models.LiveSession.bot_id == bot.id,
+        )
+        .order_by(models.LiveSession.started_at.desc())
+        .first()
+    )
 
-    if not active_session:
-        return []
+    if not session:
+        return {"mode": "bot", "is_active": False, "messages": []}
 
-    staff_msgs = db.query(models.LiveMessage).filter(
-        models.LiveMessage.session_id == active_session.id,
-        models.LiveMessage.sender_type == models.SenderType.staff
-    ).order_by(models.LiveMessage.created_at.asc()).all()
+    staff_msgs = []
+    if session.is_active:
+        staff_msgs = (
+            db.query(models.LiveMessage)
+            .filter(
+                models.LiveMessage.session_id == session.id,
+                models.LiveMessage.sender_type == models.SenderType.staff,
+            )
+            .order_by(models.LiveMessage.created_at.asc())
+            .all()
+        )
 
-    return [
-        {
-            "id": str(m.id),
-            "message": m.message,
-            "created_at": m.created_at.isoformat()
-        }
-        for m in staff_msgs
-    ]
+    mode = _mode_str(session)
+    if not session.is_active:
+        mode = "bot"
+
+    return {
+        "mode": mode,
+        "is_active": bool(session.is_active),
+        "messages": [
+            {
+                "id": str(m.id),
+                "message": m.message,
+                "sender_name": m.sender_name or "เจ้าหน้าที่",
+                "created_at": m.created_at.isoformat(),
+            }
+            for m in staff_msgs
+        ],
+    }
 @router.get("/sessions/all")
 def get_all_sessions(
     page: int = 1,

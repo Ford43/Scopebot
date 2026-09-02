@@ -14,14 +14,18 @@ export interface ChatSource {
   snippet?: string;
 }
 
+export type ChatMode = "bot" | "waiting" | "human";
+
 export interface ChatMessage {
   id: string;
-  sender: "bot" | "user";
+  sender: "bot" | "user" | "staff";
   text: string;
   time: string;
   confidence?: number;
   category?: string;
   sources?: ChatSource[];
+  offerHandoff?: boolean;
+  senderName?: string;
 }
 
 export interface HistoryItem {

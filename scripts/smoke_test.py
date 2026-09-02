@@ -125,10 +125,11 @@ def main():
     )
     answer = (data or {}).get("answer") if isinstance(data, dict) else None
     answered_by_bot = (data or {}).get("is_answered_by_bot") if isinstance(data, dict) else None
+    session_mode = (data or {}).get("session_mode") if isinstance(data, dict) else None
     check(
         "chat_handoff_keyword",
-        code == 200 and bool(answer) and answered_by_bot is False,
-        err or (f"answer_len={len(answer or '')}, by_bot={answered_by_bot}"),
+        code == 200 and bool(answer) and answered_by_bot is False and session_mode == "waiting",
+        err or (f"answer_len={len(answer or '')}, by_bot={answered_by_bot}, mode={session_mode}"),
     )
 
     code, data, err = req("GET", "/api/live/sessions", token=token)

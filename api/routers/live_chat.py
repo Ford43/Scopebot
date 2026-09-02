@@ -147,9 +147,11 @@ def staff_reply(
     if session.mode not in [models.SessionMode.human, models.SessionMode.waiting]:
         raise HTTPException(status_code=400, detail="session นี้ยังไม่ได้อยู่ใน mode human")
 
-    # อัปเดต mode เป็น human ถ้ายังเป็น waiting
+    # อัปเดต mode เป็น human ถ้ายังเป็น waiting — แจ้งลูกค้าว่าเจ้าหน้าที่เข้ามาแล้ว
+    just_joined = False
     if session.mode == models.SessionMode.waiting:
         session.mode = models.SessionMode.human
+        just_joined = True
         db.commit()
 
     # normalize line break ก่อนบันทึก
@@ -178,9 +180,15 @@ def staff_reply(
     # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง
     db.commit()
 
-    # ส่งข้อความผ่าน Line
+    # ส่งข้อความผ่าน Line — ถ้าเพิ่งรับคิว ให้บอกลูกค้าชัดเจนว่ากำลังคุยกับคน
     bot = session.bot
     if bot.line_channel_token:
+        if just_joined:
+            _push_line_message(
+                bot.line_channel_token,
+                session.line_user_id,
+                "👩‍💻 เจ้าหน้าที่เข้ามาดูแลการสนทนานี้แล้วครับ/ค่ะ",
+            )
         _push_line_message(
             bot.line_channel_token,
             session.line_user_id,

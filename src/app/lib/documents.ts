@@ -7,7 +7,7 @@ export async function uploadDocument(
 ): Promise<BotDocument> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("category", category);
+  formData.append("category", (category || "ทั่วไป").trim() || "ทั่วไป");
 
   const res = await fetch("/api/documents/upload", {
     method: "POST",
@@ -41,5 +41,15 @@ export async function unassignDocumentFromBot(
 ): Promise<void> {
   await apiFetch(`/api/documents/${docId}/unassign/${botId}`, {
     method: "DELETE",
+  });
+}
+
+export async function updateDocumentCategory(
+  docId: number,
+  category: string
+): Promise<BotDocument> {
+  return apiFetch<BotDocument>(`/api/documents/${docId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ category }),
   });
 }

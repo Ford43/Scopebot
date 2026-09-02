@@ -228,12 +228,22 @@ function LineConfigPanel({
   );
 }
 
-function WebConfigPanel({ bot }: { bot: BotItem }) {
+function WebConfigPanel({
+  bot,
+  webOn,
+  onTestChat,
+}: {
+  bot: BotItem;
+  webOn: boolean;
+  onTestChat?: (bot: BotItem) => void;
+}) {
   const widgetScript = `<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"
   data-id="${bot.bot_id}"
   data-theme="amber"
   data-lang="th">
 </script>`;
+
+  const canTest = webOn && bot.status === "active";
 
   return (
     <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
@@ -245,23 +255,88 @@ function WebConfigPanel({ bot }: { bot: BotItem }) {
       </div>
       <div>
         <p className="text-xs text-gray-500 mb-1.5">
-          ตัวอย่าง snippet (widget จริงอาจต้อง deploy แยก)
+          ตัวอย่าง snippet (widget ฝังเว็บภายนอก — ใช้ทดสอบในแอปได้ก่อน)
         </p>
         <CodeBlock code={widgetScript} />
       </div>
+
+      <div className="space-y-2">
+        {[
+          {
+            step: "1",
+            title: "เปิดสวิตช์ Website ด้านบน",
+            desc: "ต้องเปิดก่อน ระบบถึงถือว่าบอทนี้เชื่อมต่อช่องทางเว็บแล้ว",
+          },
+          {
+            step: "2",
+            title: "บอทต้องพร้อมใช้งาน",
+            desc: "สถานะต้องเป็น “พร้อมใช้งาน” (ประมวลผลเอกสารเสร็จแล้ว)",
+          },
+          {
+            step: "3",
+            title: "กดทดสอบแชท",
+            desc: "เปิดหน้าแชทของบอทนี้ในแอป — ถามคำถามจากเอกสารที่อัปโหลดไว้",
+          },
+        ].map((s) => (
+          <div
+            key={s.step}
+            className="flex gap-3 bg-gray-50 rounded-lg px-3 py-2.5"
+          >
+            <div
+              className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ fontWeight: 700 }}
+            >
+              {s.step}
+            </div>
+            <div>
+              <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>
+                {s.title}
+              </p>
+              <p className="text-[11px] text-gray-500 mt-0.5">{s.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        disabled={!onTestChat}
+        onClick={() => {
+          if (!webOn) {
+            toast.error("กรุณาเปิดสวิตช์ Website ก่อนทดสอบการเชื่อมต่อ");
+            return;
+          }
+          onTestChat?.(bot);
+        }}
+        className="w-full py-2.5 rounded-lg text-xs bg-amber-400 hover:bg-amber-500 text-gray-900 disabled:opacity-50"
+        style={{ fontWeight: 600 }}
+      >
+        {canTest
+          ? "ทดสอบแชทบนเว็บเลย"
+          : webOn
+            ? "บอทยังไม่พร้อม — ไปตรวจสอบเอกสาร"
+            : "เปิดสวิตช์ Website แล้วกดทดสอบ"}
+      </button>
+
       <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
         <p className="text-xs text-amber-800" style={{ fontWeight: 600 }}>
-          แชทบนเว็บในแอป
+          วิธีรู้ว่าเชื่อมต่อได้
         </p>
-        <p className="text-[11px] text-amber-700 mt-0.5">
-          เปิดสวิตช์ Website ด้านบน แล้วไปที่หน้าบอท → คลิกการ์ดเพื่อทดสอบแชท
+        <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+          เปิดสวิตช์แล้วกดปุ่มด้านบน — ถ้าเข้าหน้าแชทของบอทนี้ได้
+          และบอทตอบจากเอกสาร แสดงว่าการเชื่อมต่อเว็บในแอปใช้งานได้
+          การฝัง snippet บนเว็บภายนอกต้องมี widget จริงตอน deploy
         </p>
       </div>
     </div>
   );
 }
 
-export default function Integration() {
+export default function Integration({
+  onTestChat,
+}: {
+  onTestChat?: (bot: BotItem) => void;
+} = {}) {
   const [bots, setBots] = useState<BotItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -519,7 +594,7 @@ export default function Integration() {
             </div>
             {expanded === "website" && (
               <div className="px-5 pb-5">
-                <WebConfigPanel bot={bot} />
+                <WebConfigPanel bot={bot} webOn={webOn} onTestChat={onTestChat} />
               </div>
             )}
           </div>

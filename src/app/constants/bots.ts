@@ -24,6 +24,17 @@ export const MAX_DOC_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const ALLOWED_DOC_LABEL =
   "PDF, DOCX, CSV, TXT, JSON, HTML, MD (สูงสุด 10 MB / ไฟล์)";
 
+/** หมวดหมู่เอกสาร — ใช้กรอง/ค้นหาเมื่อบอทมีหลายไฟล์ */
+export const DOC_CATEGORIES = [
+  "ทั่วไป",
+  "นโยบาย",
+  "ระเบียบ",
+  "คู่มือ",
+  "FAQ",
+  "สินค้า",
+  "อื่นๆ",
+] as const;
+
 export function botAvatarColour(index: number): string {
   return BOT_AVATAR_COLOURS[index % BOT_AVATAR_COLOURS.length];
 }

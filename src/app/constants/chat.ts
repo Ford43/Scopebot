@@ -25,6 +25,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
   "เวลาทำงาน": "bg-amber-50 text-amber-600",
   "การสมัครงาน": "bg-gray-100 text-gray-600",
   Error: "bg-red-100 text-red-600",
+  Support: "bg-sky-100 text-sky-700",
+  system: "bg-gray-100 text-gray-600",
 };
 
 export const VIEW_LABELS: Record<ActiveView, string> = {

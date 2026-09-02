@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
-import type { ChatMessage, HistoryItem } from "../types/chat";
+import type { ChatMessage, ChatMode, HistoryItem } from "../types/chat";
 import type { BotItem } from "../types/bot";
 import { authHeaders } from "../lib/api";
 import { timeNow } from "../utils/date";
@@ -17,6 +17,11 @@ function formatTime(iso?: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function asChatMode(value: unknown): ChatMode {
+  if (value === "waiting" || value === "human" || value === "bot") return value;
+  return "bot";
 }
 
 function messagesFromSession(session: {
@@ -55,10 +60,55 @@ export function useChatSession({
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [chatMode, setChatMode] = useState<ChatMode>("bot");
 
   const currentSessionId = useRef(Date.now().toString());
+  const chatModeRef = useRef<ChatMode>("bot");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const applyMode = useCallback((next: ChatMode, opts?: { ended?: boolean }) => {
+    const prev = chatModeRef.current;
+    chatModeRef.current = next;
+    setChatMode(next);
+
+    if (prev !== "human" && next === "human") {
+      setMessages((msgs) => {
+        if (msgs.some((m) => m.id === "system-staff-joined")) return msgs;
+        return [
+          ...msgs,
+          {
+            id: "system-staff-joined",
+            sender: "staff",
+            text: "เจ้าหน้าที่เข้ามาดูแลการสนทนานี้แล้ว",
+            time: timeNow(),
+            category: "system",
+            senderName: "เจ้าหน้าที่",
+          },
+        ];
+      });
+    }
+
+    if (
+      (prev === "waiting" || prev === "human") &&
+      next === "bot" &&
+      opts?.ended
+    ) {
+      setMessages((msgs) => {
+        if (msgs.some((m) => m.id === "system-ended")) return msgs;
+        return [
+          ...msgs,
+          {
+            id: "system-ended",
+            sender: "bot",
+            text: "เจ้าหน้าที่จบการสนทนาแล้ว บอทพร้อมให้บริการต่อ",
+            time: timeNow(),
+            category: "system",
+          },
+        ];
+      });
+    }
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -135,18 +185,31 @@ export function useChatSession({
         );
         if (!res.ok) return;
 
-        const newMsgs = await res.json();
-        if (newMsgs.length === 0) return;
+        const data = await res.json();
+        const payload = Array.isArray(data)
+          ? { mode: "bot" as const, is_active: true, messages: data }
+          : data;
+        const nextMode = asChatMode(payload.mode);
+        applyMode(nextMode, { ended: payload.is_active === false });
+
+        const incoming = Array.isArray(payload.messages) ? payload.messages : [];
+        if (incoming.length === 0) return;
 
         setMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
-          const msgsToAdd = newMsgs
-            .filter((m: { id: number }) => !existingIds.has("staff-" + m.id))
+          const msgsToAdd = incoming
+            .filter((m: { id: string | number }) => !existingIds.has("staff-" + m.id))
             .map(
-              (m: { id: number; message: string; created_at: string }) => ({
+              (m: {
+                id: string | number;
+                message: string;
+                sender_name?: string;
+                created_at: string;
+              }) => ({
                 id: "staff-" + m.id,
-                sender: "bot" as const,
-                text: `👩‍💻 [เจ้าหน้าที่]: ${m.message}`,
+                sender: "staff" as const,
+                text: m.message,
+                senderName: m.sender_name || "เจ้าหน้าที่",
                 time: new Date(m.created_at).toLocaleTimeString("th-TH", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -162,14 +225,17 @@ export function useChatSession({
       }
     };
 
+    void pollAdminReply();
     const interval = setInterval(pollAdminReply, 3000);
     return () => clearInterval(interval);
-  }, [activeBot, isChatActive]);
+  }, [activeBot, isChatActive, applyMode]);
 
   const restoreSession = useCallback((item: HistoryItem) => {
     if (item.sessionId) {
       currentSessionId.current = item.sessionId;
     }
+    chatModeRef.current = "bot";
+    setChatMode("bot");
     if (item.messages && item.messages.length > 0) {
       setMessages(item.messages);
     } else {
@@ -221,17 +287,29 @@ export function useChatSession({
           throw new Error(data.detail || "เกิดข้อผิดพลาดในการเชื่อมต่อกับบอท");
         }
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            sender: "bot",
-            text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
-            time: timeNow(),
-            sources: Array.isArray(data.sources) ? data.sources : undefined,
-          },
-        ]);
-        // Refresh persisted history after a successful turn
+        const nextMode = asChatMode(data.session_mode);
+        const prevMode = chatModeRef.current;
+        applyMode(nextMode);
+
+        const skipEcho =
+          (prevMode === "waiting" || prevMode === "human") &&
+          (nextMode === "waiting" || nextMode === "human") &&
+          !data.offer_handoff;
+
+        if (!skipEcho) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: (Date.now() + 1).toString(),
+              sender: nextMode === "human" ? "staff" : "bot",
+              text: data.answer || data.response || "ระบบไม่สามารถหาคำตอบได้",
+              time: timeNow(),
+              sources: Array.isArray(data.sources) ? data.sources : undefined,
+              offerHandoff: !!data.offer_handoff,
+              category: data.offer_handoff ? "Support" : undefined,
+            },
+          ]);
+        }
         if (isAuthenticated) {
           void loadHistory();
         }
@@ -253,17 +331,26 @@ export function useChatSession({
         setIsTyping(false);
       }
     },
-    [inputValue, isTyping, activeBot, isAuthenticated, loadHistory]
+    [inputValue, isTyping, activeBot, isAuthenticated, loadHistory, applyMode]
   );
+
+  const handleContactStaff = useCallback(() => {
+    if (chatModeRef.current !== "bot") return;
+    void handleSend("ติดต่อเจ้าหน้าที่");
+  }, [handleSend]);
 
   const handleNewChat = useCallback(() => {
     currentSessionId.current = Date.now().toString();
+    chatModeRef.current = "bot";
+    setChatMode("bot");
     setMessages([]);
     setInputValue("");
   }, []);
 
   const resetSessionForBot = useCallback(() => {
     currentSessionId.current = Date.now().toString();
+    chatModeRef.current = "bot";
+    setChatMode("bot");
     setMessages([]);
     setInputValue("");
   }, []);
@@ -277,7 +364,9 @@ export function useChatSession({
     setHistoryItems,
     messagesEndRef,
     textareaRef,
+    chatMode,
     handleSend,
+    handleContactStaff,
     handleNewChat,
     resetSessionForBot,
     restoreSession,

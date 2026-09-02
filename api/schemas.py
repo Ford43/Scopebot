@@ -99,6 +99,8 @@ class ChatResponse(BaseModel):
     is_answered_by_bot: bool
     conversation_id: int
     sources: List[ChatSource] = []
+    session_mode: str = "bot"
+    offer_handoff: bool = False
 
 
 # =====================
@@ -143,6 +145,13 @@ class DocumentOut(BaseModel):
 
 class DocumentUpdate(BaseModel):
     category: Optional[str] = None
+
+    @validator("category")
+    def clean_category(cls, v):
+        if v is None:
+            return v
+        cleaned = v.strip()[:40]
+        return cleaned or "ทั่วไป"
 
 
 # =====================
