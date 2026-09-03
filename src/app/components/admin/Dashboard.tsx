@@ -17,7 +17,7 @@ interface DashboardStats {
   total_bots: number; active_bots: number;
   total_sessions: number; today_sessions: number;
   unanswered: number; success_rate: number;
-  total_documents: number; unread_notifications: number;
+  total_documents: number; unassigned_documents: number; unread_notifications: number;
   platform: { line: number; web: number };
   users: { new: number; returning: number };
   daily_stats: DailyStats[];
@@ -262,15 +262,26 @@ export default function Dashboard({
             badge: null, badgeColor: "",
           },
           {
-            label: "เอกสารใน Library", value: stats.total_documents,
-            sub: `Bot ${stats.active_bots}/${stats.total_bots} ตัว active`,
+            label: "เอกสารในคลัง", value: stats.total_documents,
+            sub: (stats.unassigned_documents ?? 0) > 0
+              ? `ยังไม่ผูกบอท ${stats.unassigned_documents} ไฟล์ — คลิกเพื่อดูที่หน้าบอท`
+              : `ใช้กับบอทแล้วทั้งหมด`,
             icon: FileText, iconBg: "bg-amber-100", iconColor: "text-amber-600",
             badge: null, badgeColor: "",
+            goTo: "bots" as const,
           },
         ].map((card, i) => {
           const Icon = card.icon;
           return (
-            <Card key={i} className="p-5 rounded-2xl border border-gray-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+            <Card
+              key={i}
+              className={`p-5 rounded-2xl border border-gray-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all ${
+                "goTo" in card && card.goTo ? "cursor-pointer" : ""
+              }`}
+              onClick={() => {
+                if ("goTo" in card && card.goTo) onNavigate?.(card.goTo);
+              }}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-11 h-11 ${card.iconBg} rounded-xl flex items-center justify-center`}>
                   <Icon className={`w-5 h-5 ${card.iconColor}`} />

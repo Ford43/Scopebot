@@ -116,7 +116,19 @@ def list_documents(
     )
     if category:
         query = query.filter(models.Document.category == category)
-    return query.order_by(models.Document.uploaded_at.desc()).all()
+    docs = query.order_by(models.Document.uploaded_at.desc()).all()
+    return [
+        schemas.DocumentOut(
+            id=d.id,
+            filename=d.filename,
+            file_size=d.file_size,
+            category=d.category,
+            owner_id=d.owner_id,
+            uploaded_at=d.uploaded_at,
+            assigned_bots=[b.name for b in d.bots],
+        )
+        for d in docs
+    ]
 
 
 # =====================

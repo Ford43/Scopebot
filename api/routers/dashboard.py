@@ -84,9 +84,13 @@ def get_stats(
         if total_conversations > 0 else 0, 1
     )
 
-    total_documents = db.query(models.Document).filter(
-        models.Document.owner_id == current_user.id
-    ).count()
+    docs = (
+        db.query(models.Document)
+        .filter(models.Document.owner_id == current_user.id)
+        .all()
+    )
+    total_documents = len(docs)
+    unassigned_documents = sum(1 for d in docs if not d.bots)
 
     unread_notifications = db.query(models.Notification).filter(
         models.Notification.user_id == current_user.id,
@@ -178,6 +182,7 @@ def get_stats(
         "waiting_queue": unanswered,
         "success_rate": success_rate,
         "total_documents": total_documents,
+        "unassigned_documents": unassigned_documents,
         "unread_notifications": unread_notifications,
         # Platform
         "platform": {

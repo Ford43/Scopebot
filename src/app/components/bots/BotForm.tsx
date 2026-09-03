@@ -24,6 +24,7 @@ import {
   unassignDocumentFromBot,
   uploadDocument,
   updateDocumentCategory,
+  deleteDocument,
 } from "../../lib/documents";
 import {
   ALLOWED_DOC_ACCEPT,
@@ -86,6 +87,7 @@ export default function BotForm({
   const prevStatusRef = useRef<string>(existing?.status || "inactive");
 
   const isNewBot = !currentBot;
+  const needsName = isNewBot && !name.trim();
   const isProcessing = botStatus === "processing" && !processingStuck;
   const canCreate = !!name.trim() && docs.length > 0;
   const canSave =
@@ -264,11 +266,19 @@ export default function BotForm({
   const addFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     if (isProcessing) return;
+    if (!currentBot && !name.trim()) {
+      toast.error("กรอกชื่อบอทก่อน", {
+        description: "จากนั้นเลือกไฟล์ — ระบบจะสร้างบอทและเริ่มประมวลผลทันที",
+      });
+      setErrors((p) => ({ ...p, name: "กรุณากรอกชื่อบอทก่อนอัปโหลดไฟล์" }));
+      return;
+    }
+
     setIsUploading(true);
-    setErrors((p) => ({ ...p, docs: "" }));
+    setErrors((p) => ({ ...p, docs: "", name: "" }));
 
     let bot = currentBot;
-    if (!bot && name.trim()) {
+    if (!bot) {
       try {
         bot = await createBot({
           name: name.trim(),
@@ -284,8 +294,10 @@ export default function BotForm({
         toast.error(
           error instanceof Error
             ? error.message
-            : "สร้างบอทไม่สำเร็จ — จะอัปโหลดไฟล์ไว้ก่อน แล้วกดสร้างบอทอีกครั้ง"
+            : "สร้างบอทไม่สำเร็จ — ลองใหม่อีกครั้ง"
         );
+        setIsUploading(false);
+        return;
       }
     }
 
@@ -300,27 +312,11 @@ export default function BotForm({
 
       try {
         const docData = await uploadDocument(file, resolvedUploadCategory);
-
-        if (bot?.bot_id) {
-          await assignDocumentToBot(docData.id, bot.bot_id);
-          assignedAny = true;
-          toast.success(`อัปโหลด ${file.name} แล้ว`, {
-            description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,
-          });
-        } else {
-          setDocs((prev) => {
-            if (prev.some((d) => d.id === docData.id)) {
-              toast.message(`ใช้ไฟล์ที่มีอยู่แล้ว: ${file.name}`);
-              return prev;
-            }
-            return [...prev, docData];
-          });
-          toast.success(`อัปโหลด ${file.name} แล้ว`, {
-            description: name.trim()
-              ? undefined
-              : "กรอกชื่อบอทแล้วกดสร้างบอท เพื่อเริ่มประมวลผลฐานความรู้",
-          });
-        }
+        await assignDocumentToBot(docData.id, bot.bot_id);
+        assignedAny = true;
+        toast.success(`อัปโหลด ${file.name} แล้ว`, {
+          description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,
+        });
       } catch (error) {
         console.error("File processing error", error);
         toast.error(
@@ -331,7 +327,7 @@ export default function BotForm({
       }
     }
 
-    if (bot?.bot_id && assignedAny) {
+    if (assignedAny) {
       setProcessingStuck(false);
       setBotStatus("processing");
       prevStatusRef.current = "processing";
@@ -387,6 +383,11 @@ export default function BotForm({
   const handleDeleteDoc = async (docId: number) => {
     if (isNewBot) {
       setDocs((prev) => prev.filter((d) => d.id !== docId));
+      try {
+        await deleteDocument(docId);
+      } catch {
+        /* staged file may already be gone */
+      }
       return;
     }
     if (!currentBot?.bot_id) return;
@@ -714,17 +715,29 @@ export default function BotForm({
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
-              onClick={() =>
-                !isUploading &&
-                !isProcessing &&
-                fileInputRef.current?.click()
-              }
+              onClick={() => {
+                if (isUploading || isProcessing) return;
+                if (needsName) {
+                  toast.error("กรอกชื่อบอทก่อน", {
+                    description:
+                      "จากนั้นเลือกไฟล์ — ระบบจะสร้างบอทและเริ่มประมวลผลทันที",
+                  });
+                  setErrors((p) => ({
+                    ...p,
+                    name: "กรุณากรอกชื่อบอทก่อนอัปโหลดไฟล์",
+                  }));
+                  return;
+                }
+                fileInputRef.current?.click();
+              }}
               className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all ${
                 isUploading || isProcessing
                   ? "opacity-50 cursor-not-allowed border-gray-300 bg-gray-50"
-                  : dragging
-                    ? "border-amber-400 bg-amber-50 scale-[1.01] cursor-pointer"
-                    : "border-gray-300 hover:border-amber-400 hover:bg-amber-50/40 bg-gray-50 cursor-pointer"
+                  : needsName
+                    ? "border-gray-300 bg-gray-50 cursor-pointer hover:border-amber-300"
+                    : dragging
+                      ? "border-amber-400 bg-amber-50 scale-[1.01] cursor-pointer"
+                      : "border-gray-300 hover:border-amber-400 hover:bg-amber-50/40 bg-gray-50 cursor-pointer"
               }`}
             >
               <div
@@ -745,12 +758,16 @@ export default function BotForm({
                   ? "รอประมวลผลเอกสารให้เสร็จก่อนอัปโหลดเพิ่ม"
                   : isUploading
                     ? "กำลังอัปโหลดไฟล์..."
-                    : dragging
-                      ? "วางไฟล์ที่นี่เลย!"
-                      : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
+                    : needsName
+                      ? "กรอกชื่อบอทด้านบน แล้วเลือกไฟล์ที่นี่"
+                      : dragging
+                        ? "วางไฟล์ที่นี่เลย!"
+                        : "ลากไฟล์มาวางที่นี่ หรือ คลิกเพื่อเลือกไฟล์"}
               </p>
               <p className="text-xs text-gray-400">
-                รองรับ {ALLOWED_DOC_LABEL}
+                {needsName
+                  ? "ระบบจะสร้างบอทและหั่นเอกสารเข้าฐานความรู้ทันที"
+                  : `รองรับ ${ALLOWED_DOC_LABEL}`}
               </p>
               <input
                 ref={fileInputRef}

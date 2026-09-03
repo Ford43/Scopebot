@@ -5,6 +5,7 @@ export interface BotDocument {
   category: string;
   uploaded_at: string;
   status?: "ready" | "processing" | "error";
+  assigned_bots?: string[];
 }
 
 export interface BotItem {

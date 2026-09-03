@@ -1,6 +1,10 @@
 import { apiFetch, authHeaders } from "./api";
 import type { BotDocument } from "../types/bot";
 
+export async function fetchLibraryDocuments(): Promise<BotDocument[]> {
+  return apiFetch<BotDocument[]>("/api/documents/");
+}
+
 export async function uploadDocument(
   file: File,
   category = "ทั่วไป"

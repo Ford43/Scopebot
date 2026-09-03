@@ -138,6 +138,7 @@ class DocumentOut(BaseModel):
     category: Optional[str]
     owner_id: int
     uploaded_at: datetime
+    assigned_bots: List[str] = []
 
     class Config:
         from_attributes = True

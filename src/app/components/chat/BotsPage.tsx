@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Bot, Edit2, X, Clock } from "lucide-react";
+import { Search, Plus, Bot, Edit2, X, Clock, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAdminScope } from "../../contexts/AdminScopeContext";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip";
-import type { BotItem } from "../../types/bot";
+import type { BotDocument, BotItem } from "../../types/bot";
 import { fetchBots } from "../../lib/bots";
+import { deleteDocument, fetchLibraryDocuments } from "../../lib/documents";
 import { botAvatarColour } from "../../constants/bots";
+import { formatBytes } from "../../utils/format";
+import { BotFileIcon } from "../bots/BotFileIcon";
 import BotForm from "../bots/BotForm";
 
 export type { BotItem } from "../../types/bot";
@@ -26,6 +30,7 @@ export default function BotsPage({
   initialSearch = "",
 }: BotsPageProps = {}) {
   const [bots, setBots] = useState<BotItem[]>([]);
+  const [libraryDocs, setLibraryDocs] = useState<BotDocument[]>([]);
   const [search, setSearch] = useState(initialSearch);
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingBot, setEditingBot] = useState<BotItem | undefined>();
@@ -43,8 +48,12 @@ export default function BotsPage({
   const loadBots = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await fetchBots(scopeParam);
-      setBots(data);
+      const [botData, docs] = await Promise.all([
+        fetchBots(scopeParam),
+        fetchLibraryDocuments().catch(() => [] as BotDocument[]),
+      ]);
+      setBots(botData);
+      setLibraryDocs(docs);
     } catch (error) {
       console.error("Fetch bots error", error);
     } finally {
@@ -291,6 +300,70 @@ export default function BotsPage({
                 </TooltipContent>
               )}
             </Tooltip>
+          </div>
+        )}
+
+        {libraryDocs.length > 0 && (
+          <div className="mt-10 pb-4">
+            <div className="flex items-end justify-between gap-3 mb-3">
+              <div>
+                <h2 className="text-sm text-gray-900" style={{ fontWeight: 700 }}>
+                  คลังเอกสาร
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  ไฟล์ที่อัปโหลดไว้ทั้งหมด — ถ้ายังไม่ผูกบอท จะไม่ถูกหั่นเข้าฐานความรู้
+                </p>
+              </div>
+              <span className="text-xs text-gray-400">{libraryDocs.length} ไฟล์</span>
+            </div>
+            <div className="space-y-2">
+              {libraryDocs.map((doc) => {
+                const usedBy = doc.assigned_bots ?? [];
+                return (
+                  <div
+                    key={doc.id}
+                    className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3"
+                  >
+                    <BotFileIcon filename={doc.filename} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 500 }}>
+                        {doc.filename}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {formatBytes(doc.file_size)} · {doc.category || "ทั่วไป"}
+                        {usedBy.length > 0
+                          ? ` · ใช้กับบอท: ${usedBy.join(", ")}`
+                          : " · ยังไม่ผูกบอท"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const msg =
+                          usedBy.length > 0
+                            ? `ลบ "${doc.filename}" จากคลัง? บอทที่ใช้อยู่จะไม่มีไฟล์นี้`
+                            : `ลบ "${doc.filename}" ออกจากคลัง?`;
+                        if (!window.confirm(msg)) return;
+                        try {
+                          await deleteDocument(doc.id);
+                          setLibraryDocs((prev) => prev.filter((d) => d.id !== doc.id));
+                          toast.success("ลบไฟล์จากคลังแล้ว");
+                        } catch (error) {
+                          toast.error(
+                            error instanceof Error ? error.message : "ลบไฟล์ไม่สำเร็จ"
+                          );
+                        }
+                      }}
+                      className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500"
+                      title="ลบออกจากคลัง"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
