@@ -8,15 +8,6 @@ import {
 } from "lucide-react";
 import type { ActiveView, MenuItem } from "../types/chat";
 
-export const SUGGESTED_PROMPTS = [
-  { id: "1", text: "📄 ระเบียบการลา" },
-  { id: "2", text: "💰 สอบถามเงินเดือน" },
-  { id: "3", text: "🏢 ข้อมูลองค์กร" },
-  { id: "4", text: "🖥️ IT Support" },
-  { id: "5", text: "⏰ เวลาทำงาน" },
-  { id: "6", text: "🙋 ติดต่อเจ้าหน้าที่" },
-];
-
 export const CATEGORY_COLORS: Record<string, string> = {
   "ระเบียบการลา": "bg-amber-100 text-amber-700",
   "เงินเดือน": "bg-gray-100 text-gray-600",
@@ -89,14 +80,4 @@ export function defaultViewForRole(role: string): ActiveView {
 export function roleCanAccessView(role: string, view: ActiveView): boolean {
   if (view === "chat") return role === "admin" || role === "user";
   return menuItemsForRole(role).some((item) => item.id === view);
-}
-
-/** Build suggested prompt chips from bot description when no top-questions yet */
-export function promptsFromDescription(description?: string): string[] {
-  if (!description?.trim()) return [];
-  return description
-    .split(/[。.!?！？\n;；|]/)
-    .map((s) => s.trim())
-    .filter((s) => s.length >= 6 && s.length <= 60)
-    .slice(0, 4);
 }

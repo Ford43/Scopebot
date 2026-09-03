@@ -585,7 +585,7 @@ export default function BotForm({
                 >
                   ฐานความรู้ (เอกสาร)
                 </button>{" "}
-                เลือกไฟล์ — ระบบจะเริ่มอัปโหลดทันที
+                เพื่อเพิ่มไฟล์
               </div>
             )}
 
@@ -593,7 +593,7 @@ export default function BotForm({
               <div className="pt-8 mt-6 border-t border-red-100 flex flex-col items-center">
                 <button
                   onClick={handleDeleteBot}
-                  disabled={isProcessing}
+                  disabled={isUploading || isSaving}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -632,16 +632,25 @@ export default function BotForm({
                 <div className="flex-1">
                   <p className="text-sm font-semibold">ประมวลผลเอกสารค้างอยู่</p>
                   <p className="text-xs opacity-80 mt-0.5">
-                    มักเกิดจากคอนโซล Windows หรือไฟล์ที่อ่านไม่ได้ — กดลองใหม่ได้เลย
+                    มักเกิดจากไฟล์ที่อ่านไม่ได้หรือโมเดลใช้เวลานาน — ลองใหม่ หรือลบบอทนี้แล้วสร้างใหม่
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleReindex}
-                  className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex-shrink-0"
-                >
-                  ลองประมวลผลใหม่
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleReindex}
+                    className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
+                  >
+                    ลองประมวลผลใหม่
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteBot}
+                    className="px-3 py-2 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-700 text-xs font-semibold"
+                  >
+                    ลบบอท
+                  </button>
+                </div>
               </div>
             )}
 
@@ -660,23 +669,9 @@ export default function BotForm({
                     setName(e.target.value);
                     setErrors((p) => ({ ...p, name: "" }));
                   }}
-                  placeholder="กรอกชื่อบอท แล้วเลือกไฟล์ — ระบบจะอัปโหลดทันที"
+                  placeholder="เช่น บอทตอบลูกค้า"
                   className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-amber-400 ${errors.name ? "border-red-400" : "border-gray-200"}`}
                 />
-                <p className="text-xs text-gray-500">
-                  {name.trim()
-                    ? "เลือกไฟล์แล้วระบบจะสร้างบอทและเริ่มอัปโหลดให้เลย"
-                    : "กรอกชื่อบอทก่อน แล้วเลือกไฟล์เพื่อเริ่มอัปโหลดทันที"}
-                </p>
-              </div>
-            )}
-
-            {isNewBot && docs.length === 0 && !errors.docs && (
-              <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-sm">
-                เลือกไฟล์แล้วระบบจะเริ่มอัปโหลดทันที
-                {name.trim()
-                  ? " และประมวลผลเข้าฐานความรู้"
-                  : " — กรอกชื่อบอทด้านบนเพื่อให้เริ่มประมวลผลเลย"}
               </div>
             )}
 

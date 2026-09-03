@@ -54,11 +54,3 @@ export async function toggleBotLine(botId: string): Promise<boolean> {
   );
   return data.is_line_connected;
 }
-
-export async function toggleBotWeb(botId: string): Promise<boolean> {
-  const data = await apiFetch<{ is_web_connected: boolean }>(
-    `/api/bots/${botId}/toggle-web`,
-    { method: "POST" }
-  );
-  return data.is_web_connected;
-}

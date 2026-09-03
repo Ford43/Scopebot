@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Sparkles,
   Zap,
@@ -13,19 +12,13 @@ import {
 } from "lucide-react";
 import type { ChatMessage, ChatMode } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
-import {
-  SUGGESTED_PROMPTS,
-  CATEGORY_COLORS,
-  promptsFromDescription,
-} from "../../constants/chat";
-import { authHeaders } from "../../lib/api";
+import { CATEGORY_COLORS } from "../../constants/chat";
 
 interface ChatViewProps {
   activeBot: BotItem | null;
   messages: ChatMessage[];
   inputValue: string;
   isTyping: boolean;
-  isAuthenticated: boolean;
   isWelcomeScreen: boolean;
   chatMode: ChatMode;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -43,7 +36,6 @@ export default function ChatView({
   messages,
   inputValue,
   isTyping,
-  isAuthenticated,
   isWelcomeScreen,
   chatMode,
   textareaRef,
@@ -143,7 +135,6 @@ export default function ChatView({
             activeBot={activeBot}
             inputValue={inputValue}
             isTyping={isTyping}
-            isAuthenticated={isAuthenticated}
             textareaRef={textareaRef}
             onInputChange={onInputChange}
             onSend={onSend}
@@ -242,7 +233,6 @@ function WelcomeScreen({
   activeBot,
   inputValue,
   isTyping,
-  isAuthenticated,
   textareaRef,
   onInputChange,
   onSend,
@@ -252,54 +242,12 @@ function WelcomeScreen({
   activeBot: BotItem | null;
   inputValue: string;
   isTyping: boolean;
-  isAuthenticated: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   onInputChange: (value: string) => void;
   onSend: (text?: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onContactStaff: () => void;
 }) {
-  const [suggested, setSuggested] = useState<string[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const buildFallback = () => {
-      const fromDesc = promptsFromDescription(activeBot?.description);
-      if (fromDesc.length > 0) return fromDesc;
-      return SUGGESTED_PROMPTS.map((p) =>
-        p.text.replace(/[📄💰🏢🖥️⏰🙋]/g, "").trim()
-      );
-    };
-
-    setSuggested(buildFallback());
-
-    if (!activeBot?.bot_id || !isAuthenticated) return;
-
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/dashboard/top-questions?days=30&limit=6&bot_id=${encodeURIComponent(activeBot.bot_id)}`,
-          { headers: authHeaders() }
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled || !Array.isArray(data) || data.length === 0) return;
-        const qs = data
-          .map((d: { question?: string }) => (d.question || "").trim())
-          .filter(Boolean)
-          .slice(0, 6);
-        if (qs.length > 0) setSuggested(qs);
-      } catch {
-        /* keep fallback */
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeBot?.bot_id, activeBot?.description, isAuthenticated]);
-
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6 pb-8">
       <div className="w-20 h-20 bg-amber-400 rounded-3xl flex items-center justify-center mb-5 shadow-lg shadow-amber-200">
@@ -332,24 +280,6 @@ function WelcomeScreen({
           showContactStaff
           onContactStaff={onContactStaff}
         />
-        <div className="mt-5">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            คำถามแนะนำ
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggested.map((text) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => onSend(text)}
-                className="text-xs bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-full hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 transition-colors shadow-sm text-left max-w-full"
-              >
-                <span className="line-clamp-2">{text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

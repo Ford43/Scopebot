@@ -2,6 +2,8 @@ import os
 import uuid
 import time
 import shutil
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
@@ -11,6 +13,28 @@ router = APIRouter(prefix="/api/bots", tags=["Bots"])
 
 UPLOAD_BASE = "data"
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
+PROCESSING_STALE_AFTER = timedelta(minutes=3)
+
+
+def _as_utc(ts: datetime) -> datetime:
+    if ts.tzinfo is None:
+        return ts.replace(tzinfo=timezone.utc)
+    return ts.astimezone(timezone.utc)
+
+
+def expire_stale_processing(bot: Optional[models.Bot], db: Session) -> Optional[models.Bot]:
+    """If ingest hung, flip processing → inactive so the bot can be edited or deleted."""
+    if bot is None or bot.status != models.BotStatus.processing:
+        return bot
+    ts = bot.updated_at or bot.created_at
+    if ts is None:
+        return bot
+    if datetime.now(timezone.utc) - _as_utc(ts) < PROCESSING_STALE_AFTER:
+        return bot
+    bot.status = models.BotStatus.inactive
+    db.commit()
+    db.refresh(bot)
+    return bot
 
 
 def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
@@ -57,7 +81,12 @@ def list_my_bots(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    return auth.visible_bots_query(db, current_user, scope).order_by(models.Bot.created_at.desc()).all()
+    return [
+        expire_stale_processing(bot, db)
+        for bot in auth.visible_bots_query(db, current_user, scope)
+        .order_by(models.Bot.created_at.desc())
+        .all()
+    ]
 
 
 @router.get("/{bot_id}", response_model=schemas.BotOut)
@@ -66,7 +95,7 @@ def get_bot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    return _get_bot_or_404(bot_id, db, current_user)
+    return expire_stale_processing(_get_bot_or_404(bot_id, db, current_user), db)
 
 
 @router.patch("/{bot_id}", response_model=schemas.BotOut)
@@ -95,7 +124,7 @@ def delete_bot(
     def force_delete_folder(folder_path: str) -> None:
         if not os.path.exists(folder_path):
             return
-        for _ in range(3):
+        for _ in range(8):
             try:
                 shutil.rmtree(folder_path)
                 return

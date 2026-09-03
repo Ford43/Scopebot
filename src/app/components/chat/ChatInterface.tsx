@@ -146,25 +146,7 @@ function ChatShell() {
       case "search-history":
         return <SearchHistory initialQuery={globalSearchQuery} />;
       case "integration":
-        return (
-          <Integration
-            onTestChat={(bot) => {
-              if (bot.status !== "active") {
-                setForceEditBot(bot.bot_id);
-                setForceEditReason(
-                  bot.status === "processing"
-                    ? "บอทกำลังประมวลผลเอกสาร — รอให้พร้อมใช้งานก่อนทดสอบแชทบนเว็บ"
-                    : "บอทยังไม่พร้อมใช้งาน — ตรวจสอบเอกสารฐานความรู้ก่อนทดสอบแชท"
-                );
-                setActiveView("bots");
-                return;
-              }
-              resetSessionForBot();
-              setActiveBot(bot);
-              setActiveView("chat");
-            }}
-          />
-        );
+        return <Integration />;
       case "user-management":
         return <UserManagement initialQuery={globalSearchQuery} />;
       case "bots":
@@ -187,7 +169,6 @@ function ChatShell() {
             messages={messages}
             inputValue={inputValue}
             isTyping={isTyping}
-            isAuthenticated={isAuthenticated}
             isWelcomeScreen={isWelcomeScreen}
             chatMode={chatMode}
             textareaRef={textareaRef}

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ExternalLink,
-  Globe,
   Copy,
   Check,
   ChevronDown,
@@ -9,12 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { BotItem } from "../../types/bot";
-import {
-  fetchBots,
-  toggleBotLine,
-  toggleBotWeb,
-  updateBot,
-} from "../../lib/bots";
+import { fetchBots, toggleBotLine, updateBot } from "../../lib/bots";
 import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 const LineIcon = () => (
@@ -228,120 +222,12 @@ function LineConfigPanel({
   );
 }
 
-function WebConfigPanel({
-  bot,
-  webOn,
-  onTestChat,
-}: {
-  bot: BotItem;
-  webOn: boolean;
-  onTestChat?: (bot: BotItem) => void;
-}) {
-  const widgetScript = `<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"
-  data-id="${bot.bot_id}"
-  data-theme="amber"
-  data-lang="th">
-</script>`;
-
-  const canTest = webOn && bot.status === "active";
-
-  return (
-    <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
-      <div>
-        <p className="text-xs text-gray-500 mb-1.5">
-          Bot ID สำหรับฝังบนเว็บ / ทดสอบแชทในแอป
-        </p>
-        <CodeBlock code={bot.bot_id} />
-      </div>
-      <div>
-        <p className="text-xs text-gray-500 mb-1.5">
-          ตัวอย่าง snippet (widget ฝังเว็บภายนอก — ใช้ทดสอบในแอปได้ก่อน)
-        </p>
-        <CodeBlock code={widgetScript} />
-      </div>
-
-      <div className="space-y-2">
-        {[
-          {
-            step: "1",
-            title: "เปิดสวิตช์ Website ด้านบน",
-            desc: "ต้องเปิดก่อน ระบบถึงถือว่าบอทนี้เชื่อมต่อช่องทางเว็บแล้ว",
-          },
-          {
-            step: "2",
-            title: "บอทต้องพร้อมใช้งาน",
-            desc: "สถานะต้องเป็น “พร้อมใช้งาน” (ประมวลผลเอกสารเสร็จแล้ว)",
-          },
-          {
-            step: "3",
-            title: "กดทดสอบแชท",
-            desc: "เปิดหน้าแชทของบอทนี้ในแอป — ถามคำถามจากเอกสารที่อัปโหลดไว้",
-          },
-        ].map((s) => (
-          <div
-            key={s.step}
-            className="flex gap-3 bg-gray-50 rounded-lg px-3 py-2.5"
-          >
-            <div
-              className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5"
-              style={{ fontWeight: 700 }}
-            >
-              {s.step}
-            </div>
-            <div>
-              <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>
-                {s.title}
-              </p>
-              <p className="text-[11px] text-gray-500 mt-0.5">{s.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        type="button"
-        disabled={!onTestChat}
-        onClick={() => {
-          if (!webOn) {
-            toast.error("กรุณาเปิดสวิตช์ Website ก่อนทดสอบการเชื่อมต่อ");
-            return;
-          }
-          onTestChat?.(bot);
-        }}
-        className="w-full py-2.5 rounded-lg text-xs bg-amber-400 hover:bg-amber-500 text-gray-900 disabled:opacity-50"
-        style={{ fontWeight: 600 }}
-      >
-        {canTest
-          ? "ทดสอบแชทบนเว็บเลย"
-          : webOn
-            ? "บอทยังไม่พร้อม — ไปตรวจสอบเอกสาร"
-            : "เปิดสวิตช์ Website แล้วกดทดสอบ"}
-      </button>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-        <p className="text-xs text-amber-800" style={{ fontWeight: 600 }}>
-          วิธีรู้ว่าเชื่อมต่อได้
-        </p>
-        <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-          เปิดสวิตช์แล้วกดปุ่มด้านบน — ถ้าเข้าหน้าแชทของบอทนี้ได้
-          และบอทตอบจากเอกสาร แสดงว่าการเชื่อมต่อเว็บในแอปใช้งานได้
-          การฝัง snippet บนเว็บภายนอกต้องมี widget จริงตอน deploy
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export default function Integration({
-  onTestChat,
-}: {
-  onTestChat?: (bot: BotItem) => void;
-} = {}) {
+export default function Integration() {
   const [bots, setBots] = useState<BotItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [toggling, setToggling] = useState<"line" | "web" | null>(null);
-  const [expanded, setExpanded] = useState<"line" | "website" | null>("line");
+  const [toggling, setToggling] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const { scopeParam } = useAdminScope();
 
   const load = useCallback(async () => {
@@ -368,8 +254,6 @@ export default function Integration({
 
   const bot = bots.find((b) => b.bot_id === selectedId) ?? null;
   const lineOn = !!bot?.is_line_connected;
-  const webOn = !!bot?.is_web_connected;
-  const connected = (lineOn ? 1 : 0) + (webOn ? 1 : 0);
 
   const patchBot = (updated: BotItem) => {
     setBots((prev) =>
@@ -379,7 +263,7 @@ export default function Integration({
 
   const handleToggleLine = async () => {
     if (!bot) return;
-    setToggling("line");
+    setToggling(true);
     try {
       const next = await toggleBotLine(bot.bot_id);
       patchBot({ ...bot, is_line_connected: next });
@@ -389,44 +273,17 @@ export default function Integration({
         error instanceof Error ? error.message : "สลับ LINE ไม่สำเร็จ"
       );
     } finally {
-      setToggling(null);
-    }
-  };
-
-  const handleToggleWeb = async () => {
-    if (!bot) return;
-    setToggling("web");
-    try {
-      const next = await toggleBotWeb(bot.bot_id);
-      patchBot({ ...bot, is_web_connected: next });
-      toast.success(
-        next ? "เปิดการเชื่อมต่อ Website แล้ว" : "ปิดการเชื่อมต่อ Website แล้ว"
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "สลับ Website ไม่สำเร็จ"
-      );
-    } finally {
-      setToggling(null);
+      setToggling(false);
     }
   };
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-gray-900">การเชื่อมต่อ</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            เชื่อมต่อบอทกับ LINE และช่องทางเว็บ (บันทึกจริงลงเซิร์ฟเวอร์)
-          </p>
-        </div>
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
-          <span className="w-2 h-2 bg-amber-400 rounded-full" />
-          <span className="text-sm text-amber-700">
-            <span style={{ fontWeight: 600 }}>{bot ? connected : 0}</span> / 2
-            เชื่อมต่อแล้ว
-          </span>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-gray-900">การเชื่อมต่อ</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          เชื่อมต่อบอทกับ LINE Official Account เพื่อรับข้อความจากลูกค้า
+        </p>
       </div>
 
       <div className="mb-5 max-w-md">
@@ -454,8 +311,7 @@ export default function Integration({
           {loading ? "กำลังโหลด..." : "สร้างบอทก่อน แล้วค่อยตั้งค่าการเชื่อมต่อ"}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* LINE */}
+        <div className="max-w-2xl">
           <div
             className={`bg-white border rounded-xl shadow-sm overflow-hidden ${
               lineOn ? "border-amber-300" : "border-gray-200"
@@ -486,7 +342,7 @@ export default function Integration({
                 </div>
                 <Toggle
                   enabled={lineOn}
-                  disabled={toggling === "line"}
+                  disabled={toggling}
                   onToggle={handleToggleLine}
                 />
               </div>
@@ -505,14 +361,12 @@ export default function Integration({
               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() =>
-                    setExpanded((v) => (v === "line" ? null : "line"))
-                  }
+                  onClick={() => setExpanded((v) => !v)}
                   className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
                 >
                   <ExternalLink className="w-3 h-3" />
                   ตั้งค่า & เอกสาร
-                  {expanded === "line" ? (
+                  {expanded ? (
                     <ChevronUp className="w-3 h-3" />
                   ) : (
                     <ChevronDown className="w-3 h-3" />
@@ -520,81 +374,9 @@ export default function Integration({
                 </button>
               </div>
             </div>
-            {expanded === "line" && (
+            {expanded && (
               <div className="px-5 pb-5">
                 <LineConfigPanel bot={bot} onSaved={patchBot} />
-              </div>
-            )}
-          </div>
-
-          {/* Website */}
-          <div
-            className={`bg-white border rounded-xl shadow-sm overflow-hidden ${
-              webOn ? "border-amber-300" : "border-gray-200"
-            }`}
-          >
-            <div className="p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-amber-500 flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-sm text-gray-900"
-                        style={{ fontWeight: 600 }}
-                      >
-                        Website / In-app Chat
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                        Web
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      เปิดใช้แชทบนเว็บสำหรับบอทนี้
-                    </p>
-                  </div>
-                </div>
-                <Toggle
-                  enabled={webOn}
-                  disabled={toggling === "web"}
-                  onToggle={handleToggleWeb}
-                />
-              </div>
-
-              {webOn ? (
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 bg-green-50 rounded-lg px-3 py-1.5">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  เปิดใช้งานแล้ว
-                </div>
-              ) : (
-                <div className="mt-3 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-1.5">
-                  ยังไม่ได้เปิดสำหรับบอทนี้
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpanded((v) => (v === "website" ? null : "website"))
-                  }
-                  className="flex items-center gap-1.5 text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  ตั้งค่า & เอกสาร
-                  {expanded === "website" ? (
-                    <ChevronUp className="w-3 h-3" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3" />
-                  )}
-                </button>
-              </div>
-            </div>
-            {expanded === "website" && (
-              <div className="px-5 pb-5">
-                <WebConfigPanel bot={bot} webOn={webOn} onTestChat={onTestChat} />
               </div>
             )}
           </div>

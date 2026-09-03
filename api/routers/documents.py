@@ -1,5 +1,6 @@
 import os
 import shutil
+import concurrent.futures
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Form
 from sqlalchemy.orm import Session
 from api.database import get_db, SessionLocal
@@ -12,6 +13,7 @@ UPLOAD_BASE = "data/library"
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
 ALLOWED_EXTENSIONS_LABEL = "PDF, DOCX, TXT, CSV"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+INGEST_TIMEOUT_SEC = 180
 
 
 def _create_notification(db: Session, user_id: int, title: str, message: str, type: str = "info"):
@@ -334,10 +336,32 @@ def _clear_bot_vectors(bot_id_str: str):
 
 def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int):
     db = SessionLocal()
+    timed_out = False
+    ok = False
     try:
-        ok = ingest(bot_id_str)
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = pool.submit(ingest, bot_id_str)
+        try:
+            ok = bool(future.result(timeout=INGEST_TIMEOUT_SEC))
+        except concurrent.futures.TimeoutError:
+            timed_out = True
+            ok = False
+        finally:
+            pool.shutdown(wait=False, cancel_futures=False)
+
         bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
         if not bot:
+            return
+
+        if timed_out:
+            bot.status = models.BotStatus.inactive
+            db.commit()
+            _create_notification(
+                db, user_id,
+                "ประมวลผลเอกสารหมดเวลา",
+                f"ไฟล์ '{filename}' ใช้เวลานานเกิน {INGEST_TIMEOUT_SEC // 60} นาที — บอทยังไม่พร้อม ลองอัปโหลดใหม่หรือลบบอทได้",
+                "warning",
+            )
             return
 
         if ok:
