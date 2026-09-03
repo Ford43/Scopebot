@@ -207,3 +207,20 @@ class StaffReply(BaseModel):
     def clean_message(cls, v):
         # แปลง line break ทุกรูปแบบให้เป็น \n
         return v.replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
+class AuditLogOut(BaseModel):
+    id: int
+    actor_name: str
+    action: str
+    target_name: Optional[str] = None
+    detail: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AuditLogListOut(BaseModel):
+    total: int
+    items: List[AuditLogOut]

@@ -166,3 +166,16 @@ class PasswordResetToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    actor_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    actor_name = Column(String, nullable=False)
+    action = Column(String, index=True, nullable=False)
+    target_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    target_name = Column(String, nullable=True)
+    detail = Column(Text, nullable=False, default="")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)

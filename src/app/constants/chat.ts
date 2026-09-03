@@ -5,6 +5,8 @@ import {
   Puzzle,
   User,
   Bot,
+  ScrollText,
+  Globe,
 } from "lucide-react";
 import type { ActiveView, MenuItem } from "../types/chat";
 
@@ -22,6 +24,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
 
 export const VIEW_LABELS: Record<ActiveView, string> = {
   dashboard: "แดชบอร์ด",
+  "system-overview": "ภาพรวมระบบ",
+  "audit-log": "Log",
   "unified-chat": "แชทรวม",
   "search-history": "ประวัติการสนทนา",
   integration: "การเชื่อมต่อ",
@@ -47,7 +51,9 @@ export const PRODUCT_MENU_ITEMS: MenuItem[] = [
 export const USER_MENU_ITEMS: MenuItem[] = PRODUCT_MENU_ITEMS;
 
 export const ADMIN_MENU_ITEMS: MenuItem[] = [
-  { id: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard },
+  { id: "user-management", label: "จัดการผู้ใช้งาน", icon: User },
+  { id: "system-overview", label: "ภาพรวมระบบ", icon: Globe },
+  { id: "audit-log", label: "Log", icon: ScrollText },
   { id: "bots", label: "บอท", icon: Bot },
   {
     id: "unified-chat",
@@ -55,7 +61,6 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     icon: MessageSquare,
     showUnreadBadge: true,
   },
-  { id: "user-management", label: "จัดการผู้ใช้งาน", icon: User },
   { id: "search-history", label: "ประวัติการสนทนา", icon: History },
   { id: "integration", label: "การเชื่อมต่อ", icon: Puzzle },
 ];
@@ -72,7 +77,7 @@ export function menuItemsForRole(role: string): MenuItem[] {
 }
 
 export function defaultViewForRole(role: string): ActiveView {
-  if (role === "admin") return "dashboard";
+  if (role === "admin") return "user-management";
   if (role === "support") return "user-management";
   return "bots";
 }

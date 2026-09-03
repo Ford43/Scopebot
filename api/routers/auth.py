@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from api import auth, models, schemas
+from api.audit import write_audit_log
 from api.database import get_db
 from api.email_utils import send_password_reset_email, smtp_configured
 
@@ -71,6 +72,13 @@ def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
             )
         )
 
+    write_audit_log(
+        db,
+        action="signup",
+        actor_name="ระบบ",
+        target=user,
+        detail=f"สมัครบัญชี {user.username} ({user.email}) รออนุมัติ",
+    )
     db.commit()
     return user
 
@@ -252,6 +260,11 @@ def approve_user(
     if body.is_active is False and user.id == current_user.id:
         raise HTTPException(status_code=400, detail="ไม่สามารถระงับบัญชีของตัวเองได้")
 
+    old_approved = user.is_approved
+    old_active = user.is_active
+    old_role = user.role
+    old_max = user.max_bots
+
     if body.is_approved is not None:
         user.is_approved = body.is_approved
     if body.is_active is not None:
@@ -268,6 +281,51 @@ def approve_user(
             user.role = models.UserRole(body.role)
         except ValueError:
             raise HTTPException(status_code=400, detail="บทบาทไม่ถูกต้อง")
+
+    target_name = user.username
+    if body.is_approved is not None and body.is_approved != old_approved:
+        write_audit_log(
+            db,
+            actor=current_user,
+            action="approve" if user.is_approved else "reject",
+            target=user,
+            detail=(
+                f"อนุมัติบัญชี {target_name}"
+                if user.is_approved
+                else f"ปฏิเสธบัญชี {target_name}"
+            ),
+        )
+    if body.is_active is not None and body.is_active != old_active:
+        write_audit_log(
+            db,
+            actor=current_user,
+            action="unban" if user.is_active else "ban",
+            target=user,
+            detail=(
+                f"ปลดระงับบัญชี {target_name}"
+                if user.is_active
+                else f"ระงับบัญชี {target_name}"
+            ),
+        )
+    if body.role is not None:
+        new_role = user.role.value if hasattr(user.role, "value") else str(user.role)
+        old_role_s = old_role.value if hasattr(old_role, "value") else str(old_role)
+        if new_role != old_role_s:
+            write_audit_log(
+                db,
+                actor=current_user,
+                action="change_role",
+                target=user,
+                detail=f"เปลี่ยนบทบาท {target_name} จาก {old_role_s} เป็น {new_role}",
+            )
+    if body.max_bots is not None and user.max_bots != old_max:
+        write_audit_log(
+            db,
+            actor=current_user,
+            action="change_quota",
+            target=user,
+            detail=f"ปรับโควต้าบอทของ {target_name} จาก {old_max} เป็น {user.max_bots}",
+        )
 
     db.commit()
     db.refresh(user)
@@ -371,6 +429,13 @@ def delete_user(
         ).delete(synchronize_session=False)
 
         username = user.username
+        write_audit_log(
+            db,
+            actor=current_user,
+            action="delete_user",
+            target=user,
+            detail=f"ลบบัญชี {username} ถาวร",
+        )
         db.delete(user)
         db.commit()
     except Exception as e:
@@ -422,5 +487,12 @@ def admin_reset_password(
         raise HTTPException(status_code=400, detail="รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร")
 
     user.hashed_password = auth.hash_password(body.new_password)
+    write_audit_log(
+        db,
+        actor=current_user,
+        action="reset_password",
+        target=user,
+        detail=f"รีเซ็ตรหัสผ่านของ {user.username}",
+    )
     db.commit()
     return {"message": f"Reset password ของ {user.username} สำเร็จ"}

@@ -18,6 +18,8 @@ import {
 import type { ActiveView, HistoryItem } from "../../types/chat";
 import type { BotItem } from "../../types/bot";
 import Dashboard from "../admin/Dashboard";
+import SystemOverviewPage from "../admin/SystemOverview";
+import AuditLogPage from "../admin/AuditLogPage";
 import Integration from "../admin/Integration";
 import SearchHistory from "../admin/SearchHistory";
 import UnifiedChat from "../admin/UnifiedChat";
@@ -141,6 +143,14 @@ function ChatShell() {
     switch (activeView) {
       case "dashboard":
         return <Dashboard onNavigate={setActiveView} />;
+      case "system-overview":
+        return (
+          <SystemOverviewPage
+            onGoToUsers={() => setActiveView("user-management")}
+          />
+        );
+      case "audit-log":
+        return <AuditLogPage />;
       case "unified-chat":
         return <UnifiedChat />;
       case "search-history":
@@ -219,7 +229,9 @@ function ChatShell() {
           unreadNotifs={unreadNotifs}
           notifications={notifications}
           searchPlaceholder={
-            isSupport ? "ค้นหาผู้ใช้งาน..." : "ค้นหาบอทหรือประวัติ..."
+            isSupport || isAdmin
+              ? "ค้นหาผู้ใช้งาน..."
+              : "ค้นหาบอทหรือประวัติ..."
           }
           hideSearch={activeView === "chat"}
           onMarkRead={markRead}
@@ -233,15 +245,17 @@ function ChatShell() {
             const target = resolveNotificationView(n);
             if (target === "unified-chat") {
               setActiveView("unified-chat");
+            } else if (target === "user-management") {
+              setActiveView("user-management");
             } else if (target === "dashboard") {
-              setActiveView("dashboard");
+              setActiveView(isAdmin ? "system-overview" : "dashboard");
             } else {
               setActiveView("bots");
             }
           }}
           onSearch={(query) => {
             setGlobalSearchQuery(query);
-            if (isSupport) {
+            if (isSupport || isAdmin) {
               setActiveView("user-management");
             } else if (activeView === "user-management") {
               setActiveView("user-management");

@@ -16,6 +16,7 @@ from api.routers import documents
 from api.routers import notifications
 from api.routers import dashboard
 from api.routers import live_chat
+from api.routers import audit
 import os
 from dotenv import load_dotenv
 
@@ -60,6 +61,7 @@ app.include_router(documents.router)
 app.include_router(notifications.router)
 app.include_router(dashboard.router)
 app.include_router(live_chat.router)
+app.include_router(audit.router)
 
 
 @app.get("/")

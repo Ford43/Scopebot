@@ -289,3 +289,13 @@ def get_top_questions(
     ).limit(limit).all()
 
     return [{"question": r.question, "count": r.count} for r in results]
+
+
+@router.get("/system")
+def get_system_overview(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_role("admin")),
+):
+    from api.audit import build_system_overview
+
+    return build_system_overview(db)

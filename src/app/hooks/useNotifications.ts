@@ -124,8 +124,16 @@ export function useNotifications(isAuthenticated: boolean) {
 /** Map notification content → app view */
 export function resolveNotificationView(
   n: AppNotification
-): "unified-chat" | "bots" | "dashboard" {
+): "unified-chat" | "bots" | "dashboard" | "user-management" {
   const text = `${n.title} ${n.message}`.toLowerCase();
+  if (
+    text.includes("สมัคร") ||
+    text.includes("อนุมัติ") ||
+    text.includes("ผู้ใช้") ||
+    text.includes("รหัสผ่าน")
+  ) {
+    return "user-management";
+  }
   if (
     text.includes("รอคิว") ||
     text.includes("เจ้าหน้าที่") ||

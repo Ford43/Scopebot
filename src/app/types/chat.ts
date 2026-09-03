@@ -2,6 +2,8 @@ import type { ComponentType } from "react";
 
 export type ActiveView =
   | "dashboard"
+  | "system-overview"
+  | "audit-log"
   | "unified-chat"
   | "search-history"
   | "integration"
