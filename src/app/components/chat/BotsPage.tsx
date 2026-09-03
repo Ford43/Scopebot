@@ -117,6 +117,10 @@ export default function BotsPage({
           loadBots();
           if (options?.leave) backToList();
         }}
+        onBotCreated={(bot) => {
+          setEditingBot(bot);
+          setView("edit");
+        }}
         statusNotice={view === "edit" ? editNotice : null}
         onDismissNotice={() => setEditNotice(null)}
       />

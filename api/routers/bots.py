@@ -113,28 +113,34 @@ def update_bot(
     return bot
 
 
+def _wipe_bot_files(bot_id_str: str) -> None:
+    for folder_path in (
+        os.path.join(UPLOAD_BASE, bot_id_str),
+        os.path.join("vector_db", bot_id_str),
+    ):
+        if not os.path.exists(folder_path):
+            continue
+        for _ in range(8):
+            try:
+                shutil.rmtree(folder_path)
+                break
+            except PermissionError:
+                time.sleep(1)
+            except Exception:
+                break
+
+
 @router.delete("/{bot_id}")
 def delete_bot(
     bot_id: str,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
-
-    def force_delete_folder(folder_path: str) -> None:
-        if not os.path.exists(folder_path):
-            return
-        for _ in range(8):
-            try:
-                shutil.rmtree(folder_path)
-                return
-            except PermissionError:
-                time.sleep(1)
-            except Exception:
-                return
+    bot_folder_id = bot.bot_id
 
     try:
-        # ลบ live sessions (+ messages ผ่าน cascade) ก่อน เพื่อไม่ชน FK live_sessions_bot_id_fkey
         sessions = (
             db.query(models.LiveSession)
             .filter(models.LiveSession.bot_id == bot.id)
@@ -143,19 +149,14 @@ def delete_bot(
         for session in sessions:
             db.delete(session)
 
-        # ตัดความสัมพันธ์เอกสาร (association) — ไม่ลบไฟล์ใน library กลาง
         bot.documents.clear()
-
-        # ลบโฟลเดอร์ไฟล์/vector แบบ best-effort (อย่าให้ล็อกไฟล์บล็อกการลบ DB)
-        force_delete_folder(os.path.join(UPLOAD_BASE, bot_id))
-        force_delete_folder(os.path.join("vector_db", bot_id))
-
         db.delete(bot)
         db.commit()
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"ลบบอทไม่สำเร็จ: {e}")
 
+    background_tasks.add_task(_wipe_bot_files, bot_folder_id)
     return {"message": "ลบบอทสำเร็จ"}
 
 

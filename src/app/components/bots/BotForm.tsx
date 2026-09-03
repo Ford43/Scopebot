@@ -41,6 +41,7 @@ interface BotFormProps {
   onBack: () => void;
   /** Called after save/delete. leave=true returns to list (e.g. after delete). */
   onSaveSuccess: (options?: { leave?: boolean }) => void;
+  onBotCreated?: (bot: BotItem) => void;
   /** Inline notice when redirected here (e.g. inactive bot can't chat yet) */
   statusNotice?: string | null;
   onDismissNotice?: () => void;
@@ -60,6 +61,7 @@ export default function BotForm({
   existing,
   onBack,
   onSaveSuccess,
+  onBotCreated,
   statusNotice,
   onDismissNotice,
 }: BotFormProps) {
@@ -79,7 +81,10 @@ export default function BotForm({
   const [customCategory, setCustomCategory] = useState("");
   const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docsFetchGen = useRef(0);
+  const skipDocsFetchRef = useRef(false);
   const [botStatus, setBotStatus] = useState<string>(
     existing?.status || "inactive"
   );
@@ -93,32 +98,40 @@ export default function BotForm({
   const canSave =
     !isSaving &&
     !isUploading &&
+    !isDeleting &&
     !isProcessing &&
     (isNewBot ? canCreate : !!name.trim());
+  const isBusy = isUploading || isDeleting;
 
-  const fetchDocs = useCallback(async () => {
-    if (!currentBot?.bot_id) return;
+  const fetchDocs = useCallback(async (botId?: string) => {
+    const id = botId ?? currentBot?.bot_id;
+    if (!id) return;
+    const gen = ++docsFetchGen.current;
     try {
-      const data = await fetchBotDocuments(currentBot.bot_id);
-      setDocs(data);
+      const data = await fetchBotDocuments(id);
+      if (gen === docsFetchGen.current) setDocs(data);
     } catch (error) {
       console.error("Failed to fetch documents", error);
     }
   }, [currentBot?.bot_id]);
 
   useEffect(() => {
-    if (currentBot) fetchDocs();
-  }, [currentBot, fetchDocs]);
+    if (!currentBot?.bot_id || skipDocsFetchRef.current || isUploading) return;
+    fetchDocs();
+  }, [currentBot?.bot_id, isUploading, fetchDocs]);
 
   // Sync status from server on mount / when editing existing bot
   useEffect(() => {
-    if (!currentBot?.bot_id) return;
+    if (!currentBot?.bot_id || isUploading) return;
     let cancelled = false;
 
     const sync = async () => {
       try {
         const data = await fetchBot(currentBot.bot_id);
-        if (!cancelled) setBotStatus(data.status);
+        if (cancelled) return;
+        setBotStatus((prev) =>
+          prev === "processing" && data.status === "inactive" ? prev : data.status
+        );
       } catch (error) {
         console.error("Initial status sync error:", error);
       }
@@ -127,7 +140,7 @@ export default function BotForm({
     return () => {
       cancelled = true;
     };
-  }, [currentBot?.bot_id]);
+  }, [currentBot?.bot_id, isUploading]);
 
   useEffect(() => {
     if (!currentBot?.bot_id) return;
@@ -222,20 +235,25 @@ export default function BotForm({
         : await createBot(payload);
 
       if (wasNew && docs.length > 0) {
+        skipDocsFetchRef.current = true;
         for (const doc of docs) {
           await assignDocumentToBot(doc.id, savedBot.bot_id);
         }
         setCurrentBot(savedBot);
         setBotStatus("processing");
         prevStatusRef.current = "processing";
+        onBotCreated?.(savedBot);
         toast.success("สร้างบอทแล้ว", {
-          description: "กำลังประมวลผลเอกสาร — ดูสถานะได้ที่หน้าจัดการบอท",
+          description: "กำลังประมวลผลเอกสาร — อยู่หน้านี้จนกว่าสถานะจะเป็นพร้อมใช้งาน",
         });
+        skipDocsFetchRef.current = false;
+        await fetchDocs(savedBot.bot_id);
       } else {
         setCurrentBot(savedBot);
         toast.success("บันทึกการตั้งค่าเรียบร้อย");
+        if (wasNew) onBotCreated?.(savedBot);
       }
-      onSaveSuccess({ leave: true });
+      onSaveSuccess({ leave: false });
     } catch (error) {
       console.error("Save bot error:", error);
       toast.error(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
@@ -245,7 +263,7 @@ export default function BotForm({
   };
 
   const handleDeleteBot = async () => {
-    if (!currentBot?.bot_id) return;
+    if (!currentBot?.bot_id || isDeleting) return;
     if (
       !window.confirm(
         "คุณแน่ใจหรือไม่ว่าต้องการลบบอทนี้? ข้อมูลและเอกสารจะถูกลบทั้งหมด"
@@ -253,6 +271,7 @@ export default function BotForm({
     )
       return;
 
+    setIsDeleting(true);
     try {
       await deleteBot(currentBot.bot_id);
       toast.success("ลบบอทเรียบร้อย");
@@ -260,11 +279,13 @@ export default function BotForm({
     } catch (error) {
       console.error("Delete bot error:", error);
       toast.error(error instanceof Error ? error.message : "ลบบอทไม่สำเร็จ");
+      setIsDeleting(false);
     }
   };
 
-  const addFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const addFiles = async (incoming: FileList | File[] | null) => {
+    const list = incoming ? Array.from(incoming) : [];
+    if (list.length === 0) return;
     if (isProcessing) return;
     if (!currentBot && !name.trim()) {
       toast.error("กรอกชื่อบอทก่อน", {
@@ -275,65 +296,78 @@ export default function BotForm({
     }
 
     setIsUploading(true);
+    skipDocsFetchRef.current = true;
     setErrors((p) => ({ ...p, docs: "", name: "" }));
 
-    let bot = currentBot;
-    if (!bot) {
-      try {
-        bot = await createBot({
-          name: name.trim(),
-          description: desc.trim(),
-          system_prompt: systemPrompt.trim(),
-        });
-        setCurrentBot(bot);
-        onSaveSuccess({ leave: false });
-        toast.success("สร้างบอทแล้ว", {
-          description: "กำลังอัปโหลดเอกสารเข้าฐานความรู้",
-        });
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "สร้างบอทไม่สำเร็จ — ลองใหม่อีกครั้ง"
-        );
-        setIsUploading(false);
-        return;
-      }
-    }
-
-    let assignedAny = false;
-
-    for (const file of Array.from(files)) {
-      const validationError = isAllowedDocFile(file);
-      if (validationError) {
-        toast.error(validationError);
-        continue;
+    try {
+      let bot = currentBot;
+      const createdNow = !bot;
+      if (!bot) {
+        try {
+          bot = await createBot({
+            name: name.trim(),
+            description: desc.trim(),
+            system_prompt: systemPrompt.trim(),
+          });
+          setCurrentBot(bot);
+          toast.success("สร้างบอทแล้ว", {
+            description: "กำลังอัปโหลดเอกสารเข้าฐานความรู้",
+          });
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "สร้างบอทไม่สำเร็จ — ลองใหม่อีกครั้ง"
+          );
+          return;
+        }
       }
 
-      try {
-        const docData = await uploadDocument(file, resolvedUploadCategory);
-        await assignDocumentToBot(docData.id, bot.bot_id);
-        assignedAny = true;
-        toast.success(`อัปโหลด ${file.name} แล้ว`, {
-          description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,
-        });
-      } catch (error) {
-        console.error("File processing error", error);
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : `อัปโหลดไฟล์ ${file.name} ไม่สำเร็จ`
-        );
-      }
-    }
+      let assignedAny = false;
 
-    if (assignedAny) {
-      setProcessingStuck(false);
-      setBotStatus("processing");
-      prevStatusRef.current = "processing";
-      await fetchDocs();
+      for (const file of list) {
+        const validationError = isAllowedDocFile(file);
+        if (validationError) {
+          toast.error(validationError);
+          continue;
+        }
+
+        try {
+          const docData = await uploadDocument(file, resolvedUploadCategory);
+          await assignDocumentToBot(docData.id, bot.bot_id);
+          assignedAny = true;
+          setDocs((prev) =>
+            prev.some((d) => d.id === docData.id) ? prev : [...prev, docData]
+          );
+          toast.success(`อัปโหลด ${file.name} แล้ว`, {
+            description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,
+          });
+        } catch (error) {
+          console.error("File processing error", error);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : `อัปโหลดไฟล์ ${file.name} ไม่สำเร็จ`
+          );
+        }
+      }
+
+      if (assignedAny) {
+        setProcessingStuck(false);
+        setBotStatus("processing");
+        prevStatusRef.current = "processing";
+        await fetchDocs(bot.bot_id);
+      }
+
+      if (createdNow && bot) {
+        onBotCreated?.(bot);
+      }
+
+      onSaveSuccess({ leave: false });
+    } finally {
+      skipDocsFetchRef.current = false;
+      setIsUploading(false);
     }
-    setIsUploading(false);
   };
 
   const handleCategoryChange = async (docId: number, category: string) => {
@@ -437,8 +471,12 @@ export default function BotForm({
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-8 py-4 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-20">
         <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          onClick={() => {
+            if (isBusy) return;
+            onBack();
+          }}
+          disabled={isBusy}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="w-4 h-4" />
           กลับไปจัดการบอท
@@ -594,11 +632,11 @@ export default function BotForm({
               <div className="pt-8 mt-6 border-t border-red-100 flex flex-col items-center">
                 <button
                   onClick={handleDeleteBot}
-                  disabled={isUploading || isSaving}
+                  disabled={isUploading || isSaving || isDeleting}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200 font-medium disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  ลบบอท
+                  {isDeleting ? "กำลังลบ..." : "ลบบอท"}
                 </button>
               </div>
             )}
@@ -647,9 +685,10 @@ export default function BotForm({
                   <button
                     type="button"
                     onClick={handleDeleteBot}
-                    className="px-3 py-2 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-700 text-xs font-semibold"
+                    disabled={isDeleting}
+                    className="px-3 py-2 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-700 text-xs font-semibold disabled:opacity-50"
                   >
-                    ลบบอท
+                    {isDeleting ? "กำลังลบ..." : "ลบบอท"}
                   </button>
                 </div>
               </div>
@@ -776,8 +815,11 @@ export default function BotForm({
                 accept={ALLOWED_DOC_ACCEPT}
                 className="hidden"
                 onChange={(e) => {
-                  addFiles(e.target.files);
+                  const selected = e.target.files
+                    ? Array.from(e.target.files)
+                    : [];
                   e.target.value = "";
+                  void addFiles(selected);
                 }}
                 disabled={isUploading || isProcessing}
               />
@@ -903,6 +945,34 @@ export default function BotForm({
           </div>
         )}
       </div>
+
+      {isBusy && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-gray-900/40 px-4"
+          role="alertdialog"
+          aria-busy="true"
+          aria-live="assertive"
+          aria-labelledby="bot-busy-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-gray-100 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
+              <Clock className="h-6 w-6 animate-spin text-amber-500" />
+            </div>
+            <p
+              id="bot-busy-title"
+              className="text-base text-gray-900"
+              style={{ fontWeight: 700 }}
+            >
+              {isDeleting ? "กำลังลบบอท" : "กำลังอัปโหลดเอกสาร"}
+            </p>
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              {isDeleting
+                ? "ระบบกำลังลบบอทและไฟล์ที่เกี่ยวข้อง — หน้าจออาจดูนิ่ง แต่งานยังทำงานอยู่ กรุณารอสักครู่"
+                : "ระบบกำลังสร้างบอท (ถ้ายังไม่มี) อัปโหลดไฟล์ และเริ่มหั่นเอกสารเข้าฐานความรู้ กรุณารอจนกว่าจะเสร็จ"}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
