@@ -39,7 +39,7 @@ import { BotFileIcon } from "./BotFileIcon";
 interface BotFormProps {
   existing?: BotItem;
   onBack: () => void;
-  /** Called after save/delete. leave=true returns to list (e.g. after delete). */
+  /** Called after save/delete. leave=true returns to the bot list. */
   onSaveSuccess: (options?: { leave?: boolean }) => void;
   onBotCreated?: (bot: BotItem) => void;
   /** Inline notice when redirected here (e.g. inactive bot can't chat yet) */
@@ -248,12 +248,13 @@ export default function BotForm({
         });
         skipDocsFetchRef.current = false;
         await fetchDocs(savedBot.bot_id);
+        onSaveSuccess({ leave: false });
       } else {
         setCurrentBot(savedBot);
         toast.success("บันทึกการตั้งค่าเรียบร้อย");
         if (wasNew) onBotCreated?.(savedBot);
+        onSaveSuccess({ leave: true });
       }
-      onSaveSuccess({ leave: false });
     } catch (error) {
       console.error("Save bot error:", error);
       toast.error(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");

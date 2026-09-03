@@ -1,3 +1,4 @@
+import os
 from config import EMBEDDING_MODEL, VECTOR_DB_PATH, TOP_K, DEBUG
 
 try:
@@ -22,6 +23,10 @@ def get_vector_db(bot_id):
 
 def retrieve_docs(query, bot_id, score_threshold=1.05):
     """Return docs whose distance score is at or below threshold (lower = closer)."""
+    persist_dir = f"vector_db/{bot_id}"
+    if not os.path.isdir(persist_dir) or not os.listdir(persist_dir):
+        return []
+
     db = get_vector_db(bot_id)
 
     # ดึงมากกว่า TOP_K เล็กน้อย กันหัวข้อยาวถูกตัดคนละ chunk

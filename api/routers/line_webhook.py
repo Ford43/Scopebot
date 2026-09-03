@@ -18,7 +18,6 @@ router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
 
 # แสดง loading ระหว่าง RAG (ต้องเป็นพหุคูณของ 5, สูงสุด 60)
 RAG_LOADING_SECONDS = 20
-RAG_WAIT_TEXT = "กำลังหาข้อมูล ..."
 
 
 def _show_line_loading(access_token: str, chat_id: str, loading_seconds: int = RAG_LOADING_SECONDS) -> None:
@@ -47,6 +46,19 @@ def _show_line_loading(access_token: str, chat_id: str, loading_seconds: int = R
         print(f"[LINE] show loading failed: HTTP {e.code} {body}")
     except (urllib.error.URLError, TimeoutError) as e:
         print(f"[LINE] show loading failed: {e}")
+
+
+def _line_reply_or_push(line_bot_api, reply_token: str, line_user_id: str, messages: list) -> None:
+    """ตอบด้วย reply_token ถ้ายังใช้ได้ ไม่เช่นนั้น push"""
+    try:
+        line_bot_api.reply_message(
+            ReplyMessageRequest(reply_token=reply_token, messages=messages)
+        )
+    except Exception as e:
+        print(f"[LINE] reply failed, fallback push: {e}")
+        line_bot_api.push_message(
+            PushMessageRequest(to=line_user_id, messages=messages)
+        )
 
 # ข้อความ Flex ปุ่มติดต่อเจ้าหน้าที่
 CONTACT_FLEX = {
@@ -281,16 +293,40 @@ async def line_webhook(bot_id: str, request: Request):
                     db.commit()
                     continue
 
-                # ---- RAG (+ ประวัติ session) ----
-                # ตอบทันทีว่ากำลังค้น + ลองแสดง loading animation
-                # (ไอคอน loading ของ LINE เห็นเฉพาะตอนเปิดหน้าแชท และบางเครื่องแทบไม่โชว์)
-                _show_line_loading(bot.line_channel_token, line_user_id)
-                line_bot_api.reply_message(
-                    ReplyMessageRequest(
-                        reply_token=reply_token,
-                        messages=[TextMessage(text=RAG_WAIT_TEXT)]
+                # ---- ไม่มีเอกสาร / บอทไม่พร้อม → ไม่ค้นจากฐานความรู้เก่า ----
+                if bot.status != models.BotStatus.active or not bot.documents:
+                    no_kb_text = "บอทนี้ยังไม่มีข้อมูลในฐานความรู้ในขณะนี้"
+                    db.add(models.Conversation(
+                        session_id=line_user_id,
+                        question=user_message,
+                        answer=no_kb_text,
+                        is_answered_by_bot=False,
+                        is_resolved=False,
+                        source_channel="line",
+                        bot_id=bot.id
+                    ))
+                    db.add(models.LiveMessage(
+                        session_id=session.id,
+                        sender_type=models.SenderType.bot,
+                        sender_name="Bot",
+                        message=no_kb_text
+                    ))
+                    db.commit()
+                    _line_reply_or_push(
+                        line_bot_api,
+                        reply_token,
+                        line_user_id,
+                        [
+                            FlexMessage(
+                                alt_text="บอทยังไม่มีข้อมูล — ติดต่อเจ้าหน้าที่",
+                                contents=FlexContainer.from_dict(CONTACT_FLEX)
+                            )
+                        ],
                     )
-                )
+                    continue
+
+                # ---- RAG ----
+                _show_line_loading(bot.line_channel_token, line_user_id)
 
                 # ไม่ส่งประวัติแชทเข้า RAG — โมเดลเล็กจะเลียนแบบคำตอบเก่าที่สั้น/ไม่ครบ
                 answer, _sources = ask_rag(
@@ -323,24 +359,23 @@ async def line_webhook(bot_id: str, request: Request):
                 db.commit()
 
                 if is_bot_answered:
-                    # reply_token ใช้ไปแล้ว → ส่งคำตอบด้วย push
-                    line_bot_api.push_message(
-                        PushMessageRequest(
-                            to=line_user_id,
-                            messages=[TextMessage(text=answer)]
-                        )
+                    _line_reply_or_push(
+                        line_bot_api,
+                        reply_token,
+                        line_user_id,
+                        [TextMessage(text=answer)],
                     )
                 else:
-                    line_bot_api.push_message(
-                        PushMessageRequest(
-                            to=line_user_id,
-                            messages=[
-                                FlexMessage(
-                                    alt_text="ไม่พบข้อมูล — ติดต่อเจ้าหน้าที่",
-                                    contents=FlexContainer.from_dict(CONTACT_FLEX)
-                                )
-                            ]
-                        )
+                    _line_reply_or_push(
+                        line_bot_api,
+                        reply_token,
+                        line_user_id,
+                        [
+                            FlexMessage(
+                                alt_text="ไม่พบข้อมูล — ติดต่อเจ้าหน้าที่",
+                                contents=FlexContainer.from_dict(CONTACT_FLEX)
+                            )
+                        ],
                     )
 
         return {"status": "ok"}

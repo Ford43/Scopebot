@@ -37,6 +37,22 @@ def expire_stale_processing(bot: Optional[models.Bot], db: Session) -> Optional[
     return bot
 
 
+def heal_bot_without_knowledge(bot: Optional[models.Bot], db: Session) -> Optional[models.Bot]:
+    """Active/processing with zero documents cannot answer — keep status honest."""
+    if bot is None or bot.status == models.BotStatus.inactive:
+        return bot
+    if bot.documents:
+        return bot
+    bot.status = models.BotStatus.inactive
+    db.commit()
+    db.refresh(bot)
+    return bot
+
+
+def normalize_bot_status(bot: Optional[models.Bot], db: Session) -> Optional[models.Bot]:
+    return heal_bot_without_knowledge(expire_stale_processing(bot, db), db)
+
+
 def _get_bot_or_404(bot_id_str: str, db: Session, user: models.User):
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id_str).first()
     return auth.assert_bot_access(user, bot)
@@ -82,7 +98,7 @@ def list_my_bots(
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
     return [
-        expire_stale_processing(bot, db)
+        normalize_bot_status(bot, db)
         for bot in auth.visible_bots_query(db, current_user, scope)
         .order_by(models.Bot.created_at.desc())
         .all()
@@ -95,7 +111,7 @@ def get_bot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    return expire_stale_processing(_get_bot_or_404(bot_id, db, current_user), db)
+    return normalize_bot_status(_get_bot_or_404(bot_id, db, current_user), db)
 
 
 @router.patch("/{bot_id}", response_model=schemas.BotOut)

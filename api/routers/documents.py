@@ -169,12 +169,53 @@ def update_document(
     return doc
 
 
+def _remove_bot_copy(bot_id_str: str, filename: str) -> None:
+    dest_path = os.path.join("data", bot_id_str, filename)
+    if os.path.exists(dest_path):
+        os.remove(dest_path)
+
+
+def _sync_bot_knowledge_after_doc_change(
+    bot: models.Bot,
+    filename: str,
+    user_id: int,
+    background_tasks: BackgroundTasks,
+) -> None:
+    remaining = len(bot.documents)
+    if remaining == 0:
+        bot.status = models.BotStatus.inactive
+        background_tasks.add_task(_clear_bot_vectors, bot.bot_id)
+    else:
+        bot.status = models.BotStatus.processing
+        background_tasks.add_task(
+            _run_ingest_and_notify, bot.bot_id, bot.id, filename, user_id
+        )
+
+
+def _purge_document_from_assigned_bots(
+    doc: models.Document,
+    user_id: int,
+    background_tasks: BackgroundTasks,
+) -> list[str]:
+    """Detach a library file from every bot, drop copies, rebuild or clear vectors."""
+    assigned = list(doc.bots)
+    bot_names = [b.name for b in assigned]
+    filename = doc.filename
+    for bot in assigned:
+        _remove_bot_copy(bot.bot_id, filename)
+        if doc in bot.documents:
+            bot.documents.remove(doc)
+        _sync_bot_knowledge_after_doc_change(bot, filename, user_id, background_tasks)
+    return bot_names
+
+
 # =====================
 # ลบเอกสาร (พร้อมแจ้งเตือน)
 # =====================
 @router.delete("/{doc_id}")
 def delete_document(
     doc_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
@@ -185,11 +226,11 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="ไม่พบเอกสาร")
 
-    # เช็คว่าเอกสารนี้ถูกใช้โดย Bot กี่ตัว
-    bot_count = len(doc.bots)
-    bot_names = [b.name for b in doc.bots]
+    bot_names = _purge_document_from_assigned_bots(
+        doc, current_user.id, background_tasks
+    )
+    bot_count = len(bot_names)
 
-    # ลบไฟล์จริง
     if os.path.exists(doc.file_path):
         os.remove(doc.file_path)
 
@@ -295,36 +336,19 @@ def unassign_from_bot(
     if doc not in bot.documents:
         raise HTTPException(status_code=400, detail="เอกสารนี้ไม่ได้ถูก assign ให้ Bot นี้")
 
-    # ลบไฟล์ออกจากโฟลเดอร์ Bot
-    dest_path = os.path.join("data", bot_id, doc.filename)
-    if os.path.exists(dest_path):
-        os.remove(dest_path)
-
-    # ตัด relation
+    _remove_bot_copy(bot_id, doc.filename)
     bot.documents.remove(doc)
-    remaining = len(bot.documents)
-    if remaining == 0:
-        bot.status = models.BotStatus.inactive
-    else:
-        bot.status = models.BotStatus.processing
+    _sync_bot_knowledge_after_doc_change(
+        bot, doc.filename, current_user.id, background_tasks
+    )
     db.commit()
 
-    # แจ้งเตือน
     _create_notification(
         db, current_user.id,
         "ถอดเอกสารออกจาก Bot",
         f"ไฟล์ '{doc.filename}' ถูกถอดออกจาก Bot '{bot.name}' เรียบร้อยแล้ว",
         "info"
     )
-
-    # rebuild vector index ให้ตรงกับเอกสารที่เหลือ
-    if remaining > 0:
-        background_tasks.add_task(
-            _run_ingest_and_notify, bot_id, bot.id, doc.filename, current_user.id
-        )
-    else:
-        # ไม่มีเอกสารเหลือ — เคลียร์ vector DB
-        background_tasks.add_task(_clear_bot_vectors, bot_id)
 
     return {"message": f"ถอด '{doc.filename}' ออกจาก Bot '{bot.name}' สำเร็จ"}
 
@@ -339,11 +363,11 @@ def _clear_bot_vectors(bot_id_str: str):
         except Exception:
             pass
         gc.collect()
-        persist_path = f"vector_db/{bot_id_str}"
-        if os.path.exists(persist_path):
-            shutil.rmtree(persist_path, ignore_errors=True)
     except Exception as e:
-        print(f"clear vectors error for {bot_id_str}: {e}")
+        print(f"clear vectors cache error for {bot_id_str}: {e}")
+    persist_path = f"vector_db/{bot_id_str}"
+    if os.path.exists(persist_path):
+        shutil.rmtree(persist_path, ignore_errors=True)
 
 
 def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int):

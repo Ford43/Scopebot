@@ -352,6 +352,12 @@ export default function BotsPage({
                         try {
                           await deleteDocument(doc.id);
                           setLibraryDocs((prev) => prev.filter((d) => d.id !== doc.id));
+                          try {
+                            const botData = await fetchBots(scopeParam);
+                            setBots(botData);
+                          } catch {
+                            /* status refresh is best-effort */
+                          }
                           toast.success("ลบไฟล์จากคลังแล้ว");
                         } catch (error) {
                           toast.error(
