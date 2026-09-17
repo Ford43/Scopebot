@@ -334,11 +334,21 @@ export default function BotForm({
         }
 
         try {
-          const docData = await uploadDocument(file, resolvedUploadCategory);
+          const docData = await uploadDocument(file, resolvedUploadCategory, (filename, assignedBots) =>
+            window.confirm(
+              `มีเอกสารชื่อ "${filename}" แล้ว ต้องการแทนที่ด้วยไฟล์ใหม่หรือไม่?` +
+              (assignedBots.length
+                ? `\nบอทที่ใช้เอกสารนี้จะประมวลผลใหม่ทั้งหมด: ${assignedBots.join(", ")}`
+                : "")
+            )
+          );
+          if (!docData) continue;
           await assignDocumentToBot(docData.id, bot.bot_id);
           assignedAny = true;
           setDocs((prev) =>
-            prev.some((d) => d.id === docData.id) ? prev : [...prev, docData]
+            prev.some((d) => d.id === docData.id)
+              ? prev.map((d) => d.id === docData.id ? docData : d)
+              : [...prev, docData]
           );
           toast.success(`อัปโหลด ${file.name} แล้ว`, {
             description: `หมวดหมู่: ${docData.category || resolvedUploadCategory} — กำลังประมวลผล`,

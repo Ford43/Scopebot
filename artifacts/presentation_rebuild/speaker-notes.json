@@ -1,0 +1,110 @@
+[
+  {
+    "n": 1,
+    "title": "ScopeBot",
+    "script": "เวลา 30 วินาที\nเปิดด้วยชื่อเล่นของผู้พูด แล้วกล่าวว่า วันนี้จะพาดูว่า ScopeBot รับเอกสารและนำมาตอบคำถามได้อย่างไร ตั้งแต่หน้าจอไปจนถึง AI และฐานข้อมูล จากนั้นจะสาธิตระบบจริง\nส่งต่อ: เริ่มจากทีมและลำดับการนำเสนอของเรา",
+    "source": "ScopeBot.pdf.pdf หน้า 1 และ README.md"
+  },
+  {
+    "n": 2,
+    "title": "ทีมผู้นำเสนอ",
+    "script": "เวลา 40 วินาที\nแนะนำชื่อเล่นจากซ้ายไปขวา ก้อง ป๊อกกี้ ฟลุ๊ค ฟอร์ด และมอส ก่อนขึ้นแต่ละช่วงให้ผู้พูดบอกชื่อเล่นอีกครั้ง\nการแบ่งช่วงที่เสนอสำหรับซ้อม: ก้อง ภาพรวมและ Timeline; ป๊อกกี้ Frontend; ฟลุ๊ค Backend และ Database; ฟอร์ด AI/RAG และการส่งต่อ; มอส Deployment และ Demo ทีมปรับสลับกันได้โดยไม่เปลี่ยนเนื้อหา\nส่งต่อ: ลำดับเนื้อหาจะเริ่มจากผู้ใช้งาน แล้วค่อยเปิดดูภายในระบบ",
+    "source": "ScopeBot.pdf.pdf หน้า 14–18 ชื่อและรูปสมาชิก"
+  },
+  {
+    "n": 3,
+    "title": "ลำดับการนำเสนอ",
+    "script": "เวลา 30 วินาที\nชี้ตามเลข 1 ถึง 5 ไม่ต้องอ่านชื่อเทคโนโลยีทั้งหมดในตอนนี้ เราจะเริ่มจากภาพใหญ่ ดูส่วนที่คนใช้งาน ดูส่วนที่ประมวลผล อธิบาย AI แล้วจบด้วย Timeline และ Demo\nส่งต่อ: ภาพรวมระบบมีเส้นทางหลักดังนี้",
+    "source": "หัวข้อการรายงานจากภาพโจทย์และ ScopeBot.pdf.pdf หน้า 2"
+  },
+  {
+    "n": 4,
+    "title": "ภาพรวมระบบ",
+    "script": "เวลา 60 วินาที\nชี้ 1 ช่องทาง Web หรือ LINE เป็นจุดรับคำถาม\nชี้ 2 FastAPI ตรวจสิทธิ์และควบคุมการทำงาน\nชี้ 3 PostgreSQL เก็บบัญชี บอท และประวัติ\nชี้ 4 RAG ค้นเอกสารจาก ChromaDB ก่อนเรียก Ollama สร้างคำตอบ จากนั้น FastAPI ส่งกลับช่องทางเดิม\nยังไม่อธิบาย Cloudflare หรือ embeddings ในหน้านี้\nส่งต่อ: เริ่มจากส่วนที่ผู้ใช้งานมองเห็น คือ Frontend",
+    "source": "api/main.py; api/routers/chat.py; api/routers/line_webhook.py; rag/rag_pipeline.py"
+  },
+  {
+    "n": 5,
+    "title": "Frontend",
+    "script": "เวลา 60 วินาที\nชี้จากซ้ายไปขวา 1 Login ให้ได้ตัวตนผู้ใช้ 2 เข้าหน้าหลัก ChatInterface ที่รวม Sidebar และ Top Bar 3 เลือกบอทเพื่อทดลองถามหรือใช้เมนูจัดการ\nAuthContext เก็บสถานะผู้ใช้ ส่วน useChatSession จัดการข้อความและการสนทนา แล้วส่งคำขอพร้อม token ไป API\nเอกสารรองรับ PDF DOCX TXT CSV ไม่เกิน 10 MB\nส่งต่อ: เมนูที่เห็นขึ้นอยู่กับบทบาทในระบบ",
+    "source": "src/app/routes.tsx; src/app/App.tsx; src/app/components/chat/ChatInterface.tsx; api/routers/documents.py"
+  },
+  {
+    "n": 6,
+    "title": "บทบาทและขอบเขตข้อมูล",
+    "script": "เวลา 60 วินาที\nอ่านทีละแถว Admin จัดการผู้ใช้ ภาพรวม และ Log ส่วนงานบอทยังตรวจเจ้าของ\nSupport ในระบบนี้หมายถึงคนดูแลบัญชี เข้าหน้าจัดการผู้ใช้งาน ไม่ใช่ role สำหรับตอบแชท\nUser เป็นเจ้าของบอท ใช้เมนูสินค้าและแชทรวมของตัวเอง\nดังนั้น Demo ต้องให้เจ้าของบอทหรือ Admin เจ้าของบอทตอบแชท ไม่ใช้บัญชี Support\nส่งต่อ: Backend บังคับสิทธิ์นี้ซ้ำทุกคำขอที่เกี่ยวข้อง",
+    "source": "src/app/constants/chat.ts; api/auth.py require_shop_operator, assert_bot_access, visible_bots_query"
+  },
+  {
+    "n": 7,
+    "title": "Backend",
+    "script": "เวลา 60 วินาที\nชี้เลข 1 Backend รับคำขอจาก Web หรือ webhook ของ LINE\nเลข 2 คำขอ Web ตรวจ JWT บัญชีและสิทธิ์ ส่วน LINE ตรวจ signature\nเลข 3 Router เรียกงาน เช่น จัดการบอท เอกสาร หรือแชท\nเลข 4 อ่านเขียนข้อมูล เรียก RAG แล้วส่งผลกลับ\nไม่ต้องอ่านทุก endpoint ในช่วงนี้ รายชื่ออยู่ภาคผนวก\nส่งต่อ: ระบบเก็บข้อมูลสามชนิดในคนละส่วน",
+    "source": "api/main.py; api/auth.py; api/routers/*.py"
+  },
+  {
+    "n": 8,
+    "title": "ข้อมูลอยู่ที่ไหน",
+    "script": "เวลา 60 วินาที\nอธิบายจากซ้ายไปขวา PostgreSQL เก็บผู้ใช้ บอท metadata เอกสารและประวัติ ผ่าน SQLAlchemy\nChromaDB เก็บข้อความย่อยกับ embeddings โดยแยก directory ตาม bot_id ไม่ใช่ PostgreSQL คนละฐานต่อบอท\nDocument Storage เก็บไฟล์ต้นฉบับและไฟล์สำหรับนำเข้า\nส่งต่อ: ดูเฉพาะความสัมพันธ์ฐานข้อมูลที่เกี่ยวกับบอทก่อน",
+    "source": "api/database.py; api/models.py; rag/ingest.py; docker-compose.yml"
+  },
+  {
+    "n": 9,
+    "title": "Database Relationships",
+    "script": "เวลา 70 วินาที\nชี้ users เป็นเจ้าของ bots และ documents ได้หลายรายการ\nบอทกับเอกสารเชื่อมผ่าน bot_documents จึงให้เอกสารเดียวใช้กับหลายบอทได้\nบอทหนึ่งมี conversations หลายรายการ และ live_sessions หลายครั้ง แต่ละ live_session มี live_messages หลายข้อความ\nนี่เป็น ER ย่อ ตาราง notifications password_reset_tokens audit_logs อยู่ในฐานเดียวกันแต่ไม่ใส่ในภาพหลักเพื่อให้อ่านง่าย\nส่งต่อ: เมื่อบอทมีเอกสารแล้ว ระบบจะสร้างฐานความรู้ให้บอท",
+    "source": "api/models.py"
+  },
+  {
+    "n": 10,
+    "title": "RAG ขั้นที่ 1 เตรียมความรู้",
+    "script": "เวลา 60 วินาที\nอ่าน 1 ถึง 4 ผู้ใช้ส่งเอกสาร ระบบอ่านและแบ่งข้อความ BGE-M3 แปลงข้อความย่อยเป็น embeddings แล้ว ChromaDB เก็บไว้แยกตามบอท\nขั้นนี้เป็นการเตรียมดัชนีความรู้ ไม่ใช่ฝึกโมเดลภาษาใหม่ และยังไม่ใช่ขั้นตอบคำถาม\nส่งต่อ: เมื่อผู้ใช้ถาม ระบบใช้ดัชนีนี้อย่างไร",
+    "source": "rag/ingest.py; rag/document_loader.py; rag/chunker.py; api/routers/documents.py"
+  },
+  {
+    "n": 11,
+    "title": "RAG ขั้นที่ 2 ตอบคำถาม",
+    "script": "เวลา 75 วินาที\nชี้ 1 คำถามใหม่และบริบทคำถามล่าสุดช่วยให้เข้าใจคำถามต่อเนื่อง\nชี้ 2 ตัว embedding แปลงคำค้นเพื่อหา chunks ที่ใกล้เคียงใน ChromaDB และกรองตาม distance\nชี้ 3 เอาข้อความที่ค้นได้เป็น context ส่งให้ Ollama พร้อมคำสั่งและประวัติ\nชี้ 4 คืนคำตอบพร้อมชื่อไฟล์และ snippet ให้ Web ส่วน LINE ส่งเป็นข้อความตาม router\nChromaDB เชื่อมที่การค้นหา ไม่ได้เป็นเส้นลัดเข้าโมเดล\nส่งต่อ: ดูคำถามเดียวกันในลำดับเวลาตั้งแต่ส่งจนตอบ",
+    "source": "rag/rag_pipeline.py; rag/retriever.py; src/app/hooks/useChatSession.ts; api/routers/line_webhook.py"
+  },
+  {
+    "n": 12,
+    "title": "Sequence ของคำถามหนึ่งครั้ง",
+    "script": "เวลา 60 วินาที\nชี้หัวคอลัมน์ Web FastAPI และ RAG ก่อน แล้วอ่านจากบนลงล่าง\n1 Web ส่งคำถามและ session 2 FastAPI เรียก RAG หลังตรวจสิทธิ์ 3 RAG คืนคำตอบจากเอกสาร 4 Backend บันทึก conversation 5 ส่งคำตอบกลับ Web\nหน้านี้เป็น sequence แบบย่อ รายละเอียดค้นหาและ LLM อยู่หน้าก่อน\nส่งต่อ: อีกเส้นทางหนึ่งเกิดเมื่อบอทตอบไม่ได้",
+    "source": "api/routers/chat.py; rag/rag_pipeline.py"
+  },
+  {
+    "n": 13,
+    "title": "เมื่อบอทตอบไม่ได้",
+    "script": "เวลา 60 วินาที\nอ่านตามเลข 1 ถึง 4 bot ตอบจากเอกสาร เมื่อเข้า handoff จะรอใน waiting พอคนตอบครั้งแรกจึงเปลี่ยนเป็น human หลังจบงานกลับ bot และปิด active session\nWeb ที่ไม่พบคำตอบแสดงปุ่มให้เลือกติดต่อเจ้าหน้าที่ ส่วน LINE สามารถเข้าสู่คิวอัตโนมัติ\nคนตอบคือเจ้าของบอทหรือ Admin ที่เป็นเจ้าของ ไม่ใช่ role Support ของแพลตฟอร์ม\nส่งต่อ: ทั้งสองช่องทางเชื่อมผ่าน deployment เดียวกัน",
+    "source": "api/routers/chat.py; api/routers/live_chat.py; api/routers/line_webhook.py; api/auth.py"
+  },
+  {
+    "n": 14,
+    "title": "Deployment",
+    "script": "เวลา 60 วินาที\nอ่านซ้ายไปขวา Browser และ LINE ส่ง HTTPS เข้า Tunnel จากนั้นไป Nginx\nNginx ให้ไฟล์ React กับ browser ส่วนเส้นทาง /api/ ส่งไป FastAPI รวม webhook\nFastAPI ติดต่อ PostgreSQL และ volume เอกสารกับ ChromaDB ภายใน deployment ส่วน Ollama รันบน host ตาม compose\nส่งต่อ: ต่อไปคือแผนดำเนินงานและส่วนที่ใช้ Demo",
+    "source": "docker-compose.yml; docker-compose.tunnel.yml; deploy/nginx.conf"
+  },
+  {
+    "n": 15,
+    "title": "Timeline การทำงาน",
+    "script": "เวลา 60 วินาที\nเล่าจากบนลงล่าง มีนาคมออกแบบ เมษายนถึงพฤษภาคมพัฒนาแกนหลัก มิถุนายนถึงสิงหาคมปรับ RAG และ handoff กันยายนเตรียม demo และทดสอบ ตุลาคมเตรียมส่งมอบ\nสถานะในสองช่วงท้ายแสดงเป็นแผนตามไฟล์ต้นฉบับ ไม่กล่าวว่า UAT ผ่านแล้วหากยังไม่มีผลทดสอบ\nส่งต่อ: สำหรับการสาธิตรอบนี้จะเดินตามเส้นทางที่เตรียมไว้",
+    "source": "ScopeBot.pdf.pdf หน้า 12 แผนงานเดิม; git log ยืนยันงานที่ปรากฏใน repository ถึง 4 ก.ย. 2569"
+  },
+  {
+    "n": 16,
+    "title": "Demo ScopeBot",
+    "script": "เวลา 4 นาที\nก่อนเริ่ม เปิดบัญชีเจ้าของบอทที่ได้รับอนุมัติและบอท active เตรียมเอกสารสาธิตที่ไม่มีข้อมูลส่วนบุคคล เปิด LINE OA อีกหน้าจอ\n1 แสดงบอทและเอกสารที่ใช้ 2 ถามเรื่องที่มีคำตอบในเอกสาร 3 เปิดชื่อไฟล์และ snippet บน Web 4 จาก LINE ขอคุยเจ้าหน้าที่ แล้วใช้บัญชีเจ้าของบอทเปิดแชทรวม ตอบและจบ session\nถ้า LINE ยังไม่พร้อมใช้ Web handoff กับบัญชีเจ้าของเดิมคนละหน้าต่างได้ ถ้าระบบช้าให้พูดอธิบายจาก flow ที่เตรียมไว้ ไม่กล่าวว่าทำงานสำเร็จจนเห็นผลจริง\nส่งต่อ: สรุปสิ่งที่ได้เห็นจาก Demo",
+    "source": "src/app/components/chat/BotsPage.tsx; src/app/components/admin/UnifiedChat.tsx; api/routers/live_chat.py"
+  },
+  {
+    "n": 17,
+    "title": "ScopeBot ทำงานร่วมกันอย่างไร",
+    "script": "เวลา 40 วินาที\nสรุปทีละบรรทัด Frontend เป็นจุดใช้งาน FastAPI ควบคุมงานและสิทธิ์ RAG ค้นเอกสารก่อนเรียกโมเดล ส่วนคนรับช่วงเมื่อระบบไม่มีคำตอบ\nปิดด้วย ขอบคุณครับหรือค่ะ ยินดีตอบคำถามเรื่องโครงสร้าง การเก็บข้อมูล หรือการทำงานที่สาธิตไป\nภาคผนวกถัดไปเปิดเมื่อมีคำถามเรื่อง API เท่านั้น",
+    "source": "README.md; api/main.py; rag/rag_pipeline.py"
+  },
+  {
+    "n": 18,
+    "title": "ภาคผนวก API หลัก",
+    "script": "ไม่จำเป็นต้องอ่านหน้านี้ในช่วงหลัก\nอธิบายเฉพาะกลุ่มที่ผู้ฟังถาม เช่น /api/auth สำหรับบัญชี /api/bots และ /api/documents สำหรับความรู้ /api/chat สำหรับคำถามและประวัติ /api/live สำหรับรับช่วงแชท\nLINE webhook จริงมี bot_id ต่อท้าย และตรวจ signature ส่วน /api/health เป็นจุดตรวจสถานะ",
+    "source": "api/main.py; api/routers/*.py"
+  }
+]

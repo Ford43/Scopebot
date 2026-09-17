@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Search, Clock, MessageSquare, ChevronDown, ChevronUp, Smartphone, Globe, Bot } from "lucide-react";
 import { authHeaders } from "../../lib/api";
 import { useAdminScope } from "../../contexts/AdminScopeContext";
+import type { SessionTimelineMessage } from "../../types/chat";
 
 interface ChatMessage { id: number; question: string; answer: string; is_answered_by_bot: boolean; created_at: string; }
 interface ChatSession {
@@ -10,11 +11,12 @@ interface ChatSession {
   started_at: string; last_at: string;
   msg_count: number; answered_count: number;
   messages: ChatMessage[];
+  timeline?: SessionTimelineMessage[];
 }
 interface BotItem { bot_id: string; name: string; }
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr + "Z").getTime();
+  const diff = Date.now() - new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(dateStr) ? dateStr : dateStr + "Z").getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "เมื่อกี้";
   if (mins < 60) return `${mins} นาทีที่แล้ว`;
@@ -110,11 +112,11 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map(session => (
-            <div key={session.session_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div key={`${session.bot_id}:${session.session_id}`} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
               {/* Session header — กดเพื่อขยาย */}
               <div
                 className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => setExpandedId(expandedId === session.session_id ? null : session.session_id)}
+                onClick={() => setExpandedId(expandedId === `${session.bot_id}:${session.session_id}` ? null : `${session.bot_id}:${session.session_id}`)}
               >
                 {/* Bot icon */}
                 <div className="w-9 h-9 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -155,7 +157,7 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
                     <p className="text-xs text-gray-400">ตอบได้</p>
                     <p className="text-sm font-bold text-green-600">{session.answered_count}</p>
                   </div>
-                  {expandedId === session.session_id
+                  {expandedId === `${session.bot_id}:${session.session_id}`
                     ? <ChevronUp className="w-4 h-4 text-gray-400" />
                     : <ChevronDown className="w-4 h-4 text-gray-400" />
                   }
@@ -163,9 +165,18 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
               </div>
 
               {/* Messages — ขยายออกมา */}
-              {expandedId === session.session_id && (
+              {expandedId === `${session.bot_id}:${session.session_id}` && (
                 <div className="border-t border-gray-100 bg-gray-50 px-5 py-4 space-y-3 max-h-80 overflow-y-auto">
-                  {session.messages.map(msg => (
+                  {session.timeline ? session.timeline.map(msg => (
+                    <div key={msg.id} className="bg-white rounded-lg p-3 border border-gray-100">
+                      <div className="flex items-start gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${msg.sender === "staff" ? "bg-sky-100 text-sky-700" : msg.sender === "bot" ? "bg-green-100 text-green-700" : "bg-gray-900 text-white"}`}>
+                          {msg.sender === "staff" ? msg.sender_name || "เจ้าหน้าที่" : msg.sender === "bot" ? "บอท" : "ผู้ใช้"}
+                        </span>
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                      </div>
+                    </div>
+                  )) : session.messages.map(msg => (
                     <div key={msg.id} className="bg-white rounded-lg p-3 border border-gray-100">
                       <div className="flex items-start gap-2 mb-2">
                         <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full flex-shrink-0">Q</span>

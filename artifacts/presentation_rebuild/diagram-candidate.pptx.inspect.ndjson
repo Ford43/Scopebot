@@ -1,0 +1,604 @@
+{"kind":"deck","id":"pr/i97n2m","name":"Deck"}
+{"kind":"layout","layoutId":"6fd375ad-8b54-4026-8e05-e9feb0f1ab92","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"7349a524-ede2-48a1-9297-2c83dcc40ed6","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/18ia6q","slide":1,"title":"ScopeBot","textShapes":9}
+{"kind":"textbox","id":"sh/cn694vqh","slide":1,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/bmxsbqpw","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/alor2l8b","slide":1,"bbox":[65,255,220,220]}
+{"kind":"textbox","id":"sh/pkfa9g7q","slide":1,"text":"เอกสาร","textPreview":"เอกสาร","textChars":6,"textLines":1,"bbox":[75,265,200,200]}
+{"kind":"shape","id":"sh/oj690bql","slide":1,"bbox":[490,210,300,300]}
+{"kind":"textbox","id":"sh/nix87qp0","slide":1,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[500,220,280,280]}
+{"kind":"shape","id":"sh/2h4ryl8f","slide":1,"bbox":[985,200,230,120]}
+{"kind":"textbox","id":"sh/tgjalk7a","slide":1,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[995,210,210,100]}
+{"kind":"shape","id":"sh/8fq9cfqp","slide":1,"bbox":[985,425,230,120]}
+{"kind":"textbox","id":"sh/ed0bu5kj","slide":1,"text":"LINE","textPreview":"LINE","textChars":4,"textLines":1,"bbox":[995,435,210,100]}
+{"kind":"shape","id":"sh/fe9cnal4","slide":1,"bbox":[285,365,0.1,0.1]}
+{"kind":"shape","id":"sh/gfitwf29","slide":1,"bbox":[490,360,0.1,0.1]}
+{"kind":"shape","id":"sh/10rupk3u","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/69gbq5k7","slide":1,"bbox":[790,360,0.1,0.1]}
+{"kind":"shape","id":"sh/7apsjqls","slide":1,"bbox":[890,360,0.1,0.1]}
+{"kind":"shape","id":"sh/sbitsv2d","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/tcrul03y","slide":1,"bbox":[890,360,0.1,0.1]}
+{"kind":"shape","id":"sh/q5kbmpkr","slide":1,"bbox":[890,260,0.1,0.1]}
+{"kind":"shape","id":"sh/b6tcvu1w","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/nql8nm1o","slide":1,"bbox":[890,260,0.1,0.1]}
+{"kind":"shape","id":"sh/mpcreh03","slide":1,"bbox":[985,260,0.1,0.1]}
+{"kind":"shape","id":"sh/9cnqpwje","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/8bu9grit","slide":1,"bbox":[790,360,0.1,0.1]}
+{"kind":"shape","id":"sh/ve58rm1k","slide":1,"bbox":[890,360,0.1,0.1]}
+{"kind":"shape","id":"sh/adwri10z","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/xgnqtwjq","slide":1,"bbox":[890,360,0.1,0.1]}
+{"kind":"shape","id":"sh/wfe9kri5","slide":1,"bbox":[890,485,0.1,0.1]}
+{"kind":"shape","id":"sh/ji58v61w","slide":1,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ihwrm10b","slide":1,"bbox":[890,485,0.1,0.1]}
+{"kind":"shape","id":"sh/gnypcby9","slide":1,"bbox":[985,485,0.1,0.1]}
+{"kind":"shape","id":"sh/187qlgfu","slide":1,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/ulg7a1g3","slide":1,"text":"แหล่งความรู้","textPreview":"แหล่งความรู้","textChars":12,"textLines":1,"bbox":[60,495,230,45]}
+{"kind":"textbox","id":"sh/fmp8j6xo","slide":1,"text":"ค้นก่อนตอบ","textPreview":"ค้นก่อนตอบ","textChars":10,"textLines":1,"bbox":[510,530,260,45]}
+{"kind":"textbox","id":"sh/sjyp8byd","slide":1,"text":"ระบบตอบคำถามจากเอกสารผ่าน Web และ LINE","textPreview":"ระบบตอบคำถามจากเอกสารผ่าน Web และ LINE","textChars":38,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/18ia6q","slide":1,"text":"วิธีชี้ภาพ: ชี้เอกสารด้านซ้าย ผ่าน ScopeBot ตรงกลาง แล้วไปยังสองช่องทางด้านขวา\n\nเวลา 40 วินาที\nแนะนำชื่อเล่นผู้พูดและสมาชิก ก้อง ป๊อกกี้ ฟลุ๊ค ฟอร์ด มอส แล้วกล่าวว่า ScopeBot นำเอกสารมาเป็นแหล่งความรู้ ผู้ใช้ถามผ่าน Web หรือ LINE ระบบค้นเนื้อหาที่เกี่ยวข้องก่อนตอบ\nวันนี้จะใช้ Diagram พาดูว่าภายในทำงานอย่างไร แล้วสาธิตระบบจริง\n\nแหล่งอ้างอิง: ScopeBot.pdf.pdf หน้า 1 และ README.md"}
+{"kind":"slide","id":"sl/47zshz","slide":2,"title":"ภาพรวมระบบ","textShapes":13}
+{"kind":"textbox","id":"sh/mdcvqx0f","slide":2,"text":"ภาพรวมระบบ","textPreview":"ภาพรวมระบบ","textChars":10,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/9g3elsz6","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/ofudsnil","slide":2,"bbox":[65,210,205,95]}
+{"kind":"textbox","id":"sh/b2lwn2hc","slide":2,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[75,220,185,75]}
+{"kind":"shape","id":"sh/a1cvux0r","slide":2,"bbox":[65,430,205,95]}
+{"kind":"textbox","id":"sh/x4nepcz2","slide":2,"text":"LINE","textPreview":"LINE","textChars":4,"textLines":1,"bbox":[75,440,185,75]}
+{"kind":"shape","id":"sh/w3edw7ih","slide":2,"bbox":[475,260,270,210]}
+{"kind":"textbox","id":"sh/r61cbi1s","slide":2,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[485,270,250,190]}
+{"kind":"shape","id":"sh/q5svid07","slide":2,"bbox":[960,175,265,145]}
+{"kind":"textbox","id":"sh/gvmdcjax","slide":2,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[970,185,245,125]}
+{"kind":"shape","id":"sh/hwve54r2","slide":2,"bbox":[960,435,265,145]}
+{"kind":"textbox","id":"sh/ut4va9sr","slide":2,"text":"RAG + AI","textPreview":"RAG + AI","textChars":8,"textLines":1,"bbox":[970,445,245,125]}
+{"kind":"shape","id":"sh/vudw3e9c","slide":2,"bbox":[270,257.5,0.1,0.1]}
+{"kind":"shape","id":"sh/4zmxgjat","slide":2,"bbox":[370,257,0.1,0.1]}
+{"kind":"shape","id":"sh/50fe9ore","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ix4ve9sn","slide":2,"bbox":[370,257,0.1,0.1]}
+{"kind":"shape","id":"sh/3ydw7e98","slide":2,"bbox":[370,365,0.1,0.1]}
+{"kind":"shape","id":"sh/k32d4zap","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/l4bexkra","slide":2,"bbox":[370,365,0.1,0.1]}
+{"kind":"shape","id":"sh/1k3u1g3y","slide":2,"bbox":[475,365,0.1,0.1]}
+{"kind":"shape","id":"sh/0zutsb2d","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/zylcz6ls","slide":2,"bbox":[270,477.5,0.1,0.1]}
+{"kind":"shape","id":"sh/excbqlk7","slide":2,"bbox":[370,477,0.1,0.1]}
+{"kind":"shape","id":"sh/9onu503u","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/onutwv29","slide":2,"bbox":[370,477,0.1,0.1]}
+{"kind":"shape","id":"sh/nmlc3ql4","slide":2,"bbox":[370,365,0.1,0.1]}
+{"kind":"shape","id":"sh/mlcbulkj","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/xsnu9036","slide":2,"bbox":[370,365,0.1,0.1]}
+{"kind":"shape","id":"sh/wred0v2l","slide":2,"bbox":[475,365,0.1,0.1]}
+{"kind":"shape","id":"sh/ulozedwr","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/vmx07yxc","slide":2,"bbox":[745,365,0.1,0.1]}
+{"kind":"shape","id":"sh/gn6hg3ex","slide":2,"bbox":[850,365,0.1,0.1]}
+{"kind":"shape","id":"sh/hofi98fi","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ipozidwn","slide":2,"bbox":[850,365,0.1,0.1]}
+{"kind":"shape","id":"sh/3qx0bix8","slide":2,"bbox":[850,247,0.1,0.1]}
+{"kind":"shape","id":"sh/4r6hknet","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/5szidsfe","slide":2,"bbox":[850,247,0.1,0.1]}
+{"kind":"shape","id":"sh/qt8jmxwz","slide":2,"bbox":[960,247.5,0.1,0.1]}
+{"kind":"shape","id":"sh/ruh0fixk","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/zad0zipo","slide":2,"bbox":[745,365,0.1,0.1]}
+{"kind":"shape","id":"sh/e94z6do3","slide":2,"bbox":[850,365,0.1,0.1]}
+{"kind":"shape","id":"sh/1cvi1s7u","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/0bmh8n69","slide":2,"bbox":[850,365,0.1,0.1]}
+{"kind":"shape","id":"sh/nex0325k","slide":2,"bbox":[850,507,0.1,0.1]}
+{"kind":"shape","id":"sh/md4zaxoz","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/90fi5cnq","slide":2,"bbox":[850,507,0.1,0.1]}
+{"kind":"shape","id":"sh/oz6hc765","slide":2,"bbox":[960,507.5,0.1,0.1]}
+{"kind":"shape","id":"sh/3itgrypg","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/2hkzytov","slide":2,"bbox":[65,150,42,42]}
+{"kind":"textbox","id":"sh/snix8zmt","slide":2,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[75,160,22,22]}
+{"kind":"shape","id":"sh/tore14ne","slide":2,"bbox":[585,190,42,42]}
+{"kind":"textbox","id":"sh/6lgf6p4n","slide":2,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[595,200,22,22]}
+{"kind":"shape","id":"sh/7mpwzu58","slide":2,"bbox":[1065,115,42,42]}
+{"kind":"textbox","id":"sh/kjyx4zmh","slide":2,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[1075,125,22,22]}
+{"kind":"shape","id":"sh/lk7ex4n2","slide":2,"bbox":[1065,365,42,42]}
+{"kind":"textbox","id":"sh/yhgf2p4r","slide":2,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[1075,375,22,22]}
+{"kind":"textbox","id":"sh/jipwvu5c","slide":2,"text":"จัดการคำขอ","textPreview":"จัดการคำขอ","textChars":10,"textLines":1,"bbox":[490,490,240,45]}
+{"kind":"textbox","id":"sh/4f2xgjm1","slide":2,"text":"คำตอบกลับผ่าน FastAPI ไปยังช่องทางเดิม","textPreview":"คำตอบกลับผ่าน FastAPI ไปยังช่องทางเดิม","textChars":38,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/47zshz","slide":2,"text":"วิธีชี้ภาพ: 1 ซ้าย: ช่องทาง  2 กลาง: Backend  3 ขวาบน: ข้อมูล  4 ขวาล่าง: AI\n\nเวลา 60 วินาที\nชี้ 1 ช่องทาง Web หรือ LINE เป็นจุดรับคำถาม\nชี้ 2 FastAPI ตรวจสิทธิ์และควบคุมการทำงาน\nชี้ 3 PostgreSQL เก็บบัญชี บอท และประวัติ\nชี้ 4 RAG ค้นเอกสารจาก ChromaDB ก่อนเรียก Ollama สร้างคำตอบ จากนั้น FastAPI ส่งกลับช่องทางเดิม\nยังไม่อธิบาย Cloudflare หรือ embeddings ในหน้านี้\nส่งต่อ: เริ่มจากส่วนที่ผู้ใช้งานมองเห็น คือ Frontend\n\nแหล่งอ้างอิง: api/main.py; api/routers/chat.py; api/routers/line_webhook.py; rag/rag_pipeline.py"}
+{"kind":"slide","id":"sl/0ubjwb","slide":3,"title":"Frontend","textShapes":11}
+{"kind":"textbox","id":"sh/wby9ovyl","slide":3,"text":"Frontend","textPreview":"Frontend","textChars":8,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/vapsfqx0","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/a9wrmlgf","slide":3,"bbox":[60,300,185,110]}
+{"kind":"textbox","id":"sh/5g7al0f2","slide":3,"text":"Login","textPreview":"Login","textChars":5,"textLines":1,"bbox":[70,310,165,90]}
+{"kind":"shape","id":"sh/kfy9svyh","slide":3,"bbox":[370,250,240,210]}
+{"kind":"textbox","id":"sh/jepsjqxw","slide":3,"text":"React","textPreview":"React","textChars":5,"textLines":1,"bbox":[380,260,220,190]}
+{"kind":"shape","id":"sh/idgrq5gr","slide":3,"bbox":[245,355,0.1,0.1]}
+{"kind":"shape","id":"sh/1knq9gfy","slide":3,"bbox":[370,355,0.1,0.1]}
+{"kind":"shape","id":"sh/0je9gbyd","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/qpkbmd4z","slide":3,"bbox":[760,175,265,95]}
+{"kind":"textbox","id":"sh/ratcfyl4","slide":3,"text":"บอท + เอกสาร","textPreview":"บอท + เอกสาร","textChars":12,"textLines":1,"bbox":[770,185,245,75]}
+{"kind":"shape","id":"sh/cb2to3mp","slide":3,"bbox":[760,325,265,95]}
+{"kind":"textbox","id":"sh/dcbuh83a","slide":3,"text":"แชท","textPreview":"แชท","textChars":3,"textLines":1,"bbox":[770,335,245,75]}
+{"kind":"shape","id":"sh/ed4bqd4v","slide":3,"bbox":[760,475,265,95]}
+{"kind":"textbox","id":"sh/zedcjilg","slide":3,"text":"จัดการบัญชี","textPreview":"จัดการบัญชี","textChars":11,"textLines":1,"bbox":[770,485,245,75]}
+{"kind":"shape","id":"sh/0fmtsnm1","slide":3,"bbox":[610,355,0.1,0.1]}
+{"kind":"shape","id":"sh/1gvuls3m","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/mh4vux47","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/nidcnilc","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/jmxsb21k","slide":3,"bbox":[685,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/ylob2x0z","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/l8fadsjq","slide":3,"bbox":[685,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/kn6t47i5","slide":3,"bbox":[760,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/bids7i1o","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ah4byd03","slide":3,"bbox":[610,355,0.1,0.1]}
+{"kind":"shape","id":"sh/xkva9sje","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/wjmt0ni9","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/neds3i1c","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/md4bud0r","slide":3,"bbox":[685,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/cjip4jyp","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/dkrqd4za","slide":3,"bbox":[685,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/qx0729gj","slide":3,"bbox":[760,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/ri98beh4","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/0n298jy1","slide":3,"bbox":[610,355,0.1,0.1]}
+{"kind":"shape","id":"sh/1obqhoz6","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/elk769gv","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/zmt8fehg","slide":3,"bbox":[685,355,0.1,0.1]}
+{"kind":"shape","id":"sh/grypwzyh","slide":3,"bbox":[685,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/hs7q5kz2","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/9oji5kzm","slide":3,"bbox":[685,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/8nahczy1","slide":3,"bbox":[760,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/nm103uhg","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/mlszapgv","slide":3,"bbox":[1130,285,110,140]}
+{"kind":"textbox","id":"sh/lkji1kza","slide":3,"text":"API","textPreview":"API","textChars":3,"textLines":1,"bbox":[1140,295,90,120]}
+{"kind":"shape","id":"sh/0jah8fyp","slide":3,"bbox":[1025,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/zi10zah4","slide":3,"bbox":[1075,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/yh8z65gz","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/dgzyx0ze","slide":3,"bbox":[1075,222.5,0.1,0.1]}
+{"kind":"shape","id":"sh/cfqh4vit","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/2lofe1wr","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/3mxw76xw","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/on6xgbeh","slide":3,"bbox":[1130,355,0.1,0.1]}
+{"kind":"shape","id":"sh/pofe9gf2","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ux4fa1gf","slide":3,"bbox":[1025,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/fydw36x0","slide":3,"bbox":[1075,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/gz6xcbel","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/hkfe5wf6","slide":3,"bbox":[1075,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/6t4v6hgj","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/7udwzmxo","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/vy9c7idg","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/ax0bydwb","slide":3,"bbox":[1130,355,0.1,0.1]}
+{"kind":"shape","id":"sh/x0bu9svm","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/wzit0ne1","slide":3,"bbox":[1025,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/j2tcb2ds","slide":3,"bbox":[1075,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/i1kb2xc7","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/54budcvy","slide":3,"bbox":[1075,522.5,0.1,0.1]}
+{"kind":"shape","id":"sh/k32t47ud","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/z6pszydo","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/y5gbqtw3","slide":3,"bbox":[1075,355,0.1,0.1]}
+{"kind":"shape","id":"sh/obe90zul","slide":3,"bbox":[1130,355,0.1,0.1]}
+{"kind":"shape","id":"sh/pcnq94b6","slide":3,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/29wrypcv","slide":3,"text":"AuthContext","textPreview":"AuthContext","textChars":11,"textLines":1,"bbox":[45,440,210,45]}
+{"kind":"textbox","id":"sh/3a587utg","slide":3,"text":"Vite + Tailwind CSS","textPreview":"Vite + Tailwind CSS","textChars":19,"textLines":1,"bbox":[335,485,310,45]}
+{"kind":"textbox","id":"sh/g7u9wzup","slide":3,"text":"เมนูเปลี่ยนตามสิทธิ์  /  คำขอส่งพร้อม JWT","textPreview":"เมนูเปลี่ยนตามสิทธิ์  /  คำขอส่งพร้อม JWT","textChars":41,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/0ubjwb","slide":3,"text":"วิธีชี้ภาพ: เริ่มที่ Login ไปยัง React จากนั้นเลือกหนึ่งในสามงาน และส่งคำขอไป API\n\nเวลา 60 วินาที\nชี้ Login เพื่ออธิบายการเข้าสู่ระบบและ AuthContext\nReact เป็นจุดรวมหน้าบอท แชท และเมนูจัดการตามสิทธิ์ ทุกงานเรียก Backend ผ่าน HTTP พร้อม JWT\nuseChatSession ดูแลข้อความและ session ในส่วนแชท\nส่งต่อ: เมนูที่เห็นขึ้นอยู่กับบทบาทของบัญชี\n\nแหล่งอ้างอิง: src/app/routes.tsx; src/app/App.tsx; src/app/components/chat/ChatInterface.tsx; api/routers/documents.py"}
+{"kind":"slide","id":"sl/17lvob","slide":4,"title":"ใครเข้าถึงอะไร","textShapes":9}
+{"kind":"textbox","id":"sh/fy18rahg","slide":4,"text":"ใครเข้าถึงอะไร","textPreview":"ใครเข้าถึงอะไร","textChars":14,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/gzap0fy1","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/10jqtkzm","slide":4,"bbox":[100,175,225,105]}
+{"kind":"textbox","id":"sh/21s72pg7","slide":4,"text":"Admin","textPreview":"Admin","textChars":5,"textLines":1,"bbox":[110,185,205,85]}
+{"kind":"shape","id":"sh/32l8vuhs","slide":4,"bbox":[635,175,540,105]}
+{"kind":"textbox","id":"sh/o3up4zyd","slide":4,"text":"ผู้ใช้ + ภาพรวม + Log","textPreview":"ผู้ใช้ + ภาพรวม + Log","textChars":21,"textLines":1,"bbox":[645,185,520,85]}
+{"kind":"shape","id":"sh/p43qxkzi","slide":4,"bbox":[325,227.5,0.1,0.1]}
+{"kind":"shape","id":"sh/q5c76pg3","slide":4,"bbox":[635,227.5,0.1,0.1]}
+{"kind":"shape","id":"sh/b6l8zuho","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/zipgz250","slide":4,"bbox":[100,320,225,105]}
+{"kind":"textbox","id":"sh/yhgzqx4f","slide":4,"text":"Support","textPreview":"Support","textChars":7,"textLines":1,"bbox":[110,330,205,85]}
+{"kind":"shape","id":"sh/lk7y1cn6","slide":4,"bbox":[635,320,540,105]}
+{"kind":"textbox","id":"sh/kjyhs7ml","slide":4,"text":"จัดการผู้ใช้","textPreview":"จัดการผู้ใช้","textChars":12,"textLines":1,"bbox":[645,330,520,85]}
+{"kind":"shape","id":"sh/be5gv25o","slide":4,"bbox":[325,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/atwfmx4j","slide":4,"bbox":[635,372.5,0.1,0.1]}
+{"kind":"shape","id":"sh/xg7yxcnu","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/cfexo7m9","slide":4,"bbox":[100,465,225,105]}
+{"kind":"textbox","id":"sh/va9g7m58","slide":4,"text":"User","textPreview":"User","textChars":4,"textLines":1,"bbox":[110,475,205,85]}
+{"kind":"shape","id":"sh/up0zy14n","slide":4,"bbox":[635,465,540,105]}
+{"kind":"textbox","id":"sh/q5kj6lov","slide":4,"text":"บอท + เอกสาร + แชท","textPreview":"บอท + เอกสาร + แชท","textChars":18,"textLines":1,"bbox":[645,475,520,85]}
+{"kind":"shape","id":"sh/r6tkzqpg","slide":4,"bbox":[325,517.5,0.1,0.1]}
+{"kind":"shape","id":"sh/s7m18v61","slide":4,"bbox":[635,517.5,0.1,0.1]}
+{"kind":"shape","id":"sh/d8v2107m","slide":4,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/e94ja5or","slide":4,"text":"งานบอทและ Live Chat ตรวจเจ้าของบอท แม้เป็น Admin","textPreview":"งานบอทและ Live Chat ตรวจเจ้าของบอท แม้เป็น Admin","textChars":48,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/17lvob","slide":4,"text":"วิธีชี้ภาพ: อ่านทีละแถว Admin, Support, User แล้วเน้นหมายเหตุเรื่องเจ้าของบอท\n\nเวลา 60 วินาที\nอ่านทีละแถว Admin จัดการผู้ใช้ ภาพรวม และ Log ส่วนงานบอทยังตรวจเจ้าของ\nSupport ในระบบนี้หมายถึงคนดูแลบัญชี เข้าหน้าจัดการผู้ใช้งาน ไม่ใช่ role สำหรับตอบแชท\nUser เป็นเจ้าของบอท ใช้เมนูสินค้าและแชทรวมของตัวเอง\nดังนั้น Demo ต้องให้เจ้าของบอทหรือ Admin เจ้าของบอทตอบแชท ไม่ใช้บัญชี Support\nส่งต่อ: Backend บังคับสิทธิ์นี้ซ้ำทุกคำขอที่เกี่ยวข้อง\n\nแหล่งอ้างอิง: src/app/constants/chat.ts; api/auth.py require_shop_operator, assert_bot_access, visible_bots_query"}
+{"kind":"slide","id":"sl/au6m69","slide":5,"title":"Backend รับคำขออย่างไร","textShapes":10}
+{"kind":"textbox","id":"sh/srm14fy1","slide":5,"text":"Backend รับคำขออย่างไร","textPreview":"Backend รับคำขออย่างไร","textChars":22,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/rqd0vaxg","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/6p4j25gv","slide":5,"bbox":[55,200,165,95]}
+{"kind":"textbox","id":"sh/5ovit0fa","slide":5,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[65,210,145,75]}
+{"kind":"shape","id":"sh/4nm10vyp","slide":5,"bbox":[55,435,165,95]}
+{"kind":"textbox","id":"sh/jmd0rqh4","slide":5,"text":"LINE","textPreview":"LINE","textChars":4,"textLines":1,"bbox":[65,445,145,75]}
+{"kind":"shape","id":"sh/ilkzylgz","slide":5,"bbox":[335,165,230,160]}
+{"kind":"textbox","id":"sh/hkbipgze","slide":5,"text":"JWT","textPreview":"JWT","textChars":3,"textLines":1,"bbox":[345,175,210,140]}
+{"kind":"shape","id":"sh/wj2hwvyt","slide":5,"bbox":[335,405,230,160]}
+{"kind":"textbox","id":"sh/y5kryx8r","slide":5,"text":"Signature","textPreview":"Signature","textChars":9,"textLines":1,"bbox":[345,415,210,140]}
+{"kind":"shape","id":"sh/j6tsr2pc","slide":5,"bbox":[220,247.5,0.1,0.1]}
+{"kind":"shape","id":"sh/k72t07qx","slide":5,"bbox":[335,245,0.1,0.1]}
+{"kind":"shape","id":"sh/l8batc7i","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/a10rux8v","slide":5,"bbox":[220,482.5,0.1,0.1]}
+{"kind":"shape","id":"sh/b2tsn2pg","slide":5,"bbox":[335,485,0.1,0.1]}
+{"kind":"shape","id":"sh/c329w7q1","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/x4baps7m","slide":5,"bbox":[700,275,220,180]}
+{"kind":"textbox","id":"sh/2d0rqd8z","slide":5,"text":"Router","textPreview":"Router","textChars":6,"textLines":1,"bbox":[710,285,200,160]}
+{"kind":"shape","id":"sh/ny9sjip4","slide":5,"bbox":[565,245,0.1,0.1]}
+{"kind":"shape","id":"sh/ri5ore5w","slide":5,"bbox":[635,245,0.1,0.1]}
+{"kind":"shape","id":"sh/qhw7i9or","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/d47qton2","slide":5,"bbox":[635,245,0.1,0.1]}
+{"kind":"shape","id":"sh/sjypkj6h","slide":5,"bbox":[635,365,0.1,0.1]}
+{"kind":"shape","id":"sh/f6p8vy58","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/e5g7mton","slide":5,"bbox":[635,365,0.1,0.1]}
+{"kind":"shape","id":"sh/187qx8ne","slide":5,"bbox":[700,365,0.1,0.1]}
+{"kind":"shape","id":"sh/07ypo36t","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/valojup4","slide":5,"bbox":[565,485,0.1,0.1]}
+{"kind":"shape","id":"sh/u9c7qpoj","slide":5,"bbox":[635,485,0.1,0.1]}
+{"kind":"shape","id":"sh/kfa5kvm1","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/lgjmt03m","slide":5,"bbox":[635,485,0.1,0.1]}
+{"kind":"shape","id":"sh/yts3i54b","slide":5,"bbox":[635,365,0.1,0.1]}
+{"kind":"shape","id":"sh/je14rq5w","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/wrqlgvm5","slide":5,"bbox":[635,365,0.1,0.1]}
+{"kind":"shape","id":"sh/xsjmp0nq","slide":5,"bbox":[700,365,0.1,0.1]}
+{"kind":"shape","id":"sh/ap83el4z","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/bqh4nq5k","slide":5,"bbox":[1040,205,190,120]}
+{"kind":"textbox","id":"sh/gnu5sfm9","slide":5,"text":"ข้อมูล","textPreview":"ข้อมูล","textChars":6,"textLines":1,"bbox":[1050,215,170,100]}
+{"kind":"shape","id":"sh/ho3m1k3u","slide":5,"bbox":[1040,435,190,120]}
+{"kind":"textbox","id":"sh/tgvaxsza","slide":5,"text":"RAG","textPreview":"RAG","textChars":3,"textLines":1,"bbox":[1050,445,170,100]}
+{"kind":"shape","id":"sh/sf294nyp","slide":5,"bbox":[920,365,0.1,0.1]}
+{"kind":"shape","id":"sh/retsvih4","slide":5,"bbox":[980,365,0.1,0.1]}
+{"kind":"shape","id":"sh/6dkr2dgj","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/1kva1sf6","slide":5,"bbox":[980,365,0.1,0.1]}
+{"kind":"shape","id":"sh/gjmt8nyl","slide":5,"bbox":[980,265,0.1,0.1]}
+{"kind":"shape","id":"sh/fidszix0","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/eh4b6xgf","slide":5,"bbox":[980,265,0.1,0.1]}
+{"kind":"shape","id":"sh/pofa5cfi","slide":5,"bbox":[1040,265,0.1,0.1]}
+{"kind":"shape","id":"sh/on6tc7yx","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/mtg769wf","slide":5,"bbox":[920,365,0.1,0.1]}
+{"kind":"shape","id":"sh/7up8zuxk","slide":5,"bbox":[980,365,0.1,0.1]}
+{"kind":"shape","id":"sh/8vyp8ze5","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/9w7q14fq","slide":5,"bbox":[980,365,0.1,0.1]}
+{"kind":"shape","id":"sh/ux07a9wb","slide":5,"bbox":[980,495,0.1,0.1]}
+{"kind":"shape","id":"sh/vy983exw","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/wjipcjeh","slide":5,"bbox":[980,495,0.1,0.1]}
+{"kind":"shape","id":"sh/hkrq5ov2","slide":5,"bbox":[1040,495,0.1,0.1]}
+{"kind":"shape","id":"sh/il07etw7","slide":5,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/jm987yds","slide":5,"text":"Python + FastAPI  /  ตรวจสิทธิ์ก่อนเรียกงาน","textPreview":"Python + FastAPI  /  ตรวจสิทธิ์ก่อนเรียกงาน","textChars":43,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/au6m69","slide":5,"text":"วิธีชี้ภาพ: ชี้แถว Web และ LINE แยกกัน แล้วมารวมที่ Router ก่อนแยกไปงานข้อมูลหรือ RAG\n\nเวลา 60 วินาที\nชี้เลข 1 Backend รับคำขอจาก Web หรือ webhook ของ LINE\nเลข 2 คำขอ Web ตรวจ JWT บัญชีและสิทธิ์ ส่วน LINE ตรวจ signature\nเลข 3 Router เรียกงาน เช่น จัดการบอท เอกสาร หรือแชท\nเลข 4 อ่านเขียนข้อมูล เรียก RAG แล้วส่งผลกลับ\nไม่ต้องอ่านทุก endpoint ในช่วงนี้ รายชื่ออยู่ภาคผนวก\nส่งต่อ: ระบบเก็บข้อมูลสามชนิดในคนละส่วน\n\nแหล่งอ้างอิง: api/main.py; api/auth.py; api/routers/*.py"}
+{"kind":"slide","id":"sl/cyff9z","slide":6,"title":"ข้อมูล 3 ส่วน","textShapes":9}
+{"kind":"textbox","id":"sh/rexw3mp8","slide":6,"text":"ข้อมูล 3 ส่วน","textPreview":"ข้อมูล 3 ส่วน","textChars":13,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/sf6dwrqd","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/tgfe5c7y","slide":6,"bbox":[485,250,290,175]}
+{"kind":"textbox","id":"sh/ehovyh8j","slide":6,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[495,260,270,155]}
+{"kind":"shape","id":"sh/fixw7mp4","slide":6,"bbox":[60,225,285,200]}
+{"kind":"textbox","id":"sh/gj6d0r6p","slide":6,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[70,235,265,180]}
+{"kind":"shape","id":"sh/1kfe9w7a","slide":6,"bbox":[940,225,280,200]}
+{"kind":"textbox","id":"sh/2l8v21ov","slide":6,"text":"ChromaDB","textPreview":"ChromaDB","textChars":8,"textLines":1,"bbox":[950,235,260,180]}
+{"kind":"shape","id":"sh/36hwb6p0","slide":6,"bbox":[505,505,250,95]}
+{"kind":"textbox","id":"sh/r69cv2to","slide":6,"text":"ไฟล์เอกสาร","textPreview":"ไฟล์เอกสาร","textChars":10,"textLines":1,"bbox":[515,515,230,75]}
+{"kind":"shape","id":"sh/ql0b2xs3","slide":6,"bbox":[485,337.5,0.1,0.1]}
+{"kind":"shape","id":"sh/d8buxcbu","slide":6,"bbox":[345,325,0.1,0.1]}
+{"kind":"shape","id":"sh/c72t47a9","slide":6,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/3i9srits","slide":6,"bbox":[775,337.5,0.1,0.1]}
+{"kind":"shape","id":"sh/2h0byds7","slide":6,"bbox":[940,325,0.1,0.1]}
+{"kind":"shape","id":"sh/pkratsbi","slide":6,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/4jit0nad","slide":6,"bbox":[630,425,0.1,0.1]}
+{"kind":"shape","id":"sh/nedc3mtw","slide":6,"bbox":[630,505,0.1,0.1]}
+{"kind":"shape","id":"sh/mdkbahsb","slide":6,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/i9of2lcj","slide":6,"text":"บัญชี / บอท / ประวัติ","textPreview":"บัญชี / บอท / ประวัติ","textChars":21,"textLines":1,"bbox":[55,450,300,45]}
+{"kind":"textbox","id":"sh/jaxwvqd4","slide":6,"text":"ข้อความย่อย + เวกเตอร์","textPreview":"ข้อความย่อย + เวกเตอร์","textChars":22,"textLines":1,"bbox":[925,450,310,45]}
+{"kind":"textbox","id":"sh/kb6x4vup","slide":6,"text":"ดัชนี ChromaDB แยกตาม bot_id","textPreview":"ดัชนี ChromaDB แยกตาม bot_id","textChars":28,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/cyff9z","slide":6,"text":"วิธีชี้ภาพ: เริ่มที่ ScopeBot กลางภาพ แล้วชี้ซ้าย ขวา ล่าง ตามชนิดข้อมูล\n\nเวลา 60 วินาที\nอธิบายจากซ้ายไปขวา PostgreSQL เก็บผู้ใช้ บอท metadata เอกสารและประวัติ ผ่าน SQLAlchemy\nChromaDB เก็บข้อความย่อยกับ embeddings โดยแยก directory ตาม bot_id ไม่ใช่ PostgreSQL คนละฐานต่อบอท\nDocument Storage เก็บไฟล์ต้นฉบับและไฟล์สำหรับนำเข้า\nส่งต่อ: ดูเฉพาะความสัมพันธ์ฐานข้อมูลที่เกี่ยวกับบอทก่อน\n\nแหล่งอ้างอิง: api/database.py; api/models.py; rag/ingest.py; docker-compose.yml"}
+{"kind":"slide","id":"sl/4pi4av","slide":7,"title":"Database: เจ้าของและความรู้","textShapes":11}
+{"kind":"textbox","id":"sh/0rm5sr6d","slide":7,"text":"Database: เจ้าของและความรู้","textPreview":"Database: เจ้าของและความรู้","textChars":27,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/zqdozm5s","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/yp4nqho7","slide":7,"bbox":[515,155,250,100]}
+{"kind":"textbox","id":"sh/dov6xcnm","slide":7,"text":"users","textPreview":"users","textChars":5,"textLines":1,"bbox":[525,165,230,80]}
+{"kind":"shape","id":"sh/cnm5o761","slide":7,"bbox":[100,335,270,125]}
+{"kind":"textbox","id":"sh/bmdov25w","slide":7,"text":"bots","textPreview":"bots","textChars":4,"textLines":1,"bbox":[110,345,250,105]}
+{"kind":"shape","id":"sh/ql4nmxob","slide":7,"bbox":[910,335,270,125]}
+{"kind":"textbox","id":"sh/pkb6tsnq","slide":7,"text":"documents","textPreview":"documents","textChars":9,"textLines":1,"bbox":[920,345,250,105]}
+{"kind":"shape","id":"sh/oj25k765","slide":7,"bbox":[480,510,320,105]}
+{"kind":"textbox","id":"sh/6p8vmx4z","slide":7,"text":"bot_documents","textPreview":"bot_documents","textChars":13,"textLines":1,"bbox":[490,520,300,85]}
+{"kind":"shape","id":"sh/7qhwf25k","slide":7,"bbox":[515,205,0.1,0.1]}
+{"kind":"shape","id":"sh/8rqdo7mp","slide":7,"bbox":[235,205,0.1,0.1]}
+{"kind":"shape","id":"sh/tszehcna","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ylovix4n","slide":7,"bbox":[235,205,0.1,0.1]}
+{"kind":"shape","id":"sh/jmxcb258","slide":7,"bbox":[235,335,0.1,0.1]}
+{"kind":"shape","id":"sh/kn6dknmt","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/lozudsne","slide":7,"bbox":[765,205,0.1,0.1]}
+{"kind":"shape","id":"sh/axoved4r","slide":7,"bbox":[1045,205,0.1,0.1]}
+{"kind":"shape","id":"sh/byxc7i5c","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/fq9kzuhs","slide":7,"bbox":[1045,205,0.1,0.1]}
+{"kind":"shape","id":"sh/ep0jqpg7","slide":7,"bbox":[1045,335,0.1,0.1]}
+{"kind":"shape","id":"sh/1sb21kzy","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/gr21sfyd","slide":7,"bbox":[235,460,0.1,0.1]}
+{"kind":"shape","id":"sh/3utk3uho","slide":7,"bbox":[235,562,0.1,0.1]}
+{"kind":"shape","id":"sh/2tkjupg3","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/pgb254zu","slide":7,"bbox":[235,562,0.1,0.1]}
+{"kind":"shape","id":"sh/of21wzy9","slide":7,"bbox":[480,562.5,0.1,0.1]}
+{"kind":"shape","id":"sh/jyp0rahk","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ixgji5gz","slide":7,"bbox":[1045,460,0.1,0.1]}
+{"kind":"shape","id":"sh/83ehsbex","slide":7,"bbox":[1045,562,0.1,0.1]}
+{"kind":"shape","id":"sh/94ny1wfi","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/m1wfq1wr","slide":7,"bbox":[1045,562,0.1,0.1]}
+{"kind":"shape","id":"sh/725gz6xc","slide":7,"bbox":[800,562.5,0.1,0.1]}
+{"kind":"shape","id":"sh/kzuxorel","slide":7,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/l03yxwf6","slide":7,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[255,230,170,45]}
+{"kind":"textbox","id":"sh/yxcfmhwv","slide":7,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[840,230,170,45]}
+{"kind":"textbox","id":"sh/zylgvmxg","slide":7,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[295,570,170,45]}
+{"kind":"textbox","id":"sh/4vyh0ve5","slide":7,"text":"N : 1","textPreview":"N : 1","textChars":5,"textLines":1,"bbox":[815,570,170,45]}
+{"kind":"textbox","id":"sh/5w7y9gfq","slide":7,"text":"N : M","textPreview":"N : M","textChars":5,"textLines":1,"bbox":[500,355,280,70]}
+{"kind":"notes","id":"nt/4pi4av","slide":7,"text":"วิธีชี้ภาพ: อ่าน users บนสุด แตกไป bots กับ documents แล้วดูตารางเชื่อมด้านล่าง\n\nเวลา 60 วินาที\nusers เป็นเจ้าของ bots และ documents ได้หลายรายการ จึงเป็น 1 ต่อหลาย\nbots และ documents เชื่อมผ่าน bot_documents บอทหนึ่งใช้หลายเอกสาร และเอกสารเดียวผูกกับหลายบอทได้\nนี่เป็นส่วนความสัมพันธ์ด้านความรู้ ส่วน conversations ผูกกับ bot และ live_sessions ผูกกับ bot โดย live_messages ผูกกับ session\nส่งต่อ: ต่อไปนำเอกสารเหล่านี้มาเตรียมให้ AI ค้นหา\n\nแหล่งอ้างอิง: api/models.py"}
+{"kind":"slide","id":"sl/i15cw3","slide":8,"title":"เตรียมความรู้ให้บอท","textShapes":15}
+{"kind":"textbox","id":"sh/upoj6lkn","slide":8,"text":"เตรียมความรู้ให้บอท","textPreview":"เตรียมความรู้ให้บอท","textChars":19,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/hcfih0jy","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/wr618v2d","slide":8,"bbox":[60,270,205,220]}
+{"kind":"textbox","id":"sh/jex0jq14","slide":8,"text":"เอกสาร","textPreview":"เอกสาร","textChars":6,"textLines":1,"bbox":[70,280,185,200]}
+{"kind":"shape","id":"sh/idojalkj","slide":8,"bbox":[360,290,215,175]}
+{"kind":"textbox","id":"sh/5gfil0ja","slide":8,"text":"ข้อความ\nย่อย","textPreview":"ข้อความ | ย่อย","textChars":12,"textLines":2,"bbox":[370,300,195,155]}
+{"kind":"shape","id":"sh/4f61cv2p","slide":8,"bbox":[670,270,220,220]}
+{"kind":"textbox","id":"sh/zid076l0","slide":8,"text":"BGE-M3","textPreview":"BGE-M3","textChars":6,"textLines":1,"bbox":[680,280,200,200]}
+{"kind":"shape","id":"sh/yhkzy1kf","slide":8,"bbox":[985,270,235,220]}
+{"kind":"textbox","id":"sh/8nq50jy1","slide":8,"text":"ChromaDB","textPreview":"ChromaDB","textChars":8,"textLines":1,"bbox":[995,280,215,200]}
+{"kind":"shape","id":"sh/t8z6tofm","slide":8,"bbox":[265,380,0.1,0.1]}
+{"kind":"shape","id":"sh/ml8ny9gv","slide":8,"bbox":[360,377.5,0.1,0.1]}
+{"kind":"shape","id":"sh/7mhorexg","slide":8,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/gbqp43yx","slide":8,"bbox":[575,377.5,0.1,0.1]}
+{"kind":"shape","id":"sh/hcj6xofi","slide":8,"bbox":[670,380,0.1,0.1]}
+{"kind":"shape","id":"sh/u9872tg7","slide":8,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/vahovyxc","slide":8,"bbox":[890,380,0.1,0.1]}
+{"kind":"shape","id":"sh/cf65szyt","slide":8,"bbox":[985,380,0.1,0.1]}
+{"kind":"shape","id":"sh/xgf614fe","slide":8,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/d0nu9wnq","slide":8,"bbox":[140,185,42,42]}
+{"kind":"textbox","id":"sh/szedgrml","slide":8,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[150,195,22,22]}
+{"kind":"shape","id":"sh/ry5c7m50","slide":8,"bbox":[440,185,42,42]}
+{"kind":"textbox","id":"sh/qxwveh4f","slide":8,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[450,195,22,22]}
+{"kind":"shape","id":"sh/147udgn2","slide":8,"bbox":[755,185,42,42]}
+{"kind":"textbox","id":"sh/03ydkbmh","slide":8,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[765,195,22,22]}
+{"kind":"shape","id":"sh/f25cb65w","slide":8,"bbox":[1080,185,42,42]}
+{"kind":"textbox","id":"sh/e1wvi14b","slide":8,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[1090,195,22,22]}
+{"kind":"textbox","id":"sh/ps7ehgny","slide":8,"text":"อ่านไฟล์","textPreview":"อ่านไฟล์","textChars":8,"textLines":1,"bbox":[60,525,205,45]}
+{"kind":"textbox","id":"sh/orydobmd","slide":8,"text":"แบ่งข้อความ","textPreview":"แบ่งข้อความ","textChars":11,"textLines":1,"bbox":[345,525,245,45]}
+{"kind":"textbox","id":"sh/6dsr2dkv","slide":8,"text":"สร้างเวกเตอร์","textPreview":"สร้างเวกเตอร์","textChars":13,"textLines":1,"bbox":[650,525,260,45]}
+{"kind":"textbox","id":"sh/7e1sbilg","slide":8,"text":"แยกตามบอท","textPreview":"แยกตามบอท","textChars":9,"textLines":1,"bbox":[980,525,250,45]}
+{"kind":"textbox","id":"sh/8fa94n21","slide":8,"text":"PDF / DOCX / TXT / CSV","textPreview":"PDF / DOCX / TXT / CSV","textChars":22,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/i15cw3","slide":8,"text":"วิธีชี้ภาพ: ชี้เอกสาร 1 ตามลูกศรไปข้อความย่อย 2, BGE-M3 3 และ ChromaDB 4\n\nเวลา 60 วินาที\nอ่าน 1 ถึง 4 ผู้ใช้ส่งเอกสาร ระบบอ่านและแบ่งข้อความ BGE-M3 แปลงข้อความย่อยเป็น embeddings แล้ว ChromaDB เก็บไว้แยกตามบอท\nขั้นนี้เป็นการเตรียมดัชนีความรู้ ไม่ใช่ฝึกโมเดลภาษาใหม่ และยังไม่ใช่ขั้นตอบคำถาม\nส่งต่อ: เมื่อผู้ใช้ถาม ระบบใช้ดัชนีนี้อย่างไร\n\nแหล่งอ้างอิง: rag/ingest.py; rag/document_loader.py; rag/chunker.py; api/routers/documents.py"}
+{"kind":"slide","id":"sl/b57kly","slide":9,"title":"ค้นก่อนตอบ","textShapes":11}
+{"kind":"textbox","id":"sh/6lcn2xkn","slide":9,"text":"ค้นก่อนตอบ","textPreview":"ค้นก่อนตอบ","textChars":10,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/to3mdsje","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/8nu54n2t","slide":9,"bbox":[55,205,200,125]}
+{"kind":"textbox","id":"sh/jil47i1c","slide":9,"text":"คำถาม","textPreview":"คำถาม","textChars":5,"textLines":1,"bbox":[65,215,180,105]}
+{"kind":"shape","id":"sh/yhs3ydkr","slide":9,"bbox":[380,175,230,185]}
+{"kind":"textbox","id":"sh/lk3m9sji","slide":9,"text":"ค้นหา","textPreview":"ค้นหา","textChars":5,"textLines":1,"bbox":[390,185,210,165]}
+{"kind":"shape","id":"sh/kju50n2x","slide":9,"bbox":[380,460,230,145]}
+{"kind":"textbox","id":"sh/3e54jm1g","slide":9,"text":"ChromaDB","textPreview":"ChromaDB","textChars":8,"textLines":1,"bbox":[390,470,210,125]}
+{"kind":"shape","id":"sh/idwnahkv","slide":9,"bbox":[745,185,230,165]}
+{"kind":"textbox","id":"sh/kva5s3ql","slide":9,"text":"Ollama","textPreview":"Ollama","textChars":6,"textLines":1,"bbox":[755,195,210,145]}
+{"kind":"shape","id":"sh/lwjml876","slide":9,"bbox":[1060,205,170,125]}
+{"kind":"textbox","id":"sh/ytsnqd8f","slide":9,"text":"คำตอบ","textPreview":"คำตอบ","textChars":5,"textLines":1,"bbox":[1070,215,150,105]}
+{"kind":"shape","id":"sh/zu14jy90","slide":9,"bbox":[255,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/cralo3q9","slide":9,"bbox":[380,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/dsjmh8ru","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/qp83mt8j","slide":9,"bbox":[610,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/bqh4fy94","slide":9,"bbox":[745,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/onqlkjqd","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/pozmdory","slide":9,"bbox":[975,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/587a1gfa","slide":9,"bbox":[1060,267.5,0.1,0.1]}
+{"kind":"shape","id":"sh/47ytsbe5","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/j6pszqxk","slide":9,"bbox":[495,460,0.1,0.1]}
+{"kind":"shape","id":"sh/i5gbqlwz","slide":9,"bbox":[495,360,0.1,0.1]}
+{"kind":"shape","id":"sh/hk7axgfe","slide":9,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/wjytobet","slide":9,"text":"context","textPreview":"context","textChars":7,"textLines":1,"bbox":[610,210,135,45]}
+{"kind":"textbox","id":"sh/vipsv6x8","slide":9,"text":"BGE-M3","textPreview":"BGE-M3","textChars":6,"textLines":1,"bbox":[550,380,220,45]}
+{"kind":"textbox","id":"sh/uhwbm1wn","slide":9,"text":"อ้างอิงเอกสาร","textPreview":"อ้างอิงเอกสาร","textChars":13,"textLines":1,"bbox":[990,380,270,45]}
+{"kind":"textbox","id":"sh/1gru90fi","slide":9,"text":"คำถามต่อเนื่องใช้บริบทจากประวัติ","textPreview":"คำถามต่อเนื่องใช้บริบทจากประวัติ","textChars":32,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/b57kly","slide":9,"text":"วิธีชี้ภาพ: เริ่มคำถามซ้ายบน ค้นกับ ChromaDB ด้านล่าง แล้วส่ง context ไป Ollama และคำตอบ\n\nเวลา 75 วินาที\nชี้ 1 คำถามใหม่และบริบทคำถามล่าสุดช่วยให้เข้าใจคำถามต่อเนื่อง\nชี้ 2 ตัว embedding แปลงคำค้นเพื่อหา chunks ที่ใกล้เคียงใน ChromaDB และกรองตาม distance\nชี้ 3 เอาข้อความที่ค้นได้เป็น context ส่งให้ Ollama พร้อมคำสั่งและประวัติ\nชี้ 4 คืนคำตอบพร้อมชื่อไฟล์และ snippet ให้ Web ส่วน LINE ส่งเป็นข้อความตาม router\nChromaDB เชื่อมที่การค้นหา ไม่ได้เป็นเส้นลัดเข้าโมเดล\nส่งต่อ: ดูคำถามเดียวกันในลำดับเวลาตั้งแต่ส่งจนตอบ\n\nแหล่งอ้างอิง: rag/rag_pipeline.py; rag/retriever.py; src/app/hooks/useChatSession.ts; api/routers/line_webhook.py"}
+{"kind":"slide","id":"sl/jf9qsr","slide":10,"title":"คำถามหนึ่งครั้ง","textShapes":10}
+{"kind":"textbox","id":"sh/vqt8zix4","slide":10,"text":"คำถามหนึ่งครั้ง","textPreview":"คำถามหนึ่งครั้ง","textChars":15,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/wrmpsnep","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/hsvq1sfa","slide":10,"bbox":[80,145,220,75]}
+{"kind":"textbox","id":"sh/it47uxwv","slide":10,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[90,155,200,55]}
+{"kind":"shape","id":"sh/3ud832xg","slide":10,"bbox":[190,220,0.1,0.1]}
+{"kind":"shape","id":"sh/4vmpwnel","slide":10,"bbox":[190,615,0.1,0.1]}
+{"kind":"shape","id":"sh/5wvq5sf6","slide":10,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/qh47yxwr","slide":10,"bbox":[530,145,220,75]}
+{"kind":"textbox","id":"sh/rix872dc","slide":10,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[540,155,200,55]}
+{"kind":"shape","id":"sh/zuto7ihk","slide":10,"bbox":[640,220,0.1,0.1]}
+{"kind":"shape","id":"sh/ytknydgf","slide":10,"bbox":[640,615,0.1,0.1]}
+{"kind":"shape","id":"sh/lwb698zq","slide":10,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/kv250ny5","slide":10,"bbox":[980,145,220,75]}
+{"kind":"textbox","id":"sh/b6to3yho","slide":10,"text":"RAG","textPreview":"RAG","textChars":3,"textLines":1,"bbox":[990,155,200,55]}
+{"kind":"shape","id":"sh/a50nutg3","slide":10,"bbox":[1090,220,0.1,0.1]}
+{"kind":"shape","id":"sh/xsb658zu","slide":10,"bbox":[1090,615,0.1,0.1]}
+{"kind":"shape","id":"sh/c725w3y9","slide":10,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/v2dof2hs","slide":10,"bbox":[190,285,0.1,0.1]}
+{"kind":"shape","id":"sh/u1476xg7","slide":10,"bbox":[640,285,0.1,0.1]}
+{"kind":"shape","id":"sh/qx8re10f","slide":10,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/rih87610","slide":10,"text":"1  ส่งคำถาม","textPreview":"1  ส่งคำถาม","textChars":11,"textLines":1,"bbox":[210,240,410,40]}
+{"kind":"shape","id":"sh/sjq9gbil","slide":10,"bbox":[640,365,0.1,0.1]}
+{"kind":"shape","id":"sh/dkzq9wj6","slide":10,"bbox":[1090,365,0.1,0.1]}
+{"kind":"shape","id":"sh/el8ri10r","slide":10,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/fmhsb6hc","slide":10,"text":"2  ค้นและสร้างคำตอบ","textPreview":"2  ค้นและสร้างคำตอบ","textChars":19,"textLines":1,"bbox":[660,320,410,40]}
+{"kind":"shape","id":"sh/0nq9kbix","slide":10,"bbox":[1090,445,0.1,0.1]}
+{"kind":"shape","id":"sh/1ojadgzi","slide":10,"bbox":[640,445,0.1,0.1]}
+{"kind":"shape","id":"sh/up4r6h0n","slide":10,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/vqx8zm1s","slide":10,"text":"3  คืนผล","textPreview":"3  คืนผล","textChars":8,"textLines":1,"bbox":[660,400,410,40]}
+{"kind":"textbox","id":"sh/xwn2147m","slide":10,"text":"4  บันทึกประวัติ","textPreview":"4  บันทึกประวัติ","textChars":16,"textLines":1,"bbox":[665,467,400,45]}
+{"kind":"shape","id":"sh/wvelsj61","slide":10,"bbox":[640,575,0.1,0.1]}
+{"kind":"shape","id":"sh/bu5kzepw","slide":10,"bbox":[190,575,0.1,0.1]}
+{"kind":"shape","id":"sh/atc3q9ob","slide":10,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/lkn25ony","slide":10,"text":"5  แสดงคำตอบ","textPreview":"5  แสดงคำตอบ","textChars":12,"textLines":1,"bbox":[210,530,410,40]}
+{"kind":"notes","id":"nt/jf9qsr","slide":10,"text":"วิธีชี้ภาพ: หัวคอลัมน์เป็นผู้เกี่ยวข้อง เวลาเดินจากบนลงล่างตามเลข 1–5\n\nเวลา 60 วินาที\nชี้หัวคอลัมน์ Web FastAPI และ RAG ก่อน แล้วอ่านจากบนลงล่าง\n1 Web ส่งคำถามและ session 2 FastAPI เรียก RAG หลังตรวจสิทธิ์ 3 RAG คืนคำตอบจากเอกสาร 4 Backend บันทึก conversation 5 ส่งคำตอบกลับ Web\nหน้านี้เป็น sequence แบบย่อ รายละเอียดค้นหาและ LLM อยู่หน้าก่อน\nส่งต่อ: อีกเส้นทางหนึ่งเกิดเมื่อบอทตอบไม่ได้\n\nแหล่งอ้างอิง: api/routers/chat.py; rag/rag_pipeline.py"}
+{"kind":"slide","id":"sl/1stijv","slide":11,"title":"บอทส่งต่อให้คน","textShapes":9}
+{"kind":"textbox","id":"sh/72hsje9o","slide":11,"text":"บอทส่งต่อให้คน","textPreview":"บอทส่งต่อให้คน","textChars":14,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/83q9cjq9","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/9ozaloru","slide":11,"bbox":[70,240,230,230]}
+{"kind":"textbox","id":"sh/yxor6987","slide":11,"text":"bot","textPreview":"bot","textChars":3,"textLines":1,"bbox":[80,250,210,210]}
+{"kind":"shape","id":"sh/zyx8fe9s","slide":11,"bbox":[515,240,230,230]}
+{"kind":"textbox","id":"sh/kz698jqd","slide":11,"text":"waiting","textPreview":"waiting","textChars":7,"textLines":1,"bbox":[525,250,210,210]}
+{"kind":"shape","id":"sh/l0zahory","slide":11,"bbox":[960,240,230,230]}
+{"kind":"textbox","id":"sh/itsrid8b","slide":11,"text":"human","textPreview":"human","textChars":5,"textLines":1,"bbox":[970,250,210,210]}
+{"kind":"shape","id":"sh/ju1sry9w","slide":11,"bbox":[300,355,0.1,0.1]}
+{"kind":"shape","id":"sh/bidoje1g","slide":11,"bbox":[515,355,0.1,0.1]}
+{"kind":"shape","id":"sh/ah4nq90v","slide":11,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/xkf6lojm","slide":11,"bbox":[745,355,0.1,0.1]}
+{"kind":"shape","id":"sh/wjm5sji1","slide":11,"bbox":[960,355,0.1,0.1]}
+{"kind":"shape","id":"sh/jmxony1c","slide":11,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/ylonut07","slide":11,"text":"ขอเจ้าหน้าที่","textPreview":"ขอเจ้าหน้าที่","textChars":13,"textLines":1,"bbox":[295,255,225,45]}
+{"kind":"textbox","id":"sh/l8f6poji","slide":11,"text":"คนตอบครั้งแรก","textPreview":"คนตอบครั้งแรก","textChars":13,"textLines":1,"bbox":[735,255,235,45]}
+{"kind":"shape","id":"sh/k765w3ix","slide":11,"bbox":[1075,470,0.1,0.1]}
+{"kind":"shape","id":"sh/7axory1o","slide":11,"bbox":[1075,555,0.1,0.1]}
+{"kind":"shape","id":"sh/69onyt03","slide":11,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/i5srqxkb","slide":11,"bbox":[1075,555,0.1,0.1]}
+{"kind":"shape","id":"sh/3618j2lw","slide":11,"bbox":[185,555,0.1,0.1]}
+{"kind":"shape","id":"sh/47a9s72h","slide":11,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/58jqlc32","slide":11,"bbox":[185,555,0.1,0.1]}
+{"kind":"shape","id":"sh/u18rmxkf","slide":11,"bbox":[185,470,0.1,0.1]}
+{"kind":"shape","id":"sh/v2h8f2lk","slide":11,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/g3a9on25","slide":11,"text":"จบการสนทนา","textPreview":"จบการสนทนา","textChars":10,"textLines":1,"bbox":[475,555,310,45]}
+{"kind":"textbox","id":"sh/h4jqhs3q","slide":11,"text":"Web ให้เลือกส่งต่อ  /  LINE เข้าคิวได้อัตโนมัติ","textPreview":"Web ให้เลือกส่งต่อ  /  LINE เข้าคิวได้อัตโนมัติ","textChars":47,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/1stijv","slide":11,"text":"วิธีชี้ภาพ: อ่านวงจรตามเข็มนาฬิกาจาก bot ไป waiting และ human แล้วกลับ bot\n\nเวลา 60 วินาที\nอ่านตามเลข 1 ถึง 4 bot ตอบจากเอกสาร เมื่อเข้า handoff จะรอใน waiting พอคนตอบครั้งแรกจึงเปลี่ยนเป็น human หลังจบงานกลับ bot และปิด active session\nWeb ที่ไม่พบคำตอบแสดงปุ่มให้เลือกติดต่อเจ้าหน้าที่ ส่วน LINE สามารถเข้าสู่คิวอัตโนมัติ\nคนตอบคือเจ้าของบอทหรือ Admin ที่เป็นเจ้าของ ไม่ใช่ role Support ของแพลตฟอร์ม\nส่งต่อ: ทั้งสองช่องทางเชื่อมผ่าน deployment เดียวกัน\n\nแหล่งอ้างอิง: api/routers/chat.py; api/routers/live_chat.py; api/routers/line_webhook.py; api/auth.py"}
+{"kind":"slide","id":"sl/hg6orw","slide":12,"title":"ระบบเชื่อมต่อกันที่ไหน","textShapes":13}
+{"kind":"textbox","id":"sh/1sf6xs3y","slide":12,"text":"ระบบเชื่อมต่อกันที่ไหน","textPreview":"ระบบเชื่อมต่อกันที่ไหน","textChars":22,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/ep4nmdk7","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/fqxovils","slide":12,"bbox":[55,170,220,95]}
+{"kind":"textbox","id":"sh/ov65sn29","slide":12,"text":"Web / LINE","textPreview":"Web / LINE","textChars":10,"textLines":1,"bbox":[65,180,200,75]}
+{"kind":"shape","id":"sh/pwf61sju","slide":12,"bbox":[400,170,215,95]}
+{"kind":"textbox","id":"sh/2tonqdkj","slide":12,"text":"Tunnel","textPreview":"Tunnel","textChars":6,"textLines":1,"bbox":[410,180,195,75]}
+{"kind":"shape","id":"sh/nuxozi1o","slide":12,"bbox":[740,170,190,95]}
+{"kind":"textbox","id":"sh/4zm5g325","slide":12,"text":"Nginx","textPreview":"Nginx","textChars":5,"textLines":1,"bbox":[750,180,170,75]}
+{"kind":"shape","id":"sh/50vmp83q","slide":12,"bbox":[1030,170,205,95]}
+{"kind":"textbox","id":"sh/98f2p872","slide":12,"text":"React files","textPreview":"React files","textChars":11,"textLines":1,"bbox":[1040,180,185,75]}
+{"kind":"shape","id":"sh/876lw3qh","slide":12,"bbox":[275,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/76xknypw","slide":12,"bbox":[400,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/m5o3ut8b","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/hczmts7y","slide":12,"bbox":[615,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/wb6l0nqd","slide":12,"bbox":[740,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/vax4rips","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/u9o3yd8n","slide":12,"bbox":[930,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/50zmxs7a","slide":12,"bbox":[1030,217.5,0.1,0.1]}
+{"kind":"shape","id":"sh/4zql4nqp","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/4jy50byl","slide":12,"bbox":[720,355,230,145]}
+{"kind":"textbox","id":"sh/p4769wf6","slide":12,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[730,365,210,125]}
+{"kind":"shape","id":"sh/2hgny1gv","slide":12,"bbox":[835,265,0.1,0.1]}
+{"kind":"shape","id":"sh/3ipo76x0","slide":12,"bbox":[835,355,0.1,0.1]}
+{"kind":"shape","id":"sh/c7i54byx","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/d8r6dgfi","slide":12,"text":"/api/*","textPreview":"/api/*","textChars":6,"textLines":1,"bbox":[935,285,155,45]}
+{"kind":"shape","id":"sh/q5gn21gr","slide":12,"bbox":[55,550,240,105]}
+{"kind":"textbox","id":"sh/r6pob6xc","slide":12,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[65,560,220,85]}
+{"kind":"shape","id":"sh/sbe5sryd","slide":12,"bbox":[380,550,265,105]}
+{"kind":"textbox","id":"sh/tcnm1cfy","slide":12,"text":"ไฟล์ + ChromaDB","textPreview":"ไฟล์ + ChromaDB","textChars":15,"textLines":1,"bbox":[390,560,245,85]}
+{"kind":"shape","id":"sh/vid0nels","slide":12,"bbox":[1010,360,225,135]}
+{"kind":"textbox","id":"sh/uh4zu947","slide":12,"text":"Ollama","textPreview":"Ollama","textChars":6,"textLines":1,"bbox":[1020,370,205,115]}
+{"kind":"shape","id":"sh/hkfipo3y","slide":12,"bbox":[835,500,0.1,0.1]}
+{"kind":"shape","id":"sh/wjmhwjmd","slide":12,"bbox":[835,520,0.1,0.1]}
+{"kind":"shape","id":"sh/nedgjelw","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/md4zq94b","slide":12,"bbox":[835,520,0.1,0.1]}
+{"kind":"shape","id":"sh/9gvil43m","slide":12,"bbox":[175,520,0.1,0.1]}
+{"kind":"shape","id":"sh/8fmhsjmh","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/zatgfulk","slide":12,"bbox":[175,520,0.1,0.1]}
+{"kind":"shape","id":"sh/ypkzmp4z","slide":12,"bbox":[175,550,0.1,0.1]}
+{"kind":"shape","id":"sh/ex43qx0z","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/fixkj2h4","slide":12,"bbox":[835,500,0.1,0.1]}
+{"kind":"shape","id":"sh/0j6ls7ip","slide":12,"bbox":[835,520,0.1,0.1]}
+{"kind":"shape","id":"sh/1kfmlsza","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/qt43md0n","slide":12,"bbox":[835,520,0.1,0.1]}
+{"kind":"shape","id":"sh/rudkfih8","slide":12,"bbox":[512.5,520,0.1,0.1]}
+{"kind":"shape","id":"sh/svmlonit","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/dwv2hsze","slide":12,"bbox":[512.5,520,0.1,0.1]}
+{"kind":"shape","id":"sh/ipk3id0r","slide":12,"bbox":[512.5,550,0.1,0.1]}
+{"kind":"shape","id":"sh/3qtkbihw","slide":12,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/lkj6hgju","slide":12,"bbox":[950,427.5,0.1,0.1]}
+{"kind":"shape","id":"sh/kja5ob29","slide":12,"bbox":[1010,427.5,0.1,0.1]}
+{"kind":"shape","id":"sh/zi1of61o","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/yh8nm1k3","slide":12,"text":"รันบน host","textPreview":"รันบน host","textChars":10,"textLines":1,"bbox":[1010,550,225,45]}
+{"kind":"textbox","id":"sh/xgz6dwji","slide":12,"text":"Docker Compose","textPreview":"Docker Compose","textChars":14,"textLines":1,"bbox":[55,380,530,65]}
+{"kind":"notes","id":"nt/hg6orw","slide":12,"text":"วิธีชี้ภาพ: อ่านทางเข้าซ้ายบน ผ่าน Tunnel และ Nginx จากนั้นแยกไฟล์เว็บกับ API แล้วดูบริการด้านล่าง\n\nเวลา 60 วินาที\nอ่านซ้ายไปขวา Browser และ LINE ส่ง HTTPS เข้า Tunnel จากนั้นไป Nginx\nNginx ให้ไฟล์ React กับ browser ส่วนเส้นทาง /api/ ส่งไป FastAPI รวม webhook\nFastAPI ติดต่อ PostgreSQL และ volume เอกสารกับ ChromaDB ภายใน deployment ส่วน Ollama รันบน host ตาม compose\nส่งต่อ: ต่อไปคือแผนดำเนินงานและส่วนที่ใช้ Demo\n\nแหล่งอ้างอิง: docker-compose.yml; docker-compose.tunnel.yml; deploy/nginx.conf"}
+{"kind":"slide","id":"sl/2ntytm","slide":13,"title":"Timeline 2569","textShapes":19}
+{"kind":"textbox","id":"sh/214bapcv","slide":13,"text":"Timeline 2569","textPreview":"Timeline 2569","textChars":13,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/p4fulkb6","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/436tcful","slide":13,"bbox":[100,360,0.1,0.1]}
+{"kind":"shape","id":"sh/fydcfat4","slide":13,"bbox":[1180,360,0.1,0.1]}
+{"kind":"shape","id":"sh/ux4b65cj","slide":13,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/h0vuhkba","slide":13,"bbox":[107,332,56,56]}
+{"kind":"textbox","id":"sh/gzmt8fup","slide":13,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[117,342,36,36]}
+{"kind":"textbox","id":"sh/7utcbat8","slide":13,"text":"มี.ค.","textPreview":"มี.ค.","textChars":5,"textLines":1,"bbox":[20,220,230,65]}
+{"kind":"textbox","id":"sh/6tkb25cn","slide":13,"text":"ออกแบบ","textPreview":"ออกแบบ","textChars":6,"textLines":1,"bbox":[20,445,230,60]}
+{"kind":"shape","id":"sh/cj2tk3uh","slide":13,"bbox":[352,332,56,56]}
+{"kind":"textbox","id":"sh/dkbad8b2","slide":13,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[362,342,36,36]}
+{"kind":"textbox","id":"sh/qh0ritcb","slide":13,"text":"เม.ย.–พ.ค.","textPreview":"เม.ย.–พ.ค.","textChars":10,"textLines":1,"bbox":[265,220,230,65]}
+{"kind":"textbox","id":"sh/ri9sbytw","slide":13,"text":"พัฒนา","textPreview":"พัฒนา","textChars":5,"textLines":1,"bbox":[265,445,230,60]}
+{"kind":"shape","id":"sh/4fi9gju5","slide":13,"bbox":[597,332,56,56]}
+{"kind":"textbox","id":"sh/pgra9obq","slide":13,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[607,342,36,36]}
+{"kind":"textbox","id":"sh/2d0retcf","slide":13,"text":"มิ.ย.–ส.ค.","textPreview":"มิ.ย.–ส.ค.","textChars":10,"textLines":1,"bbox":[510,220,230,65]}
+{"kind":"textbox","id":"sh/3e9s7yt0","slide":13,"text":"ปรับระบบ","textPreview":"ปรับระบบ","textChars":8,"textLines":1,"bbox":[510,445,230,60]}
+{"kind":"shape","id":"sh/obmtsnup","slide":13,"bbox":[842,332,56,56]}
+{"kind":"textbox","id":"sh/9cvalsba","slide":13,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[852,342,36,36]}
+{"kind":"textbox","id":"sh/xsra5s3e","slide":13,"text":"ก.ย.","textPreview":"ก.ย.","textChars":4,"textLines":1,"bbox":[755,220,230,65]}
+{"kind":"textbox","id":"sh/wri9wnmt","slide":13,"text":"Demo / UAT","textPreview":"Demo / UAT","textChars":10,"textLines":1,"bbox":[755,445,230,60]}
+{"kind":"textbox","id":"sh/v69s3il8","slide":13,"text":"ตามแผน","textPreview":"ตามแผน","textChars":6,"textLines":1,"bbox":[760,520,220,45]}
+{"kind":"shape","id":"sh/a50rud4n","slide":13,"bbox":[1087,332,56,56]}
+{"kind":"textbox","id":"sh/947a1832","slide":13,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[1097,342,36,36]}
+{"kind":"textbox","id":"sh/83y9s3mh","slide":13,"text":"ต.ค.","textPreview":"ต.ค.","textChars":4,"textLines":1,"bbox":[1000,220,230,65]}
+{"kind":"textbox","id":"sh/n2pszylc","slide":13,"text":"ส่งมอบ","textPreview":"ส่งมอบ","textChars":6,"textLines":1,"bbox":[1000,445,230,60]}
+{"kind":"textbox","id":"sh/m1grqd4r","slide":13,"text":"ตามแผน","textPreview":"ตามแผน","textChars":6,"textLines":1,"bbox":[1005,520,220,45]}
+{"kind":"notes","id":"nt/2ntytm","slide":13,"text":"วิธีชี้ภาพ: อ่านหมุดเวลาซ้ายไปขวา ช่วงกันยายนและตุลาคมเป็นแผนที่ต้องยืนยันสถานะ\n\nเวลา 50 วินาที\nแผนเดิมเริ่มมีนาคมออกแบบ เมษายนถึงพฤษภาคมพัฒนาแกนหลัก มิถุนายนถึงสิงหาคมปรับระบบ กันยายนเตรียม Demo และ UAT ตุลาคมเตรียมส่งมอบ\nรายการนี้เป็นแผนจากเอกสารเดิม ต้องอัปเดตสถานะกับทีม ไม่อ้างว่า UAT ผ่านแล้ว\nส่งต่อ: ต่อไปสาธิตตามเส้นทางที่เตรียม\n\nแหล่งอ้างอิง: ScopeBot.pdf.pdf หน้า 12 แผนงานเดิม; git log ยืนยันงานที่ปรากฏใน repository ถึง 4 ก.ย. 2569"}
+{"kind":"slide","id":"sl/31nvlz","slide":14,"title":"Demo: เดินตามเส้นทางนี้","textShapes":8}
+{"kind":"textbox","id":"sh/obmhczyd","slide":14,"text":"Demo: เดินตามเส้นทางนี้","textPreview":"Demo: เดินตามเส้นทางนี้","textChars":23,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/natg3ehs","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/29kza9g7","slide":14,"bbox":[70,195,240,155]}
+{"kind":"textbox","id":"sh/x0vy9ozu","slide":14,"text":"1\nเลือกบอท","textPreview":"1 | เลือกบอท","textChars":10,"textLines":2,"bbox":[80,205,220,135]}
+{"kind":"shape","id":"sh/czmh0jy9","slide":14,"bbox":[515,195,240,155]}
+{"kind":"textbox","id":"sh/bedg7eho","slide":14,"text":"2\nถาม","textPreview":"2 | ถาม","textChars":5,"textLines":2,"bbox":[525,205,220,135]}
+{"kind":"shape","id":"sh/ad4zy9g3","slide":14,"bbox":[960,195,240,155]}
+{"kind":"textbox","id":"sh/d4byxkzq","slide":14,"text":"3\nดูอ้างอิง","textPreview":"3 | ดูอ้างอิง","textChars":11,"textLines":2,"bbox":[970,205,220,135]}
+{"kind":"shape","id":"sh/s3ih4fy5","slide":14,"bbox":[960,470,240,145]}
+{"kind":"textbox","id":"sh/eh83e9gf","slide":14,"text":"4\nขอเจ้าหน้าที่","textPreview":"4 | ขอเจ้าหน้าที่","textChars":15,"textLines":2,"bbox":[970,480,220,125]}
+{"kind":"shape","id":"sh/fihk7eh0","slide":14,"bbox":[515,470,240,145]}
+{"kind":"textbox","id":"sh/g3qlgjyl","slide":14,"text":"5\nตอบและจบ","textPreview":"5 | ตอบและจบ","textChars":10,"textLines":2,"bbox":[525,480,220,125]}
+{"kind":"shape","id":"sh/14zm9of6","slide":14,"bbox":[310,272.5,0.1,0.1]}
+{"kind":"shape","id":"sh/25s3itgb","slide":14,"bbox":[515,272.5,0.1,0.1]}
+{"kind":"shape","id":"sh/3614byxw","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/o7alk3yh","slide":14,"bbox":[755,272.5,0.1,0.1]}
+{"kind":"shape","id":"sh/p8jmd8f2","slide":14,"bbox":[960,272.5,0.1,0.1]}
+{"kind":"shape","id":"sh/q9s3mtgn","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ba14fyx8","slide":14,"bbox":[1080,350,0.1,0.1]}
+{"kind":"shape","id":"sh/nelk3ydg","slide":14,"bbox":[1080,470,0.1,0.1]}
+{"kind":"shape","id":"sh/mdc3adwv","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/9g3258v6","slide":14,"bbox":[960,542.5,0.1,0.1]}
+{"kind":"shape","id":"sh/8fulc3el","slide":14,"bbox":[755,542.5,0.1,0.1]}
+{"kind":"shape","id":"sh/za1kzyd4","slide":14,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/y9sj6twj","slide":14,"text":"ประมาณ\n4 นาที","textPreview":"ประมาณ | 4 นาที","textChars":13,"textLines":2,"bbox":[85,455,220,145]}
+{"kind":"notes","id":"nt/31nvlz","slide":14,"text":"วิธีชี้ภาพ: ชี้ 1–3 แถวบน แล้วลงมาที่ 4–5 แถวล่าง\n\nเวลา 4 นาที\nก่อนเริ่ม เปิดบัญชีเจ้าของบอทที่อนุมัติแล้ว บอท active และประมวลผลเอกสารพร้อมใช้งาน\n1 เลือกบอทและเอกสาร 2 ถามเรื่องที่อยู่ในเอกสาร 3 เปิดชื่อไฟล์กับข้อความอ้างอิงบน Web 4 ขอคุยเจ้าหน้าที่จาก LINE หรือ Web 5 เจ้าของบอทตอบในแชทรวมและจบ session\nใช้ข้อมูลสาธิตที่ไม่มีข้อมูลส่วนบุคคล ซ้อมเส้นทางนี้ก่อนวันจริง\nส่งต่อ: สรุปภาพการทำงานทั้งหมด\n\nแหล่งอ้างอิง: src/app/components/chat/BotsPage.tsx; src/app/components/admin/UnifiedChat.tsx; api/routers/live_chat.py"}
+{"kind":"slide","id":"sl/ukbeaw","slide":15,"title":"ScopeBot ทำงานครบวงจร","textShapes":9}
+{"kind":"textbox","id":"sh/98ra9sjm","slide":15,"text":"ScopeBot ทำงานครบวงจร","textPreview":"ScopeBot ทำงานครบวงจร","textChars":21,"textLines":1,"bbox":[55,35,1170,70]}
+{"kind":"textbox","id":"sh/ml0ryx0v","slide":15,"text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1170,670,55,25]}
+{"kind":"shape","id":"sh/nm9s7i1g","slide":15,"bbox":[55,285,210,130]}
+{"kind":"textbox","id":"sh/0ji9wnip","slide":15,"text":"คำถาม","textPreview":"คำถาม","textChars":5,"textLines":1,"bbox":[65,295,190,110]}
+{"kind":"shape","id":"sh/lkra5sja","slide":15,"bbox":[435,245,270,210]}
+{"kind":"textbox","id":"sh/yh0rud0j","slide":15,"text":"ค้นเอกสาร","textPreview":"ค้นเอกสาร","textChars":9,"textLines":1,"bbox":[445,255,250,190]}
+{"kind":"shape","id":"sh/zi9s3i14","slide":15,"bbox":[960,170,250,130]}
+{"kind":"textbox","id":"sh/4f2t87i9","slide":15,"text":"คำตอบ","textPreview":"คำตอบ","textChars":5,"textLines":1,"bbox":[970,180,230,110]}
+{"kind":"shape","id":"sh/5gvahcje","slide":15,"bbox":[960,445,250,130]}
+{"kind":"textbox","id":"sh/9gra9sfi","slide":15,"text":"เจ้าของบอท","textPreview":"เจ้าของบอท","textChars":10,"textLines":1,"bbox":[970,455,230,110]}
+{"kind":"shape","id":"sh/ofitgnex","slide":15,"bbox":[265,350,0.1,0.1]}
+{"kind":"shape","id":"sh/ne9s7ixs","slide":15,"bbox":[435,350,0.1,0.1]}
+{"kind":"shape","id":"sh/mdgbedw7","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/1c7a5sfm","slide":15,"bbox":[705,350,0.1,0.1]}
+{"kind":"shape","id":"sh/0bytcny1","slide":15,"bbox":[825,350,0.1,0.1]}
+{"kind":"shape","id":"sh/zaps3ixg","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/e9gbadgv","slide":15,"bbox":[825,350,0.1,0.1]}
+{"kind":"shape","id":"sh/58buhcfq","slide":15,"bbox":[825,235,0.1,0.1]}
+{"kind":"shape","id":"sh/k72to7e5","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/4nul0fqt","slide":15,"bbox":[825,235,0.1,0.1]}
+{"kind":"shape","id":"sh/po3m9kre","slide":15,"bbox":[960,235,0.1,0.1]}
+{"kind":"shape","id":"sh/2ls3y58n","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/3ml47a98","slide":15,"bbox":[705,350,0.1,0.1]}
+{"kind":"shape","id":"sh/gzalwfqh","slide":15,"bbox":[825,350,0.1,0.1]}
+{"kind":"shape","id":"sh/hkjm50r2","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/uxs3u58r","slide":15,"bbox":[825,350,0.1,0.1]}
+{"kind":"shape","id":"sh/fy143a9w","slide":15,"bbox":[825,510,0.1,0.1]}
+{"kind":"shape","id":"sh/svalsvql","slide":15,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/twjm10r6","slide":15,"bbox":[825,510,0.1,0.1]}
+{"kind":"shape","id":"sh/vqh4bqts","slide":15,"bbox":[960,510,0.1,0.1]}
+{"kind":"shape","id":"sh/ap8n2lc7","slide":15,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/xszmd0by","slide":15,"text":"พบข้อมูล","textPreview":"พบข้อมูล","textChars":8,"textLines":1,"bbox":[780,170,175,45]}
+{"kind":"textbox","id":"sh/wrq54vud","slide":15,"text":"ส่งต่อ","textPreview":"ส่งต่อ","textChars":6,"textLines":1,"bbox":[785,445,165,45]}
+{"kind":"textbox","id":"sh/juh4fat4","slide":15,"text":"คำถามและข้อเสนอแนะ","textPreview":"คำถามและข้อเสนอแนะ","textChars":18,"textLines":1,"bbox":[65,620,1140,42]}
+{"kind":"notes","id":"nt/ukbeaw","slide":15,"text":"วิธีชี้ภาพ: เริ่มคำถามทางซ้าย ผ่านการค้น แล้วแตกเป็นตอบจากเอกสารหรือส่งต่อคน\n\nเวลา 45 วินาที\nคำถามเข้ามาทาง Web หรือ LINE แล้ว FastAPI เรียก RAG ค้นเอกสาร ถ้ามีข้อมูลก็สร้างคำตอบและส่งกลับ ถ้าไม่มีคำตอบจะเสนอหรือเริ่มการส่งต่อคนตามช่องทาง\nชี้สองทางเลือกให้เห็นว่าความรู้จากเอกสารและเจ้าของบอททำงานร่วมกัน\nขอบคุณและเปิดรับคำถาม\n\nแหล่งอ้างอิง: README.md; api/main.py; rag/rag_pipeline.py"}

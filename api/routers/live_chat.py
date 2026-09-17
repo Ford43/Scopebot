@@ -179,7 +179,6 @@ def staff_reply(
         models.Conversation.is_resolved == False
     ).update({
         "is_resolved": True,
-        "answer": clean_message
     })
     
     # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง

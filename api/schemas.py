@@ -101,6 +101,7 @@ class ChatResponse(BaseModel):
     sources: List[ChatSource] = []
     session_mode: str = "bot"
     offer_handoff: bool = False
+    response_status: str = "answered"
 
 
 # =====================

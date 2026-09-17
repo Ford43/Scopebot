@@ -12,7 +12,8 @@ from linebot.v3.messaging import (
 )
 from api.database import SessionLocal
 from api import models
-from rag.rag_pipeline import ask_rag
+from rag.rag_pipeline import ask_rag, RagUnavailableError, RAG_ERROR_MESSAGE
+from api.chat_history import recent_bot_history
 
 router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
 
@@ -328,15 +329,18 @@ async def line_webhook(bot_id: str, request: Request):
                 # ---- RAG ----
                 _show_line_loading(bot.line_channel_token, line_user_id)
 
-                # ไม่ส่งประวัติแชทเข้า RAG — โมเดลเล็กจะเลียนแบบคำตอบเก่าที่สั้น/ไม่ครบ
-                answer, _sources = ask_rag(
-                    user_message,
-                    bot_id,
-                    user_system_prompt=bot.system_prompt,
-                    history=None,
-                )
-                if answer == "REQUIRE_HUMAN_HANDOFF":
-                    answer = "ไม่พบข้อมูล กรุณารอสักครู่ กำลังส่งต่อให้เจ้าหน้าที่"
+                rag_failed = False
+                try:
+                    answer, _sources = ask_rag(
+                        user_message, bot_id, user_system_prompt=bot.system_prompt,
+                        history=recent_bot_history(db, bot.id, line_user_id, "line"),
+                    )
+                except RagUnavailableError:
+                    answer, rag_failed = RAG_ERROR_MESSAGE, True
+                if rag_failed:
+                    is_bot_answered = False
+                elif answer == "REQUIRE_HUMAN_HANDOFF":
+                    answer = "ไม่พบข้อมูล สามารถกดติดต่อเจ้าหน้าที่ได้"
                     is_bot_answered = False
                 else:
                     is_bot_answered = "ไม่พบข้อมูล" not in answer
@@ -354,11 +358,11 @@ async def line_webhook(bot_id: str, request: Request):
                     session_id=session.id,
                     sender_type=models.SenderType.bot,
                     sender_name="Bot",
-                    message=answer if is_bot_answered else "ไม่พบข้อมูล"
+                    message=answer
                 ))
                 db.commit()
 
-                if is_bot_answered:
+                if is_bot_answered or rag_failed:
                     _line_reply_or_push(
                         line_bot_api,
                         reply_token,

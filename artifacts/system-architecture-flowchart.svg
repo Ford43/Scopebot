@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">ScopeBot System Architecture Flowchart</title>
+  <desc id="desc">Web and LINE requests travel through Cloudflare Tunnel and Nginx to React or FastAPI. FastAPI connects to PostgreSQL, document storage, ChromaDB, and Ollama.</desc>
+  <defs>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#27c4f4"/></marker>
+    <marker id="arrowPurple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#af5cff"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#6de0b3"/></marker>
+    <style>
+      .bg{fill:#07090c}.title{font-family:Tahoma,Arial,sans-serif;font-size:46px;font-weight:700;fill:#27c4f4}.sub{font-family:Tahoma,Arial,sans-serif;font-size:22px;fill:#b9c6d9}.label{font-family:Tahoma,Arial,sans-serif;font-size:27px;font-weight:700;fill:#f4f7fb;text-anchor:middle}.small{font-family:Tahoma,Arial,sans-serif;font-size:19px;fill:#b9c6d9;text-anchor:middle}.group{font-family:Tahoma,Arial,sans-serif;font-size:22px;font-weight:700;fill:#27c4f4}.box{fill:#142031;stroke:#27c4f4;stroke-width:3}.purple{fill:#142031;stroke:#af5cff;stroke-width:3}.green{fill:#142031;stroke:#6de0b3;stroke-width:3}.lineC{fill:none;stroke:#27c4f4;stroke-width:4;marker-end:url(#arrowCyan)}.lineP{fill:none;stroke:#af5cff;stroke-width:4;marker-end:url(#arrowPurple)}.lineG{fill:none;stroke:#6de0b3;stroke-width:4;marker-end:url(#arrowGreen)}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="900"/>
+  <text x="70" y="80" class="title">ScopeBot — System Architecture</text>
+  <text x="70" y="118" class="sub">Flow of a request from Web or LINE to knowledge retrieval, answer generation, and return response</text>
+
+  <text x="85" y="190" class="group">1. ช่องทางผู้ใช้</text>
+  <rect x="75" y="225" width="230" height="100" rx="20" class="box"/>
+  <text x="190" y="275" class="label">Web Browser</text>
+  <text x="190" y="305" class="small">React application</text>
+  <rect x="75" y="410" width="230" height="100" rx="20" class="green"/>
+  <text x="190" y="460" class="label">LINE OA</text>
+  <text x="190" y="490" class="small">Webhook messages</text>
+
+  <text x="410" y="190" class="group">2. ทางเข้าระบบ</text>
+  <rect x="395" y="305" width="250" height="120" rx="20" class="box"/>
+  <text x="520" y="357" class="label">Cloudflare Tunnel</text>
+  <text x="520" y="388" class="small">HTTPS public endpoint</text>
+
+  <rect x="730" y="305" width="190" height="120" rx="20" class="box"/>
+  <text x="825" y="357" class="label">Nginx</text>
+  <text x="825" y="388" class="small">routes traffic</text>
+
+  <text x="995" y="190" class="group">3. แอปพลิเคชัน</text>
+  <rect x="980" y="230" width="240" height="105" rx="20" class="box"/>
+  <text x="1100" y="280" class="label">React files</text>
+  <text x="1100" y="310" class="small">serves Web UI</text>
+  <polygon points="1100,405 1230,480 1230,630 1100,705 970,630 970,480" class="box"/>
+  <text x="1100" y="540" class="label">FastAPI</text>
+  <text x="1100" y="573" class="small">JWT / LINE signature</text>
+  <text x="1100" y="603" class="small">Bots · Chat · Documents</text>
+
+  <text x="1315" y="190" class="group">4. ข้อมูลและ AI</text>
+  <rect x="1300" y="230" width="235" height="105" rx="20" class="purple"/>
+  <text x="1417" y="280" class="label">PostgreSQL</text>
+  <text x="1417" y="310" class="small">users · bots · history</text>
+  <rect x="1300" y="410" width="235" height="105" rx="20" class="green"/>
+  <text x="1417" y="460" class="label">Document Storage</text>
+  <text x="1417" y="490" class="small">uploaded source files</text>
+  <rect x="1300" y="590" width="235" height="105" rx="20" class="purple"/>
+  <text x="1417" y="640" class="label">ChromaDB + Ollama</text>
+  <text x="1417" y="670" class="small">retrieve context · generate answer</text>
+
+  <path d="M305 275 H350 V365 H395" class="lineC"/>
+  <path d="M305 460 H350 V365 H395" class="lineG"/>
+  <path d="M645 365 H730" class="lineC"/>
+  <path d="M920 350 V282 H980" class="lineC"/>
+  <path d="M825 425 V555 H970" class="lineC"/>
+  <path d="M1230 540 H1260 V282 H1300" class="lineP"/>
+  <path d="M1230 555 H1260 V462 H1300" class="lineG"/>
+  <path d="M1230 575 H1260 V642 H1300" class="lineP"/>
+  <text x="840" y="458" class="small">/api/* + LINE webhook</text>
+  <text x="1255" y="720" class="small">FastAPI คืนผลกลับผ่าน Nginx → Tunnel → Web หรือ LINE</text>
+  <text x="70" y="850" class="sub">RAG flow: document → chunks → embeddings → ChromaDB; question → retrieve context → Ollama → answer with sources</text>
+</svg>

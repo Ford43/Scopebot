@@ -1,0 +1,215 @@
+{"kind":"deck","id":"pr/a64583","name":"Deck"}
+{"kind":"layout","layoutId":"731bcd68-dfbd-4574-bf4b-ecf35126b110","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"30aa55a6-a66a-4115-b94b-1ede55c89fa4","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ynfa53","slide":1,"title":"IT PRESENTATION","textShapes":8}
+{"kind":"shape","id":"sh/4jytojyh","slide":1,"bbox":[0,0,18,720]}
+{"kind":"shape","id":"sh/3ipsvexw","slide":1,"bbox":[18,0,8,720]}
+{"kind":"shape","id":"sh/2hwbm9gb","slide":1,"bbox":[78,102,184,34]}
+{"kind":"textbox","id":"sh/do7ulofy","slide":1,"text":"IT PRESENTATION","textPreview":"IT PRESENTATION","textChars":15,"textLines":1,"bbox":[78,104,184,28]}
+{"kind":"textbox","id":"sh/cnytsjyd","slide":1,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[78,166,720,84]}
+{"kind":"textbox","id":"sh/rmpcjexs","slide":1,"text":"แพลตฟอร์ม AI Chatbot\nสำหรับความรู้ภายในองค์กร","textPreview":"แพลตฟอร์ม AI Chatbot | สำหรับความรู้ภายในองค์กร","textChars":45,"textLines":2,"bbox":[80,264,700,116]}
+{"kind":"textbox","id":"sh/qlgbq9g7","slide":1,"text":"เอกสารองค์กร  •  คำตอบด้วย RAG  •  ส่งต่อเจ้าหน้าที่","textPreview":"เอกสารองค์กร  •  คำตอบด้วย RAG  •  ส่งต่อเจ้าหน้าที่","textChars":52,"textLines":1,"bbox":[82,408,660,36]}
+{"kind":"shape","id":"sh/1crup8fu","slide":1,"bbox":[875,115,258,258]}
+{"kind":"textbox","id":"sh/0bitw3y9","slide":1,"text":"AI","textPreview":"AI","textChars":2,"textLines":1,"bbox":[920,147,170,74]}
+{"kind":"textbox","id":"sh/atgrqpsj","slide":1,"text":"Knowledge\nAssistant","textPreview":"Knowledge | Assistant","textChars":19,"textLines":2,"bbox":[903,236,202,70]}
+{"kind":"shape","id":"sh/vup8jut4","slide":1,"bbox":[840,476,310,4]}
+{"kind":"textbox","id":"sh/wvy9szap","slide":1,"text":"สรุปสำหรับฝ่ายเทคโนโลยีสารสนเทศ","textPreview":"สรุปสำหรับฝ่ายเทคโนโลยีสารสนเทศ","textChars":31,"textLines":1,"bbox":[80,615,670,30]}
+{"kind":"textbox","id":"sh/xg7ql4ba","slide":1,"text":"17 กันยายน 2569","textPreview":"17 กันยายน 2569","textChars":15,"textLines":1,"bbox":[880,615,270,30]}
+{"kind":"notes","id":"nt/ynfa53","slide":1,"text":"Sources: Scopebot README.md; .env.example; user-supplied ScopeBot.pdf.pdf used only as visual reference."}
+{"kind":"slide","id":"sl/hgiymc","slide":2,"title":"ขอบเขตของ ScopeBot","textShapes":16}
+{"kind":"textbox","id":"sh/fihwnm9g","slide":2,"text":"ขอบเขตของ ScopeBot","textPreview":"ขอบเขตของ ScopeBot","textChars":18,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/gjqxw7a1","slide":2,"text":"ระบบตอบคำถามจากเอกสารองค์กร พร้อมช่องทางสนทนาและการส่งต่อเจ้าหน้าที่","textPreview":"ระบบตอบคำถามจากเอกสารองค์กร พร้อมช่องทางสนทนาและการส่งต่อเจ้าหน้าที่","textChars":68,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/hkzepcrm","slide":2,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/258fyhs7","slide":2,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/361wrm9c","slide":2,"bbox":[76,196,340,190]}
+{"kind":"shape","id":"sh/47ax0rax","slide":2,"bbox":[76,196,6,190]}
+{"kind":"textbox","id":"sh/p8jetwri","slide":2,"text":"Knowledge chatbot","textPreview":"Knowledge chatbot","textChars":17,"textLines":1,"bbox":[100,216,298,31]}
+{"kind":"textbox","id":"sh/q9sf21s3","slide":2,"text":"สร้างบอทได้หลายตัว และผูกเอกสารความรู้ให้แต่ละบอท","textPreview":"สร้างบอทได้หลายตัว และผูกเอกสารความรู้ให้แต่ละบอท","textChars":49,"textLines":1,"bbox":[100,254,298,118]}
+{"kind":"shape","id":"sh/ra1wv69o","slide":2,"bbox":[470,196,340,190]}
+{"kind":"shape","id":"sh/nulsn6to","slide":2,"bbox":[470,196,6,190]}
+{"kind":"textbox","id":"sh/2tcru1c3","slide":2,"text":"RAG pipeline","textPreview":"RAG pipeline","textChars":12,"textLines":1,"bbox":[494,216,298,31]}
+{"kind":"textbox","id":"sh/pg3apgbe","slide":2,"text":"แยกข้อความจากเอกสาร สร้าง embedding ค้นหาส่วนที่เกี่ยวข้อง แล้วส่งบริบทให้โมเดล","textPreview":"แยกข้อความจากเอกสาร สร้าง embedding ค้นหาส่วนที่เกี่ยวข้อง แล้วส่งบริบทให้โมเดล","textChars":79,"textLines":1,"bbox":[494,254,298,118]}
+{"kind":"shape","id":"sh/ofu9wbut","slide":2,"bbox":[864,196,340,190]}
+{"kind":"shape","id":"sh/fq1sjmtc","slide":2,"bbox":[864,196,6,190]}
+{"kind":"textbox","id":"sh/epsrq1cr","slide":2,"text":"Live support","textPreview":"Live support","textChars":12,"textLines":1,"bbox":[888,216,298,31]}
+{"kind":"textbox","id":"sh/1sjalwbi","slide":2,"text":"ส่งต่อบทสนทนาให้เจ้าหน้าที่เมื่อผู้ใช้ขอความช่วยเหลือหรือบอทตอบไม่ได้","textPreview":"ส่งต่อบทสนทนาให้เจ้าหน้าที่เมื่อผู้ใช้ขอความช่วยเหลือหรือบอทตอบไม่ได้","textChars":69,"textLines":1,"bbox":[888,254,298,118]}
+{"kind":"shape","id":"sh/gra9srux","slide":2,"bbox":[76,450,1128,138]}
+{"kind":"textbox","id":"sh/zm5svqtg","slide":2,"text":"ช่องทางที่รองรับ","textPreview":"ช่องทางที่รองรับ","textChars":16,"textLines":1,"bbox":[104,474,270,29]}
+{"kind":"textbox","id":"sh/ylwb2lcb","slide":2,"text":"Web chat","textPreview":"Web chat","textChars":8,"textLines":1,"bbox":[420,474,192,29]}
+{"kind":"textbox","id":"sh/uhgvupwj","slide":2,"text":"LINE webhook","textPreview":"LINE webhook","textChars":12,"textLines":1,"bbox":[680,474,220,29]}
+{"kind":"textbox","id":"sh/vipc3udo","slide":2,"text":"Admin workspace","textPreview":"Admin workspace","textChars":15,"textLines":1,"bbox":[955,474,210,29]}
+{"kind":"textbox","id":"sh/wjidwze9","slide":2,"text":"ระบบมี dashboard, การจัดการบอท, เอกสาร, ผู้ใช้ และประวัติสนทนา","textPreview":"ระบบมี dashboard, การจัดการบอท, เอกสาร, ผู้ใช้ และประวัติสนทนา","textChars":62,"textLines":1,"bbox":[104,526,980,28]}
+{"kind":"shape","id":"sh/hkru54vu","slide":2,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/i50vypcf","slide":2,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/j69c7ud0","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/hgiymc","slide":2,"text":"Source: README.md Features and project structure; repository source under src/app, api, rag."}
+{"kind":"slide","id":"sl/mwgkjm","slide":3,"title":"สถาปัตยกรรมปัจจุบัน","textShapes":18}
+{"kind":"textbox","id":"sh/fapo7q9c","slide":3,"text":"สถาปัตยกรรมปัจจุบัน","textPreview":"สถาปัตยกรรมปัจจุบัน","textChars":19,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/gvypgvqx","slide":3,"text":"องค์ประกอบที่ตรวจพบในโปรเจคและเส้นทางข้อมูลหลัก","textPreview":"องค์ประกอบที่ตรวจพบในโปรเจคและเส้นทางข้อมูลหลัก","textChars":47,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/1w7690ri","slide":3,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/2xg7i58n","slide":3,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/3ypoba98","slide":3,"bbox":[90,220,250,150]}
+{"kind":"shape","id":"sh/ozypkfqt","slide":3,"bbox":[90,220,6,150]}
+{"kind":"textbox","id":"sh/p076dkre","slide":3,"text":"Web application","textPreview":"Web application","textChars":15,"textLines":1,"bbox":[114,240,208,31]}
+{"kind":"textbox","id":"sh/i1cn6l8j","slide":3,"text":"React + Vite\nTailwind CSS, shadcn/Radix UI","textPreview":"React + Vite | Tailwind CSS, shadcn/Radix UI","textChars":42,"textLines":2,"bbox":[114,278,208,78]}
+{"kind":"shape","id":"sh/j2loz694","slide":3,"bbox":[390,220,250,150]}
+{"kind":"shape","id":"sh/bmp8jql0","slide":3,"bbox":[390,220,6,150]}
+{"kind":"textbox","id":"sh/algrql4f","slide":3,"text":"API service","textPreview":"API service","textChars":11,"textLines":1,"bbox":[414,240,208,31]}
+{"kind":"textbox","id":"sh/x87qlg3q","slide":3,"text":"FastAPI\nSQLAlchemy + Alembic","textPreview":"FastAPI | SQLAlchemy + Alembic","textChars":28,"textLines":2,"bbox":[414,278,208,78]}
+{"kind":"shape","id":"sh/cny9svm5","slide":3,"bbox":[690,220,250,150]}
+{"kind":"shape","id":"sh/ni58f65o","slide":3,"bbox":[690,220,6,150]}
+{"kind":"textbox","id":"sh/2hwrm143","slide":3,"text":"RAG service","textPreview":"RAG service","textChars":11,"textLines":1,"bbox":[714,240,208,31]}
+{"kind":"textbox","id":"sh/pknqhg3u","slide":3,"text":"Ollama + BGE-M3\nChromaDB","textPreview":"Ollama + BGE-M3 | ChromaDB","textChars":24,"textLines":2,"bbox":[714,278,208,78]}
+{"kind":"shape","id":"sh/oje9obm9","slide":3,"bbox":[990,220,210,150]}
+{"kind":"shape","id":"sh/fe58b65s","slide":3,"bbox":[990,220,6,150]}
+{"kind":"textbox","id":"sh/edc7i147","slide":3,"text":"Data store","textPreview":"Data store","textChars":10,"textLines":1,"bbox":[1014,240,168,31]}
+{"kind":"textbox","id":"sh/ipcru1oz","slide":3,"text":"PostgreSQL\nบัญชี บอท เอกสาร ประวัติ","textPreview":"PostgreSQL | บัญชี บอท เอกสาร ประวัติ","textChars":35,"textLines":2,"bbox":[1014,278,168,78]}
+{"kind":"textbox","id":"sh/3qls36pk","slide":3,"text":"Web chat และ LINE","textPreview":"Web chat และ LINE","textChars":17,"textLines":1,"bbox":[90,422,250,26]}
+{"kind":"textbox","id":"sh/4bu9wr65","slide":3,"text":"ตรวจสิทธิ์และประมวลผล","textPreview":"ตรวจสิทธิ์และประมวลผล","textChars":21,"textLines":1,"bbox":[390,422,250,26]}
+{"kind":"textbox","id":"sh/5c3a5w7q","slide":3,"text":"ค้นหาเอกสารและสร้างคำตอบ","textPreview":"ค้นหาเอกสารและสร้างคำตอบ","textChars":24,"textLines":1,"bbox":[690,422,250,26]}
+{"kind":"textbox","id":"sh/qdcry1ob","slide":3,"text":"บันทึกสถานะและประวัติ","textPreview":"บันทึกสถานะและประวัติ","textChars":21,"textLines":1,"bbox":[990,422,210,44]}
+{"kind":"shape","id":"sh/re5s76pg","slide":3,"bbox":[90,515,1110,76]}
+{"kind":"textbox","id":"sh/sfe90b61","slide":3,"text":"การเชื่อมต่อภายนอก: LINE ส่ง event เข้า webhook ของบอท และ Ollama ทำงานเป็น service แยกที่ API เข้าถึงได้","textPreview":"การเชื่อมต่อภายนอก: LINE ส่ง event เข้า webhook ของบอท และ Ollama ทำงานเป็น service แยกที่ API เข้าถึงได้","textChars":105,"textLines":1,"bbox":[116,534,1060,33]}
+{"kind":"shape","id":"sh/dgna9g7m","slide":3,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/ehwr2lo7","slide":3,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/fi5sbqps","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/mwgkjm","slide":3,"text":"Sources: README.md Tech Stack and Docker deployment section; docker-compose.yml; .env.example."}
+{"kind":"slide","id":"sl/zbm3hl","slide":4,"title":"การจัดการเอกสารและ RAG","textShapes":18}
+{"kind":"textbox","id":"sh/e1of6lkf","slide":4,"text":"การจัดการเอกสารและ RAG","textPreview":"การจัดการเอกสารและ RAG","textChars":22,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/14fy10j6","slide":4,"text":"ค่าเริ่มต้นปัจจุบันกำหนดให้ค้นหา 5 ส่วนของเอกสารต่อคำถาม","textPreview":"ค่าเริ่มต้นปัจจุบันกำหนดให้ค้นหา 5 ส่วนของเอกสารต่อคำถาม","textChars":56,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/036x8v2l","slide":4,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/rydwvq14","slide":4,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/qx4f2lkj","slide":4,"bbox":[78,212,238,244]}
+{"kind":"textbox","id":"sh/d0fexgja","slide":4,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[100,230,58,32]}
+{"kind":"textbox","id":"sh/cz6x4v2p","slide":4,"text":"อัปโหลด","textPreview":"อัปโหลด","textChars":7,"textLines":1,"bbox":[100,278,190,32]}
+{"kind":"textbox","id":"sh/buhg7a18","slide":4,"text":"PDF, DOCX, TXT, CSV\nขนาดสูงสุด 10 MB","textPreview":"PDF, DOCX, TXT, CSV | ขนาดสูงสุด 10 MB","textChars":36,"textLines":2,"bbox":[100,334,192,76]}
+{"kind":"shape","id":"sh/at8fe5kn","slide":4,"bbox":[363,212,238,244]}
+{"kind":"textbox","id":"sh/4fe9cze1","slide":4,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[385,230,58,32]}
+{"kind":"textbox","id":"sh/5gnal4vm","slide":4,"text":"แบ่งเนื้อหา","textPreview":"แบ่งเนื้อหา","textChars":11,"textLines":1,"bbox":[385,278,190,32]}
+{"kind":"textbox","id":"sh/idwrapwb","slide":4,"text":"Chunk 1,000 ตัวอักษร\nซ้อนทับ 200 ตัวอักษร","textPreview":"Chunk 1,000 ตัวอักษร | ซ้อนทับ 200 ตัวอักษร","textChars":41,"textLines":2,"bbox":[385,334,192,76]}
+{"kind":"shape","id":"sh/3e5sjudg","slide":4,"bbox":[648,212,238,244]}
+{"kind":"textbox","id":"sh/gbu98fe5","slide":4,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[670,230,58,32]}
+{"kind":"textbox","id":"sh/hc3ahkvq","slide":4,"text":"สร้างดัชนี","textPreview":"สร้างดัชนี","textChars":10,"textLines":1,"bbox":[670,278,190,32]}
+{"kind":"textbox","id":"sh/u9cr65wz","slide":4,"text":"BGE-M3 สร้าง embedding\nเก็บใน ChromaDB","textPreview":"BGE-M3 สร้าง embedding | เก็บใน ChromaDB","textChars":38,"textLines":2,"bbox":[670,334,192,76]}
+{"kind":"shape","id":"sh/valsfadk","slide":4,"bbox":[933,212,238,244]}
+{"kind":"textbox","id":"sh/87u94fet","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[955,230,58,32]}
+{"kind":"textbox","id":"sh/t83qdkve","slide":4,"text":"ตอบคำถาม","textPreview":"ตอบคำถาม","textChars":8,"textLines":1,"bbox":[955,278,190,32]}
+{"kind":"textbox","id":"sh/9sbylcj6","slide":4,"text":"ค้นหา Top K = 5\nส่งบริบทเข้า Ollama","textPreview":"ค้นหา Top K = 5 | ส่งบริบทเข้า Ollama","textChars":35,"textLines":2,"bbox":[955,334,192,76]}
+{"kind":"shape","id":"sh/or2hs72l","slide":4,"bbox":[104,520,1072,70]}
+{"kind":"textbox","id":"sh/nqtgj210","slide":4,"text":"เมื่อมีเอกสารชื่อซ้ำ ระบบขอการยืนยันก่อนแทนที่ และประมวลผลใหม่ให้ทุกบอทที่ผูกกับเอกสารนั้น","textPreview":"เมื่อมีเอกสารชื่อซ้ำ ระบบขอการยืนยันก่อนแทนที่ และประมวลผลใหม่ให้ทุกบอทที่ผูกกับเอกสารนั้น","textChars":90,"textLines":1,"bbox":[132,538,1016,34]}
+{"kind":"shape","id":"sh/mpkfqxkf","slide":4,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/1obyhsju","slide":4,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/0nixon29","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/zbm3hl","slide":4,"text":"Sources: .env.example values TOP_K=5, CHUNK_SIZE=1000, CHUNK_OVERLAP=200, EMBEDDING_MODEL=BAAI/bge-m3; api/routers/documents.py; README.md regression-test note."}
+{"kind":"slide","id":"sl/6cqglf","slide":5,"title":"การใช้งานและการส่งต่อเจ้าหน้าที่","textShapes":13}
+{"kind":"textbox","id":"sh/dwrid0bi","slide":5,"text":"การใช้งานและการส่งต่อเจ้าหน้าที่","textPreview":"การใช้งานและการส่งต่อเจ้าหน้าที่","textChars":32,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/qt0ji5s7","slide":5,"text":"บอทตอบคำถามตามความรู้ที่กำหนด และส่งงานให้ทีม support เมื่อจำเป็น","textPreview":"บอทตอบคำถามตามความรู้ที่กำหนด และส่งงานให้ทีม support เมื่อจำเป็น","textChars":65,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/ru90bats","slide":5,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/4ry1gva1","slide":5,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/5sri90bm","slide":5,"bbox":[94,210,300,145]}
+{"kind":"shape","id":"sh/i5gzelsv","slide":5,"bbox":[94,210,6,145]}
+{"kind":"textbox","id":"sh/36p07qtg","slide":5,"text":"ผู้ใช้งาน","textPreview":"ผู้ใช้งาน","textChars":9,"textLines":1,"bbox":[118,230,258,31]}
+{"kind":"textbox","id":"sh/on21sfa5","slide":5,"text":"ถามคำถามผ่านหน้า web chat หรือ LINE","textPreview":"ถามคำถามผ่านหน้า web chat หรือ LINE","textChars":35,"textLines":1,"bbox":[118,268,258,73]}
+{"kind":"shape","id":"sh/9ob2lkbq","slide":5,"bbox":[488,210,300,145]}
+{"kind":"shape","id":"sh/1gzq5gja","slide":5,"bbox":[488,210,6,145]}
+{"kind":"textbox","id":"sh/0fqpwb2p","slide":5,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[512,230,258,31]}
+{"kind":"textbox","id":"sh/zeh8361k","slide":5,"text":"ตรวจสิทธิ์ ดึงบริบทจากเอกสาร และสร้างคำตอบ","textPreview":"ตรวจสิทธิ์ ดึงบริบทจากเอกสาร และสร้างคำตอบ","textChars":42,"textLines":1,"bbox":[512,268,258,73]}
+{"kind":"shape","id":"sh/edo7u1kz","slide":5,"bbox":[882,210,300,145]}
+{"kind":"shape","id":"sh/dcfq1wje","slide":5,"bbox":[882,210,6,145]}
+{"kind":"textbox","id":"sh/cb6psb2t","slide":5,"text":"เจ้าหน้าที่","textPreview":"เจ้าหน้าที่","textChars":11,"textLines":1,"bbox":[906,230,258,31]}
+{"kind":"textbox","id":"sh/rax8z618","slide":5,"text":"รับช่วงสนทนาและให้คำตอบเพิ่มเติมใน live chat","textPreview":"รับช่วงสนทนาและให้คำตอบเพิ่มเติมใน live chat","textChars":44,"textLines":1,"bbox":[906,268,258,73]}
+{"kind":"shape","id":"sh/q9o7q1kn","slide":5,"bbox":[94,410,1088,145]}
+{"kind":"textbox","id":"sh/x8jqd0ji","slide":5,"text":"ประวัติการสนทนา","textPreview":"ประวัติการสนทนา","textChars":15,"textLines":1,"bbox":[124,436,300,29]}
+{"kind":"textbox","id":"sh/w7a94vix","slide":5,"text":"ระบบเก็บประวัติบอทและเจ้าหน้าที่ในบริบทเดียวกัน เพื่อให้เจ้าหน้าที่เห็นสิ่งที่ผู้ใช้ถามและคำตอบก่อนหน้า","textPreview":"ระบบเก็บประวัติบอทและเจ้าหน้าที่ในบริบทเดียวกัน เพื่อให้เจ้าหน้าที่เห็นสิ่งที่ผู้ใช้ถามและคำตอบก่อนหน้า","textChars":103,"textLines":1,"bbox":[124,482,1005,40]}
+{"kind":"shape","id":"sh/grit0zq9","slide":5,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/hcra94ru","slide":5,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/upgry983","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/6cqglf","slide":5,"text":"Sources: README.md Features; api/routers/live_chat.py; api/chat_history.py; src/app/components/admin/SearchHistory.tsx."}
+{"kind":"slide","id":"sl/na392r","slide":6,"title":"สิทธิ์ผู้ใช้และการควบคุม","textShapes":13}
+{"kind":"textbox","id":"sh/1032hcnq","slide":6,"text":"สิทธิ์ผู้ใช้และการควบคุม","textPreview":"สิทธิ์ผู้ใช้และการควบคุม","textChars":24,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/excj6xoz","slide":6,"text":"การเข้าถึงแยกตามบทบาท และระบบตรวจสถานะบัญชีในคำขอที่ต้องยืนยันตัวตน","textPreview":"การเข้าถึงแยกตามบทบาท และระบบตรวจสถานะบัญชีในคำขอที่ต้องยืนยันตัวตน","textChars":67,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/fyl0f25k","slide":6,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/o3e1c761","slide":6,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/p4n2lcnm","slide":6,"bbox":[86,208,340,174]}
+{"kind":"shape","id":"sh/21wjaxob","slide":6,"bbox":[86,208,6,174]}
+{"kind":"textbox","id":"sh/n25kj25w","slide":6,"text":"Admin","textPreview":"Admin","textChars":5,"textLines":1,"bbox":[110,228,298,31]}
+{"kind":"textbox","id":"sh/cre1gr6d","slide":6,"text":"จัดการบอท เอกสาร ผู้ใช้ การอนุมัติ และ dashboard","textPreview":"จัดการบอท เอกสาร ผู้ใช้ การอนุมัติ และ dashboard","textChars":48,"textLines":1,"bbox":[110,266,298,102]}
+{"kind":"shape","id":"sh/xs72pwny","slide":6,"bbox":[470,208,340,174]}
+{"kind":"shape","id":"sh/987u9sbq","slide":6,"bbox":[470,208,6,174]}
+{"kind":"textbox","id":"sh/87ytgna5","slide":6,"text":"Support","textPreview":"Support","textChars":7,"textLines":1,"bbox":[494,228,298,31]}
+{"kind":"textbox","id":"sh/76pc7itk","slide":6,"text":"ดูและรับช่วงบทสนทนาที่ส่งต่อจากบอท","textPreview":"ดูและรับช่วงบทสนทนาที่ส่งต่อจากบอท","textChars":34,"textLines":1,"bbox":[494,266,298,102]}
+{"kind":"shape","id":"sh/m5gbedsz","slide":6,"bbox":[854,208,340,174]}
+{"kind":"shape","id":"sh/hcrudsr2","slide":6,"bbox":[854,208,6,174]}
+{"kind":"textbox","id":"sh/wbidknah","slide":6,"text":"User","textPreview":"User","textChars":4,"textLines":1,"bbox":[878,228,298,31]}
+{"kind":"textbox","id":"sh/va9cb29w","slide":6,"text":"ใช้งานบอทตามสิทธิ์ หลังผู้ดูแลอนุมัติบัญชี","textPreview":"ใช้งานบอทตามสิทธิ์ หลังผู้ดูแลอนุมัติบัญชี","textChars":42,"textLines":1,"bbox":[878,266,298,102]}
+{"kind":"shape","id":"sh/u90bixsb","slide":6,"bbox":[86,454,1108,106]}
+{"kind":"textbox","id":"sh/xgnu18bi","slide":6,"text":"Controls ที่ต้องตั้งค่าใน pilot","textPreview":"Controls ที่ต้องตั้งค่าใน pilot","textChars":31,"textLines":1,"bbox":[118,474,350,28]}
+{"kind":"textbox","id":"sh/cfet83ax","slide":6,"text":"SECRET_KEY เฉพาะสภาพแวดล้อมจริง   /   จำกัด CORS เฉพาะโดเมนที่ใช้   /   ปิด DEBUG ก่อนเปิดใช้งาน","textPreview":"SECRET_KEY เฉพาะสภาพแวดล้อมจริง   /   จำกัด CORS เฉพาะโดเมนที่ใช้   /   ปิด DEBUG ก่อนเปิดใช้งาน","textChars":96,"textLines":1,"bbox":[118,514,1035,25]}
+{"kind":"shape","id":"sh/ojito3it","slide":6,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/pkrux8je","slide":6,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/2x0bmt0n","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/na392r","slide":6,"text":"Sources: README.md Features and production checklist; .env.example JWT/CORS/DEBUG settings; api/auth.py."}
+{"kind":"slide","id":"sl/lx4yvp","slide":7,"title":"แนวทางติดตั้งสำหรับ Pilot","textShapes":18}
+{"kind":"textbox","id":"sh/10v2d0n6","slide":7,"text":"แนวทางติดตั้งสำหรับ Pilot","textPreview":"แนวทางติดตั้งสำหรับ Pilot","textChars":25,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/exkji5ov","slide":7,"text":"โปรเจครองรับ Docker Compose และ Cloudflare Tunnel สำหรับโดเมน HTTPS","textPreview":"โปรเจครองรับ Docker Compose และ Cloudflare Tunnel สำหรับโดเมน HTTPS","textChars":67,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/zydkbq50","slide":7,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/onmlof6x","slide":7,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/9ov2hkni","slide":7,"bbox":[88,210,42,34]}
+{"kind":"textbox","id":"sh/ml43m5or","slide":7,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[88,212,42,28]}
+{"kind":"textbox","id":"sh/nmdkfa5c","slide":7,"text":"เตรียม environment","textPreview":"เตรียม environment","textChars":18,"textLines":1,"bbox":[88,265,230,52]}
+{"kind":"textbox","id":"sh/4r21cb6d","slide":7,"text":"PostgreSQL, Ollama, secrets และ URL ที่อนุญาต","textPreview":"PostgreSQL, Ollama, secrets และ URL ที่อนุญาต","textChars":45,"textLines":1,"bbox":[88,340,230,88]}
+{"kind":"shape","id":"sh/psb25g7y","slide":7,"bbox":[366,210,42,34]}
+{"kind":"textbox","id":"sh/l07id8je","slide":7,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[366,212,42,28]}
+{"kind":"textbox","id":"sh/0zeh432t","slide":7,"text":"เริ่มบริการ","textPreview":"เริ่มบริการ","textChars":11,"textLines":1,"bbox":[366,265,230,52]}
+{"kind":"textbox","id":"sh/zy50bi18","slide":7,"text":"Frontend, API และ database ด้วย Docker Compose","textPreview":"Frontend, API และ database ด้วย Docker Compose","textChars":46,"textLines":1,"bbox":[366,340,230,88]}
+{"kind":"shape","id":"sh/yxwz2dkn","slide":7,"bbox":[644,210,42,34]}
+{"kind":"textbox","id":"sh/947ihsja","slide":7,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[644,212,42,28]}
+{"kind":"textbox","id":"sh/83yh8n2p","slide":7,"text":"เปิดช่องทางภายนอก","textPreview":"เปิดช่องทางภายนอก","textChars":17,"textLines":1,"bbox":[644,265,230,52]}
+{"kind":"textbox","id":"sh/n2p0fi1k","slide":7,"text":"ตั้ง HTTPS และ update LINE webhook หากใช้ LINE","textPreview":"ตั้ง HTTPS และ update LINE webhook หากใช้ LINE","textChars":46,"textLines":1,"bbox":[644,340,230,88]}
+{"kind":"shape","id":"sh/m1gz6dkz","slide":7,"bbox":[922,210,42,34]}
+{"kind":"textbox","id":"sh/xsrilsjm","slide":7,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[922,212,42,28]}
+{"kind":"textbox","id":"sh/wrihcn21","slide":7,"text":"ทดสอบก่อนเปิดใช้","textPreview":"ทดสอบก่อนเปิดใช้","textChars":16,"textLines":1,"bbox":[922,265,230,52]}
+{"kind":"textbox","id":"sh/gnqt4ve9","slide":7,"text":"Smoke test, ทดสอบ reset password และ user approval","textPreview":"Smoke test, ทดสอบ reset password และ user approval","textChars":50,"textLines":1,"bbox":[922,340,230,88]}
+{"kind":"shape","id":"sh/18jax0vu","slide":7,"bbox":[94,518,1095,52]}
+{"kind":"textbox","id":"sh/el8b2lwj","slide":7,"text":"ข้อจำกัดที่ต้องรับรู้: RAG ใช้ไม่ได้หาก API ติดต่อ Ollama ไม่ได้","textPreview":"ข้อจำกัดที่ต้องรับรู้: RAG ใช้ไม่ได้หาก API ติดต่อ Ollama ไม่ได้","textChars":64,"textLines":1,"bbox":[112,530,1058,28]}
+{"kind":"shape","id":"sh/fmhsvqdo","slide":7,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/obat8fel","slide":7,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/pcja1kv6","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/lx4yvp","slide":7,"text":"Sources: README.md Deploy with Docker + Cloudflare Tunnel; Production checklist; .env.example OLLAMA_HOST."}
+{"kind":"slide","id":"sl/ae0ihn","slide":8,"title":"สิ่งที่ฝ่าย IT ควรกำหนดก่อนเริ่ม Pilot","textShapes":13}
+{"kind":"textbox","id":"sh/ra10r6h0","slide":8,"text":"สิ่งที่ฝ่าย IT ควรกำหนดก่อนเริ่ม Pilot","textPreview":"สิ่งที่ฝ่าย IT ควรกำหนดก่อนเริ่ม Pilot","textChars":38,"textLines":1,"bbox":[74,48,1000,54]}
+{"kind":"textbox","id":"sh/sbahkby5","slide":8,"text":"รายการนี้อ้างอิงจากการตั้งค่าและขั้นตอน deploy ที่มีอยู่ในโปรเจค","textPreview":"รายการนี้อ้างอิงจากการตั้งค่าและขั้นตอน deploy ที่มีอยู่ในโปรเจค","textChars":64,"textLines":1,"bbox":[76,106,1000,30]}
+{"kind":"shape","id":"sh/tcjitgzq","slide":8,"bbox":[74,145,106,4]}
+{"kind":"textbox","id":"sh/i58ze1g3","slide":8,"text":"ScopeBot  |  IT briefing","textPreview":"ScopeBot  |  IT briefing","textChars":24,"textLines":1,"bbox":[1022,52,180,26]}
+{"kind":"shape","id":"sh/j6h0n6ho","slide":8,"bbox":[84,210,520,150]}
+{"kind":"shape","id":"sh/47qhgry9","slide":8,"bbox":[84,210,6,150]}
+{"kind":"textbox","id":"sh/58zipwzu","slide":8,"text":"สภาพแวดล้อม","textPreview":"สภาพแวดล้อม","textChars":11,"textLines":1,"bbox":[108,230,478,31]}
+{"kind":"textbox","id":"sh/uhozah07","slide":8,"text":"เลือกที่ตั้งของ PostgreSQL, Ollama และที่เก็บ backup ของฐานข้อมูล","textPreview":"เลือกที่ตั้งของ PostgreSQL, Ollama และที่เก็บ backup ของฐานข้อมูล","textChars":65,"textLines":1,"bbox":[108,268,478,78]}
+{"kind":"shape","id":"sh/vih0jmhs","slide":8,"bbox":[676,210,520,150]}
+{"kind":"shape","id":"sh/n6543yhc","slide":8,"bbox":[676,210,6,150]}
+{"kind":"textbox","id":"sh/25w3at0r","slide":8,"text":"โดเมนและเครือข่าย","textPreview":"โดเมนและเครือข่าย","textChars":17,"textLines":1,"bbox":[700,230,478,31]}
+{"kind":"textbox","id":"sh/p8nm58zi","slide":8,"text":"กำหนด HTTPS, CORS, firewall/VPN และ URL ของ frontend","textPreview":"กำหนด HTTPS, CORS, firewall/VPN และ URL ของ frontend","textChars":52,"textLines":1,"bbox":[700,268,478,78]}
+{"kind":"shape","id":"sh/o7elc3ix","slide":8,"bbox":[84,414,520,150]}
+{"kind":"shape","id":"sh/bap47yh8","slide":8,"bbox":[84,414,6,150]}
+{"kind":"textbox","id":"sh/a9w3ed0n","slide":8,"text":"บัญชีและผู้รับผิดชอบ","textPreview":"บัญชีและผู้รับผิดชอบ","textChars":20,"textLines":1,"bbox":[108,434,478,31]}
+{"kind":"textbox","id":"sh/xw7m98ze","slide":8,"text":"กำหนด admin, support, SMTP และขั้นตอนอนุมัติผู้ใช้","textPreview":"กำหนด admin, support, SMTP และขั้นตอนอนุมัติผู้ใช้","textChars":50,"textLines":1,"bbox":[108,472,478,78]}
+{"kind":"shape","id":"sh/cvylg3it","slide":8,"bbox":[676,414,520,150]}
+{"kind":"shape","id":"sh/relkveh4","slide":8,"bbox":[676,414,6,150]}
+{"kind":"textbox","id":"sh/qdc3290j","slide":8,"text":"ชุดเอกสารเริ่มต้น","textPreview":"ชุดเอกสารเริ่มต้น","textChars":17,"textLines":1,"bbox":[700,434,478,31]}
+{"kind":"textbox","id":"sh/utk7ahk7","slide":8,"text":"คัดเลือกเอกสารฉบับควบคุมเวอร์ชันสำหรับทดสอบความถูกต้องของคำตอบ","textPreview":"คัดเลือกเอกสารฉบับควบคุมเวอร์ชันสำหรับทดสอบความถูกต้องของคำตอบ","textChars":62,"textLines":1,"bbox":[700,472,478,78]}
+{"kind":"shape","id":"sh/vutojm1s","slide":8,"bbox":[0,694,1280,26]}
+{"kind":"textbox","id":"sh/wv2pcr2d","slide":8,"text":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textPreview":"ข้อมูลจากโค้ดและคู่มือโปรเจค ScopeBot","textChars":37,"textLines":1,"bbox":[72,697,500,18]}
+{"kind":"textbox","id":"sh/hwb6lwji","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1150,697,58,18]}
+{"kind":"notes","id":"nt/ae0ihn","slide":8,"text":"Sources: README.md Company pilot checklist and production checklist; .env.example."}
+{"kind":"slide","id":"sl/qqw1im","slide":9,"title":"ScopeBot","textShapes":6}
+{"kind":"shape","id":"sh/i9cbqd0r","slide":9,"bbox":[0,0,18,720]}
+{"kind":"shape","id":"sh/5cnu1sji","slide":9,"bbox":[18,0,8,720]}
+{"kind":"textbox","id":"sh/4betsnix","slide":9,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[80,124,710,72]}
+{"kind":"textbox","id":"sh/ry5c3ih8","slide":9,"text":"พร้อมสำหรับการประเมิน Pilot\nในสภาพแวดล้อมของบริษัท","textPreview":"พร้อมสำหรับการประเมิน Pilot | ในสภาพแวดล้อมของบริษัท","textChars":50,"textLines":2,"bbox":[82,238,790,116]}
+{"kind":"shape","id":"sh/6xwbud0n","slide":9,"bbox":[82,419,720,4]}
+{"kind":"textbox","id":"sh/t0nu5sze","slide":9,"text":"หัวข้อสำหรับการประชุมถัดไป","textPreview":"หัวข้อสำหรับการประชุมถัดไป","textChars":26,"textLines":1,"bbox":[82,463,430,30]}
+{"kind":"textbox","id":"sh/szetwnit","slide":9,"text":"ขอบเขตเอกสาร  •  สภาพแวดล้อมติดตั้ง  •  ผู้รับผิดชอบการทดสอบ","textPreview":"ขอบเขตเอกสาร  •  สภาพแวดล้อมติดตั้ง  •  ผู้รับผิดชอบการทดสอบ","textChars":60,"textLines":1,"bbox":[82,514,800,35]}
+{"kind":"shape","id":"sh/721sry14","slide":9,"bbox":[994,492,138,34]}
+{"kind":"textbox","id":"sh/m1sbit0j","slide":9,"text":"Q&A","textPreview":"Q&A","textChars":3,"textLines":1,"bbox":[994,494,138,28]}
+{"kind":"textbox","id":"sh/8r69wzul","slide":9,"text":"ScopeBot IT Presentation","textPreview":"ScopeBot IT Presentation","textChars":24,"textLines":1,"bbox":[82,635,420,26]}
+{"kind":"notes","id":"nt/qqw1im","slide":9,"text":"Sources: all content derived from Scopebot repository files and user-supplied PDF visual reference."}

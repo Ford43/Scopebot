@@ -1,6 +1,10 @@
 import os
 import shutil
 import concurrent.futures
+import uuid
+import logging
+from pathlib import Path
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Form
 from sqlalchemy.orm import Session
 from api.database import get_db, SessionLocal
@@ -14,6 +18,89 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
 ALLOWED_EXTENSIONS_LABEL = "PDF, DOCX, TXT, CSV"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 INGEST_TIMEOUT_SEC = 180
+logger = logging.getLogger(__name__)
+
+
+def _validated_filename(filename: str) -> str:
+    # Reject paths on both Windows and POSIX, including drive-relative paths
+    # and alternate data streams. Keep the display name separate from storage.
+    if (not filename or len(filename) > 255 or filename in {".", ".."}
+            or filename.endswith((" ", "."))
+            or any(c in filename for c in '/\\:<>"|?*')
+            or any(ord(c) < 32 for c in filename)
+            or filename.split(".")[0].upper() in {
+                "CON", "PRN", "AUX", "NUL",
+                *{f"COM{i}" for i in range(1, 10)},
+                *{f"LPT{i}" for i in range(1, 10)},
+            }):
+        raise HTTPException(status_code=400, detail="ชื่อไฟล์ไม่ถูกต้อง กรุณาใช้ชื่อไฟล์ที่ไม่มีพาธหรืออักขระพิเศษ")
+    return filename
+
+
+def _contained_path(folder, filename: str) -> Path:
+    root = Path(folder).resolve()
+    path = (root / _validated_filename(filename)).resolve()
+    if not path.is_relative_to(root):
+        raise HTTPException(status_code=400, detail="ตำแหน่งไฟล์ไม่ถูกต้อง")
+    return path
+
+
+def _library_folder(user_id: int) -> Path:
+    return _contained_path(UPLOAD_BASE, str(user_id))
+
+
+def _bot_copy_path(bot_id: str, filename: str) -> Path:
+    # Persisted names may predate the portable upload-name rules (e.g. ':' on
+    # Linux). Permit cleanup of these names, but never follow paths/symlinks out
+    # of this bot's directory. New uploads still use _validated_filename.
+    root = _contained_path("data", bot_id)
+    path = (root / filename).resolve()
+    if path.parent != root:
+        raise HTTPException(status_code=400, detail="ตำแหน่งไฟล์ไม่ถูกต้อง")
+    return path
+
+
+def _replace_document(doc, file_path, category, size, db):
+    """Stage every copy first, and restore originals if installation/commit fails."""
+    staged = []
+    installed = []
+    try:
+        for bot in doc.bots:
+            dest = _bot_copy_path(bot.bot_id, doc.filename)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            temp = dest.with_name(f".{uuid.uuid4().hex}.tmp")
+            staged.append((dest, temp))
+            shutil.copy2(file_path, temp)
+        for dest, temp in staged:
+            backup = dest.with_name(f".{uuid.uuid4().hex}.backup") if dest.exists() else None
+            if backup:
+                os.replace(dest, backup)
+            installed.append((dest, backup))
+            os.replace(temp, dest)
+        doc.file_path = str(file_path)
+        doc.file_size = size
+        doc.category = category
+        for bot in doc.bots:
+            bot.status = models.BotStatus.processing
+        db.commit()
+    except Exception:
+        db.rollback()
+        for dest, backup in reversed(installed):
+            if backup:
+                os.replace(backup, dest)
+            else:
+                dest.unlink(missing_ok=True)
+        file_path.unlink(missing_ok=True)
+        raise
+    finally:
+        for _, temp in staged:
+            temp.unlink(missing_ok=True)
+    for _, backup in installed:
+        if backup:
+            try:
+                backup.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("Could not remove document backup %s", backup)
 
 
 def _create_notification(db: Session, user_id: int, title: str, message: str, type: str = "info"):
@@ -37,52 +124,67 @@ async def upload_document(
     file: UploadFile = File(...),
     category: str = Form("ทั่วไป"),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.require_shop_operator)
+    current_user: models.User = Depends(auth.require_shop_operator),
+    replace_existing: Annotated[bool, Form()] = False,
 ):
+    filename = _validated_filename(file.filename or "")
     # เช็คนามสกุลไฟล์
-    ext = os.path.splitext(file.filename or "")[1].lower()
+    ext = os.path.splitext(filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail=f"ไฟล์ประเภท {ext or '(ไม่มีนามสกุล)'} ไม่รองรับ (รองรับ: {ALLOWED_EXTENSIONS_LABEL})",
         )
 
+    # Finish asynchronous I/O before acquiring a row lock: waiting on another
+    # upload must not block the event loop while the lock holder awaits a read.
+    content = await file.read(MAX_FILE_SIZE + 1)
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="ไฟล์ใหญ่เกิน 10 MB")
+
+    # A document row may not exist yet. Lock its existing owner first so two
+    # concurrent PostgreSQL uploads cannot both insert the same new filename.
+    db.query(models.User).filter(models.User.id == current_user.id).with_for_update().one()
+
     # เช็คชื่อไฟล์ซ้ำ
     existing = db.query(models.Document).filter(
-        models.Document.filename == file.filename,
+        models.Document.filename == filename,
         models.Document.owner_id == current_user.id
-    ).first()
+    ).with_for_update().first()
 
     category = (category or "ทั่วไป").strip()[:40] or "ทั่วไป"
 
-    if existing:
-        # หากมีไฟล์ชื่อนี้อยู่แล้วใน Library ของ User คนนี้
-        # ให้ส่งข้อมูลไฟล์เดิมกลับไปเลย โดยไม่ต้องบันทึกใหม่และไม่เกิด Error
-        if existing.category != category:
-            existing.category = category
-            db.commit()
-            db.refresh(existing)
-        return existing 
+    if existing and not replace_existing:
+        raise HTTPException(status_code=409, detail={
+            "code": "document_exists",
+            "message": "มีเอกสารชื่อนี้แล้ว ต้องยืนยันก่อนแทนที่เนื้อหา",
+            "assigned_bots": [b.name for b in existing.bots],
+        })
 
     # บันทึกไฟล์
-    folder = os.path.join(UPLOAD_BASE, str(current_user.id))
-    os.makedirs(folder, exist_ok=True)
-    file_path = os.path.join(folder, file.filename)
-
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"ไฟล์ใหญ่เกิน 10 MB (ขนาดปัจจุบัน {len(content) / (1024 * 1024):.1f} MB)",
-        )
-
+    folder = _library_folder(current_user.id)
+    file_path = _contained_path(folder, f"{uuid.uuid4().hex}{ext}")
+    folder.mkdir(parents=True, exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(content)
 
+    if existing:
+        old_path = Path(existing.file_path).resolve()
+        _replace_document(existing, file_path, category, len(content), db)
+        db.refresh(existing)
+        for bot in existing.bots:
+            background_tasks.add_task(_run_ingest_and_notify, bot.bot_id, bot.id, filename, current_user.id)
+        if old_path.is_relative_to(folder.resolve()) and old_path != file_path:
+            try:
+                old_path.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("Could not remove superseded library file %s", old_path)
+        return existing
+
     # บันทึก metadata
     doc = models.Document(
-        filename=file.filename,
-        file_path=file_path,
+        filename=filename,
+        file_path=str(file_path),
         file_size=len(content),
         category=category,
         owner_id=current_user.id
@@ -170,7 +272,7 @@ def update_document(
 
 
 def _remove_bot_copy(bot_id_str: str, filename: str) -> None:
-    dest_path = os.path.join("data", bot_id_str, filename)
+    dest_path = _bot_copy_path(bot_id_str, filename)
     if os.path.exists(dest_path):
         os.remove(dest_path)
 
@@ -231,8 +333,9 @@ def delete_document(
     )
     bot_count = len(bot_names)
 
-    if os.path.exists(doc.file_path):
-        os.remove(doc.file_path)
+    library_path = Path(doc.file_path).resolve()
+    if library_path.is_relative_to(_library_folder(current_user.id)):
+        library_path.unlink(missing_ok=True)
 
     filename = doc.filename
     db.delete(doc)
@@ -287,13 +390,15 @@ def assign_to_bot(
 
     # เช็คว่า assign แล้วหรือยัง
     if doc in bot.documents:
-        raise HTTPException(status_code=400, detail="เอกสารนี้ถูก assign ให้ Bot นี้แล้ว")
+        return {"message": "เอกสารนี้อยู่ในบอทแล้ว"}
 
     # copy ไฟล์ไปยังโฟลเดอร์ของ Bot
-    bot_folder = os.path.join("data", bot_id)
-    os.makedirs(bot_folder, exist_ok=True)
-    dest_path = os.path.join(bot_folder, doc.filename)
-    shutil.copy2(doc.file_path, dest_path)
+    dest_path = _bot_copy_path(bot_id, doc.filename)
+    source_path = Path(doc.file_path).resolve()
+    if not source_path.is_relative_to(_library_folder(current_user.id)):
+        raise HTTPException(status_code=400, detail="ตำแหน่งเอกสารไม่ถูกต้อง กรุณาอัปโหลดใหม่")
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, dest_path)
 
     # เชื่อม relation
     bot.documents.append(doc)

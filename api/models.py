@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from api.database import Base
 import enum
+from datetime import datetime, timezone
 
 
 class UserRole(str, enum.Enum):
@@ -92,7 +93,7 @@ class Conversation(Base):
     is_resolved = Column(Boolean, default=False)
     source_channel = Column(String, default="web")
     bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now())
 
     bot = relationship("Bot", back_populates="conversations")
 
@@ -150,7 +151,7 @@ class LiveMessage(Base):
     sender_type = Column(Enum(SenderType), nullable=False)
     sender_name = Column(String, nullable=True)
     message = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now())
 
     session = relationship("LiveSession", back_populates="messages")
 

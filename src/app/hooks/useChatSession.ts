@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
-import type { ChatMessage, ChatMode, HistoryItem } from "../types/chat";
+import type { ChatMessage, ChatMode, HistoryItem, SessionTimelineMessage } from "../types/chat";
 import type { BotItem } from "../types/bot";
 import { authHeaders } from "../lib/api";
 import { timeNow } from "../utils/date";
@@ -26,6 +26,7 @@ function asChatMode(value: unknown): ChatMode {
 
 function messagesFromSession(session: {
   session_id: string;
+  timeline?: SessionTimelineMessage[];
   messages?: Array<{
     id: number;
     question: string;
@@ -33,6 +34,13 @@ function messagesFromSession(session: {
     created_at: string;
   }>;
 }): ChatMessage[] {
+  if (Array.isArray(session.timeline)) {
+    return session.timeline.map((m) => ({
+      id: m.id, sender: m.sender, text: m.text, time: formatTime(m.created_at),
+      senderName: m.sender_name,
+      category: m.sender === "staff" ? "Support" : undefined,
+    }));
+  }
   const out: ChatMessage[] = [];
   for (const m of session.messages || []) {
     out.push({
@@ -145,6 +153,7 @@ export function useChatSession({
             title?: string;
             last_at?: string;
             started_at?: string;
+            timeline?: SessionTimelineMessage[];
             messages?: Array<{
               id: number;
               question: string;
@@ -190,10 +199,10 @@ export function useChatSession({
           ? { mode: "bot" as const, is_active: true, messages: data }
           : data;
         const nextMode = asChatMode(payload.mode);
-        applyMode(nextMode, { ended: payload.is_active === false });
+        // Joined goes before the reply; ended must follow the final reply.
+        if (payload.is_active !== false) applyMode(nextMode);
 
         const incoming = Array.isArray(payload.messages) ? payload.messages : [];
-        if (incoming.length === 0) return;
 
         setMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
@@ -220,6 +229,7 @@ export function useChatSession({
 
           return msgsToAdd.length > 0 ? [...prev, ...msgsToAdd] : prev;
         });
+        if (payload.is_active === false) applyMode(nextMode, { ended: true });
       } catch (e) {
         console.error(e);
       }
@@ -306,7 +316,7 @@ export function useChatSession({
               time: timeNow(),
               sources: Array.isArray(data.sources) ? data.sources : undefined,
               offerHandoff: !!data.offer_handoff,
-              category: data.offer_handoff ? "Support" : undefined,
+              category: data.response_status === "error" ? "Error" : data.offer_handoff ? "Support" : undefined,
             },
           ]);
         }

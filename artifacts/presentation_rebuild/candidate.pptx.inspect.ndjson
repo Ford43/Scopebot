@@ -1,0 +1,325 @@
+{"kind":"deck","id":"pr/1pivfk","name":"Deck"}
+{"kind":"layout","layoutId":"c7011eaa-cc5b-4c66-a2db-59df97cd346f","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"846074e1-b5ae-4952-bfd8-242bf81ca00e","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/rm5oy5","slide":1,"title":"ScopeBot","textShapes":6}
+{"kind":"textbox","id":"sh/3a5sbutw","slide":1,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/4be9kzah","slide":1,"text":"ระบบตอบคำถามจากเอกสารผ่าน Web และ LINE","textPreview":"ระบบตอบคำถามจากเอกสารผ่าน Web และ LINE","textChars":38,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/5c7ad4b2","slide":1,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/qdgbm9s7","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/repsfets","slide":1,"text":"เอกสารองค์กร\nสู่คำตอบที่ตรวจสอบได้","textPreview":"เอกสารองค์กร | สู่คำตอบที่ตรวจสอบได้","textChars":34,"textLines":2,"bbox":[65,245,800,150]}
+{"kind":"textbox","id":"sh/szytojad","slide":1,"text":"ภาพรวมระบบ  /  การพัฒนา  /  Demo","textPreview":"ภาพรวมระบบ  /  การพัฒนา  /  Demo","textChars":32,"textLines":1,"bbox":[65,450,820,55]}
+{"kind":"image","id":"im/sve1obut","slide":1,"name":"","bbox":[930,215,280,310]}
+{"kind":"notes","id":"nt/rm5oy5","slide":1,"text":"เวลา 30 วินาที\nเปิดด้วยชื่อเล่นของผู้พูด แล้วกล่าวว่า วันนี้จะพาดูว่า ScopeBot รับเอกสารและนำมาตอบคำถามได้อย่างไร ตั้งแต่หน้าจอไปจนถึง AI และฐานข้อมูล จากนั้นจะสาธิตระบบจริง\nส่งต่อ: เริ่มจากทีมและลำดับการนำเสนอของเรา\n\nแหล่งอ้างอิง: ScopeBot.pdf.pdf หน้า 1 และ README.md"}
+{"kind":"slide","id":"sl/y4psv2","slide":2,"title":"ทีมผู้นำเสนอ","textShapes":14}
+{"kind":"textbox","id":"sh/i587y5w3","slide":2,"text":"ทีมผู้นำเสนอ","textPreview":"ทีมผู้นำเสนอ","textChars":12,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/58zqt0ve","slide":2,"text":"ทุกคนบอกชื่อเล่นก่อนเริ่มช่วงของตน","textPreview":"ทุกคนบอกชื่อเล่นก่อนเริ่มช่วงของตน","textChars":34,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/k7qp0fet","slide":2,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/v2xonqdc","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/x4z6p0vi","slide":2,"text":"ก้อง","textPreview":"ก้อง","textChars":4,"textLines":1,"bbox":[60,505,210,45]}
+{"kind":"textbox","id":"sh/w3qpwvex","slide":2,"text":"ภควัต สุขสมโสตร","textPreview":"ภควัต สุขสมโสตร","textChars":15,"textLines":1,"bbox":[57,553,216,40]}
+{"kind":"textbox","id":"sh/uxs76pcv","slide":2,"text":"ป๊อกกี้","textPreview":"ป๊อกกี้","textChars":7,"textLines":1,"bbox":[295,505,210,45]}
+{"kind":"textbox","id":"sh/sn6hsja9","slide":2,"text":"ชัชชญา จอมพงษ์","textPreview":"ชัชชญา จอมพงษ์","textChars":14,"textLines":1,"bbox":[292,553,216,40]}
+{"kind":"textbox","id":"sh/6lozq9s3","slide":2,"text":"ฟลุ๊ค","textPreview":"ฟลุ๊ค","textChars":5,"textLines":1,"bbox":[530,505,210,45]}
+{"kind":"textbox","id":"sh/rmx0je9o","slide":2,"text":"พสิษฐ์ ลี้ไพบูลย์","textPreview":"พสิษฐ์ ลี้ไพบูลย์","textChars":17,"textLines":1,"bbox":[527,553,216,40]}
+{"kind":"textbox","id":"sh/5kfyhori","slide":2,"text":"ฟอร์ด","textPreview":"ฟอร์ด","textChars":5,"textLines":1,"bbox":[765,505,210,45]}
+{"kind":"textbox","id":"sh/ih4zm9sr","slide":2,"text":"นรากร นิลรวม","textPreview":"นรากร นิลรวม","textChars":12,"textLines":1,"bbox":[762,553,216,40]}
+{"kind":"textbox","id":"sh/wfmhkza1","slide":2,"text":"มอส","textPreview":"มอส","textChars":3,"textLines":1,"bbox":[1000,505,210,45]}
+{"kind":"textbox","id":"sh/xgvyd4rm","slide":2,"text":"ดุษฎี จันทรสุวรรณ","textPreview":"ดุษฎี จันทรสุวรรณ","textChars":17,"textLines":1,"bbox":[997,553,216,40]}
+{"kind":"image","id":"im/3yhwb2h8","slide":2,"name":"","bbox":[60,205,210,285]}
+{"kind":"image","id":"im/ut8vyd0r","slide":2,"name":"","bbox":[295,205,210,285]}
+{"kind":"image","id":"im/et4zixob","slide":2,"name":"","bbox":[530,205,210,285]}
+{"kind":"image","id":"im/3yx0f2ps","slide":2,"name":"","bbox":[765,205,210,285]}
+{"kind":"image","id":"im/oz6ho76d","slide":2,"name":"","bbox":[1000,205,210,285]}
+{"kind":"notes","id":"nt/y4psv2","slide":2,"text":"เวลา 40 วินาที\nแนะนำชื่อเล่นจากซ้ายไปขวา ก้อง ป๊อกกี้ ฟลุ๊ค ฟอร์ด และมอส ก่อนขึ้นแต่ละช่วงให้ผู้พูดบอกชื่อเล่นอีกครั้ง\nการแบ่งช่วงที่เสนอสำหรับซ้อม: ก้อง ภาพรวมและ Timeline; ป๊อกกี้ Frontend; ฟลุ๊ค Backend และ Database; ฟอร์ด AI/RAG และการส่งต่อ; มอส Deployment และ Demo ทีมปรับสลับกันได้โดยไม่เปลี่ยนเนื้อหา\nส่งต่อ: ลำดับเนื้อหาจะเริ่มจากผู้ใช้งาน แล้วค่อยเปิดดูภายในระบบ\n\nแหล่งอ้างอิง: ScopeBot.pdf.pdf หน้า 14–18 ชื่อและรูปสมาชิก"}
+{"kind":"slide","id":"sl/g7sw49","slide":3,"title":"ลำดับการนำเสนอ","textShapes":9}
+{"kind":"textbox","id":"sh/7qxk3epc","slide":3,"text":"ลำดับการนำเสนอ","textPreview":"ลำดับการนำเสนอ","textChars":14,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/8r61wjqx","slide":3,"text":"ภาพรวมก่อน แล้วจึงอธิบายแต่ละส่วนและสาธิต","textPreview":"ภาพรวมก่อน แล้วจึงอธิบายแต่ละส่วนและสาธิต","textChars":41,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/9sf2547i","slide":3,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/utojy983","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/vuxk7epo","slide":3,"text":"01  ภาพรวมระบบ","textPreview":"01  ภาพรวมระบบ","textChars":14,"textLines":1,"bbox":[110,198,1080,57]}
+{"kind":"textbox","id":"sh/wf6l0j69","slide":3,"text":"02  Frontend และบทบาท","textPreview":"02  Frontend และบทบาท","textChars":21,"textLines":1,"bbox":[110,272,1080,57]}
+{"kind":"textbox","id":"sh/hgz29o7e","slide":3,"text":"03  Backend และ Database","textPreview":"03  Backend และ Database","textChars":24,"textLines":1,"bbox":[110,346,1080,57]}
+{"kind":"textbox","id":"sh/ax4jmp8z","slide":3,"text":"04  AI และการส่งต่อคน","textPreview":"04  AI และการส่งต่อคน","textChars":21,"textLines":1,"bbox":[110,420,1080,57]}
+{"kind":"textbox","id":"sh/bydkvup4","slide":3,"text":"05  Timeline และ Demo","textPreview":"05  Timeline และ Demo","textChars":21,"textLines":1,"bbox":[110,494,1080,57]}
+{"kind":"notes","id":"nt/g7sw49","slide":3,"text":"เวลา 30 วินาที\nชี้ตามเลข 1 ถึง 5 ไม่ต้องอ่านชื่อเทคโนโลยีทั้งหมดในตอนนี้ เราจะเริ่มจากภาพใหญ่ ดูส่วนที่คนใช้งาน ดูส่วนที่ประมวลผล อธิบาย AI แล้วจบด้วย Timeline และ Demo\nส่งต่อ: ภาพรวมระบบมีเส้นทางหลักดังนี้\n\nแหล่งอ้างอิง: หัวข้อการรายงานจากภาพโจทย์และ ScopeBot.pdf.pdf หน้า 2"}
+{"kind":"slide","id":"sl/xkda22","slide":4,"title":"ภาพรวมระบบ","textShapes":10}
+{"kind":"textbox","id":"sh/8zutojy1","slide":4,"text":"ภาพรวมระบบ","textPreview":"ภาพรวมระบบ","textChars":10,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/nylcfexg","slide":4,"text":"อ่านจากช่องทางด้านซ้าย ไปยัง FastAPI แล้วแยกไปข้อมูลและ AI","textPreview":"อ่านจากช่องทางด้านซ้าย ไปยัง FastAPI แล้วแยกไปข้อมูลและ AI","textChars":58,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/mxcbm9gv","slide":4,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/x4nulofi","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/w3etsjyx","slide":4,"text":"1  Web / React","textPreview":"1  Web / React","textChars":14,"textLines":1,"bbox":[60,230,275,100]}
+{"kind":"textbox","id":"sh/v25cjexc","slide":4,"text":"1  LINE OA","textPreview":"1  LINE OA","textChars":10,"textLines":1,"bbox":[60,405,275,100]}
+{"kind":"textbox","id":"sh/a1wbqtgr","slide":4,"text":"2  FastAPI\nจัดการคำขอ","textPreview":"2  FastAPI | จัดการคำขอ","textChars":21,"textLines":2,"bbox":[485,305,260,130]}
+{"kind":"textbox","id":"sh/5s7up8fe","slide":4,"text":"3  PostgreSQL\nข้อมูลระบบ","textPreview":"3  PostgreSQL | ข้อมูลระบบ","textChars":24,"textLines":2,"bbox":[930,225,290,110]}
+{"kind":"textbox","id":"sh/k7edw3y9","slide":4,"text":"4  RAG + Ollama\nค้นเอกสารและตอบ","textPreview":"4  RAG + Ollama | ค้นเอกสารและตอบ","textChars":31,"textLines":2,"bbox":[930,405,290,110]}
+{"kind":"shape","id":"sh/ix8zul0r","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/3yh0nq1c","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/4zqhwvix","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/50jip0ji","slide":4,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/q1szy503","slide":4,"text":"คำตอบย้อนกลับผ่าน FastAPI ไปยัง Web หรือ LINE ที่ส่งคำถามมา","textPreview":"คำตอบย้อนกลับผ่าน FastAPI ไปยัง Web หรือ LINE ที่ส่งคำถามมา","textChars":59,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/xkda22","slide":4,"text":"เวลา 60 วินาที\nชี้ 1 ช่องทาง Web หรือ LINE เป็นจุดรับคำถาม\nชี้ 2 FastAPI ตรวจสิทธิ์และควบคุมการทำงาน\nชี้ 3 PostgreSQL เก็บบัญชี บอท และประวัติ\nชี้ 4 RAG ค้นเอกสารจาก ChromaDB ก่อนเรียก Ollama สร้างคำตอบ จากนั้น FastAPI ส่งกลับช่องทางเดิม\nยังไม่อธิบาย Cloudflare หรือ embeddings ในหน้านี้\nส่งต่อ: เริ่มจากส่วนที่ผู้ใช้งานมองเห็น คือ Frontend\n\nแหล่งอ้างอิง: api/main.py; api/routers/chat.py; api/routers/line_webhook.py; rag/rag_pipeline.py"}
+{"kind":"slide","id":"sl/6ldg7v","slide":5,"title":"Frontend","textShapes":13}
+{"kind":"textbox","id":"sh/gvy1k3a9","slide":5,"text":"Frontend","textPreview":"Frontend","textChars":8,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/fup0by9o","slide":5,"text":"React + Vite + Tailwind CSS","textPreview":"React + Vite + Tailwind CSS","textChars":27,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/etgjits3","slide":5,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/ts7i9ori","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/sry1gjax","slide":5,"text":"1  เข้าสู่ระบบ\nLogin","textPreview":"1  เข้าสู่ระบบ | Login","textChars":20,"textLines":2,"bbox":[60,270,360,130]}
+{"kind":"textbox","id":"sh/76p07e9c","slide":5,"text":"2  หน้าหลัก\nChatInterface","textPreview":"2  หน้าหลัก | ChatInterface","textChars":25,"textLines":2,"bbox":[460,270,360,130]}
+{"kind":"textbox","id":"sh/65gjets7","slide":5,"text":"3  เลือกเมนู\nบอท / แชท / จัดการ","textPreview":"3  เลือกเมนู | บอท / แชท / จัดการ","textChars":31,"textLines":2,"bbox":[860,270,360,130]}
+{"kind":"shape","id":"sh/54ni5orm","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/k3e1cja1","slide":5,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/atgr2lwr","slide":5,"text":"สถานะผู้ใช้","textPreview":"สถานะผู้ใช้","textChars":11,"textLines":1,"bbox":[80,470,340,45]}
+{"kind":"textbox","id":"sh/bup8vqdc","slide":5,"text":"AuthContext","textPreview":"AuthContext","textChars":11,"textLines":1,"bbox":[80,520,340,45]}
+{"kind":"textbox","id":"sh/wvy9ovex","slide":5,"text":"สถานะแชท","textPreview":"สถานะแชท","textChars":8,"textLines":1,"bbox":[470,470,340,45]}
+{"kind":"textbox","id":"sh/xw7qx0vi","slide":5,"text":"useChatSession","textPreview":"useChatSession","textChars":14,"textLines":1,"bbox":[470,520,340,45]}
+{"kind":"textbox","id":"sh/mpwrylwv","slide":5,"text":"เชื่อม Backend","textPreview":"เชื่อม Backend","textChars":14,"textLines":1,"bbox":[860,470,340,45]}
+{"kind":"textbox","id":"sh/nqp8r6xg","slide":5,"text":"HTTP พร้อม JWT","textPreview":"HTTP พร้อม JWT","textChars":14,"textLines":1,"bbox":[860,520,340,45]}
+{"kind":"notes","id":"nt/6ldg7v","slide":5,"text":"เวลา 60 วินาที\nชี้จากซ้ายไปขวา 1 Login ให้ได้ตัวตนผู้ใช้ 2 เข้าหน้าหลัก ChatInterface ที่รวม Sidebar และ Top Bar 3 เลือกบอทเพื่อทดลองถามหรือใช้เมนูจัดการ\nAuthContext เก็บสถานะผู้ใช้ ส่วน useChatSession จัดการข้อความและการสนทนา แล้วส่งคำขอพร้อม token ไป API\nเอกสารรองรับ PDF DOCX TXT CSV ไม่เกิน 10 MB\nส่งต่อ: เมนูที่เห็นขึ้นอยู่กับบทบาทในระบบ\n\nแหล่งอ้างอิง: src/app/routes.tsx; src/app/App.tsx; src/app/components/chat/ChatInterface.tsx; api/routers/documents.py"}
+{"kind":"slide","id":"sl/qxu7gy","slide":6,"title":"บทบาทและขอบเขตข้อมูล","textShapes":14}
+{"kind":"textbox","id":"sh/pwnyhwjm","slide":6,"text":"บทบาทและขอบเขตข้อมูล","textPreview":"บทบาทและขอบเขตข้อมูล","textChars":20,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/2twz6hkb","slide":6,"text":"สิทธิ์ของแพลตฟอร์มแยกจากหน้าที่ตอบแชทลูกค้า","textPreview":"สิทธิ์ของแพลตฟอร์มแยกจากหน้าที่ตอบแชทลูกค้า","textChars":43,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/3u5gfm1w","slide":6,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/grex4r25","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/hsnydwjq","slide":6,"text":"Admin","textPreview":"Admin","textChars":5,"textLines":1,"bbox":[65,215,225,52]}
+{"kind":"textbox","id":"sh/upcf2hkz","slide":6,"text":"จัดการผู้ใช้ ภาพรวม และ Audit Log","textPreview":"จัดการผู้ใช้ ภาพรวม และ Audit Log","textChars":33,"textLines":1,"bbox":[325,215,880,45]}
+{"kind":"textbox","id":"sh/fqlgbmlk","slide":6,"text":"บอทและแชทอยู่ในขอบเขตที่ตนเป็นเจ้าของ","textPreview":"บอทและแชทอยู่ในขอบเขตที่ตนเป็นเจ้าของ","textChars":37,"textLines":1,"bbox":[325,265,880,44]}
+{"kind":"shape","id":"sh/snux0729","slide":6,"bbox":[65,323,1140,0]}
+{"kind":"textbox","id":"sh/to3y9c3e","slide":6,"text":"Support","textPreview":"Support","textChars":7,"textLines":1,"bbox":[65,335,225,52]}
+{"kind":"textbox","id":"sh/l4r6dgfq","slide":6,"text":"ดูแลและอนุมัติบัญชีผู้ใช้งาน","textPreview":"ดูแลและอนุมัติบัญชีผู้ใช้งาน","textChars":28,"textLines":1,"bbox":[325,335,880,45]}
+{"kind":"textbox","id":"sh/03ipkbe5","slide":6,"text":"ไม่เข้าหน้าบอทและไม่ตอบ Live Chat","textPreview":"ไม่เข้าหน้าบอทและไม่ตอบ Live Chat","textChars":33,"textLines":1,"bbox":[325,385,880,44]}
+{"kind":"shape","id":"sh/z29ob6xk","slide":6,"bbox":[65,443,1140,0]}
+{"kind":"textbox","id":"sh/y107ilwz","slide":6,"text":"User","textPreview":"User","textChars":4,"textLines":1,"bbox":[65,455,225,52]}
+{"kind":"textbox","id":"sh/d0r69gfu","slide":6,"text":"เจ้าของบอทและเอกสาร","textPreview":"เจ้าของบอทและเอกสาร","textChars":19,"textLines":1,"bbox":[325,455,880,45]}
+{"kind":"textbox","id":"sh/czipgbe9","slide":6,"text":"ใช้งานบอท ประวัติ การเชื่อมต่อ และแชทรวมของตน","textPreview":"ใช้งานบอท ประวัติ การเชื่อมต่อ และแชทรวมของตน","textChars":45,"textLines":1,"bbox":[325,505,880,44]}
+{"kind":"textbox","id":"sh/bypo76xo","slide":6,"text":"คนตอบแชท = เจ้าของบอทหรือ Admin ที่เป็นเจ้าของบอทนั้น","textPreview":"คนตอบแชท = เจ้าของบอทหรือ Admin ที่เป็นเจ้าของบอทนั้น","textChars":53,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/qxu7gy","slide":6,"text":"เวลา 60 วินาที\nอ่านทีละแถว Admin จัดการผู้ใช้ ภาพรวม และ Log ส่วนงานบอทยังตรวจเจ้าของ\nSupport ในระบบนี้หมายถึงคนดูแลบัญชี เข้าหน้าจัดการผู้ใช้งาน ไม่ใช่ role สำหรับตอบแชท\nUser เป็นเจ้าของบอท ใช้เมนูสินค้าและแชทรวมของตัวเอง\nดังนั้น Demo ต้องให้เจ้าของบอทหรือ Admin เจ้าของบอทตอบแชท ไม่ใช้บัญชี Support\nส่งต่อ: Backend บังคับสิทธิ์นี้ซ้ำทุกคำขอที่เกี่ยวข้อง\n\nแหล่งอ้างอิง: src/app/constants/chat.ts; api/auth.py require_shop_operator, assert_bot_access, visible_bots_query"}
+{"kind":"slide","id":"sl/2arc4t","slide":7,"title":"Backend","textShapes":13}
+{"kind":"textbox","id":"sh/cv69kv6h","slide":7,"text":"Backend","textPreview":"Backend","textChars":7,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/bax8bqpw","slide":7,"text":"Python คือภาษา  FastAPI คือ framework  JWT ใช้ยืนยันตัวตน","textPreview":"Python คือภาษา  FastAPI คือ framework  JWT ใช้ยืนยันตัวตน","textChars":57,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/a9orilob","slide":7,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/p8fq9g76","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/o769gb6l","slide":7,"text":"1  รับคำขอ","textPreview":"1  รับคำขอ","textChars":10,"textLines":1,"bbox":[60,245,260,130]}
+{"kind":"textbox","id":"sh/n6x87qp0","slide":7,"text":"2  ตรวจสิทธิ์","textPreview":"2  ตรวจสิทธิ์","textChars":13,"textLines":1,"bbox":[360,245,260,130]}
+{"kind":"textbox","id":"sh/25o7elof","slide":7,"text":"3  เลือกงาน","textPreview":"3  เลือกงาน","textChars":11,"textLines":1,"bbox":[660,245,260,130]}
+{"kind":"textbox","id":"sh/14vq5g7u","slide":7,"text":"4  ประมวลผล","textPreview":"4  ประมวลผล","textChars":11,"textLines":1,"bbox":[960,245,260,130]}
+{"kind":"shape","id":"sh/03mpcb69","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/adobyhsn","slide":7,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/bexc7m98","slide":7,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/cf6t0rat","slide":7,"text":"Web และ LINE","textPreview":"Web และ LINE","textChars":12,"textLines":1,"bbox":[65,420,265,45]}
+{"kind":"textbox","id":"sh/xgfu9wre","slide":7,"text":"JWT / Signature","textPreview":"JWT / Signature","textChars":15,"textLines":1,"bbox":[365,420,255,45]}
+{"kind":"textbox","id":"sh/2p4buhsr","slide":7,"text":"Bots / Chat / Docs","textPreview":"Bots / Chat / Docs","textChars":18,"textLines":1,"bbox":[665,420,255,45]}
+{"kind":"textbox","id":"sh/nqdc3m9c","slide":7,"text":"Database / RAG","textPreview":"Database / RAG","textChars":14,"textLines":1,"bbox":[965,420,255,45]}
+{"kind":"textbox","id":"sh/or6twrah","slide":7,"text":"FastAPI เป็นจุดประสานงาน และคืนผลลัพธ์หรือข้อผิดพลาดไปยังผู้เรียก","textPreview":"FastAPI เป็นจุดประสานงาน และคืนผลลัพธ์หรือข้อผิดพลาดไปยังผู้เรียก","textChars":65,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/2arc4t","slide":7,"text":"เวลา 60 วินาที\nชี้เลข 1 Backend รับคำขอจาก Web หรือ webhook ของ LINE\nเลข 2 คำขอ Web ตรวจ JWT บัญชีและสิทธิ์ ส่วน LINE ตรวจ signature\nเลข 3 Router เรียกงาน เช่น จัดการบอท เอกสาร หรือแชท\nเลข 4 อ่านเขียนข้อมูล เรียก RAG แล้วส่งผลกลับ\nไม่ต้องอ่านทุก endpoint ในช่วงนี้ รายชื่ออยู่ภาคผนวก\nส่งต่อ: ระบบเก็บข้อมูลสามชนิดในคนละส่วน\n\nแหล่งอ้างอิง: api/main.py; api/auth.py; api/routers/*.py"}
+{"kind":"slide","id":"sl/k69u9o","slide":8,"title":"ข้อมูลอยู่ที่ไหน","textShapes":11}
+{"kind":"textbox","id":"sh/vex8julk","slide":8,"text":"ข้อมูลอยู่ที่ไหน","textPreview":"ข้อมูลอยู่ที่ไหน","textChars":16,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/wf6psz2p","slide":8,"text":"PostgreSQL เก็บข้อมูลระบบ  ChromaDB เก็บดัชนีความรู้  Storage เก็บไฟล์","textPreview":"PostgreSQL เก็บข้อมูลระบบ  ChromaDB เก็บดัชนีความรู้  Storage เก็บไฟล์","textChars":70,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/hgzql43a","slide":8,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/m9o7m5kn","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/naxofal8","slide":8,"text":"1  PostgreSQL","textPreview":"1  PostgreSQL","textChars":13,"textLines":1,"bbox":[60,235,345,100]}
+{"kind":"textbox","id":"sh/8b6pof2t","slide":8,"text":"2  ChromaDB","textPreview":"2  ChromaDB","textChars":11,"textLines":1,"bbox":[468,235,345,100]}
+{"kind":"textbox","id":"sh/9cfqhk3e","slide":8,"text":"3  Document Storage","textPreview":"3  Document Storage","textChars":19,"textLines":1,"bbox":[875,235,345,100]}
+{"kind":"textbox","id":"sh/6587y9k7","slide":8,"text":"บัญชีและสิทธิ์\nบอทและรายการเอกสาร\nประวัติแชทและ Log","textPreview":"บัญชีและสิทธิ์ | บอทและรายการเอกสาร | ประวัติแชทและ Log","textChars":51,"textLines":3,"bbox":[80,365,325,160]}
+{"kind":"textbox","id":"sh/r6h8relc","slide":8,"text":"ข้อความย่อยและเวกเตอร์\nค้นหาเนื้อหาที่เกี่ยวข้อง\nแยกดัชนีตาม bot_id","textPreview":"ข้อความย่อยและเวกเตอร์ | ค้นหาเนื้อหาที่เกี่ยวข้อง | แยกดัชนีตาม bot_id","textChars":67,"textLines":3,"bbox":[490,365,325,160]}
+{"kind":"textbox","id":"sh/jip0jqdg","slide":8,"text":"ไฟล์ที่อัปโหลด\nPDF DOCX TXT CSV\nDocker volume: uploads","textPreview":"ไฟล์ที่อัปโหลด | PDF DOCX TXT CSV | Docker volume: uploads","textChars":54,"textLines":3,"bbox":[895,365,325,160]}
+{"kind":"textbox","id":"sh/ihgjqlcv","slide":8,"text":"เชื่อม PostgreSQL ผ่าน SQLAlchemy และ DATABASE_URL","textPreview":"เชื่อม PostgreSQL ผ่าน SQLAlchemy และ DATABASE_URL","textChars":50,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/k69u9o","slide":8,"text":"เวลา 60 วินาที\nอธิบายจากซ้ายไปขวา PostgreSQL เก็บผู้ใช้ บอท metadata เอกสารและประวัติ ผ่าน SQLAlchemy\nChromaDB เก็บข้อความย่อยกับ embeddings โดยแยก directory ตาม bot_id ไม่ใช่ PostgreSQL คนละฐานต่อบอท\nDocument Storage เก็บไฟล์ต้นฉบับและไฟล์สำหรับนำเข้า\nส่งต่อ: ดูเฉพาะความสัมพันธ์ฐานข้อมูลที่เกี่ยวกับบอทก่อน\n\nแหล่งอ้างอิง: api/database.py; api/models.py; rag/ingest.py; docker-compose.yml"}
+{"kind":"slide","id":"sl/ooorin","slide":9,"title":"Database Relationships","textShapes":18}
+{"kind":"textbox","id":"sh/298fql8b","slide":9,"text":"Database Relationships","textPreview":"Database Relationships","textChars":22,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/pwzel07m","slide":9,"text":"เริ่มจาก users แล้วตามไป bots และเอกสารที่ผูกกับบอท","textPreview":"เริ่มจาก users แล้วตามไป bots และเอกสารที่ผูกกับบอท","textChars":51,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/obqxsvq1","slide":9,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/by1wnaps","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/axsfu587","slide":9,"text":"users","textPreview":"users","textChars":5,"textLines":1,"bbox":[60,245,190,85]}
+{"kind":"textbox","id":"sh/x0jyp07y","slide":9,"text":"bots","textPreview":"bots","textChars":4,"textLines":1,"bbox":[350,245,190,85]}
+{"kind":"textbox","id":"sh/czaxwfqd","slide":9,"text":"bot_documents","textPreview":"bot_documents","textChars":13,"textLines":1,"bbox":[650,245,245,85]}
+{"kind":"textbox","id":"sh/z21grapo","slide":9,"text":"documents","textPreview":"documents","textChars":9,"textLines":1,"bbox":[995,245,225,85]}
+{"kind":"textbox","id":"sh/y1sfy58j","slide":9,"text":"conversations","textPreview":"conversations","textChars":13,"textLines":1,"bbox":[330,460,230,85]}
+{"kind":"textbox","id":"sh/czudoj21","slide":9,"text":"live_sessions","textPreview":"live_sessions","textChars":13,"textLines":1,"bbox":[660,460,230,85]}
+{"kind":"textbox","id":"sh/d03uxo36","slide":9,"text":"live_messages","textPreview":"live_messages","textChars":13,"textLines":1,"bbox":[990,460,230,85]}
+{"kind":"shape","id":"sh/qxsvmtkv","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/ry1cvylg","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/03uds32x","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/143e183i","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/e1cvqtkr","slide":9,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/z2lwzylc","slide":9,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/oredw32t","slide":9,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[265,195,85,40]}
+{"kind":"textbox","id":"sh/9sne583e","slide":9,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[555,195,85,40]}
+{"kind":"textbox","id":"sh/xojup8vi","slide":9,"text":"N : 1","textPreview":"N : 1","textChars":5,"textLines":1,"bbox":[905,195,85,40]}
+{"kind":"textbox","id":"sh/wnadg3ud","slide":9,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[340,388,85,40]}
+{"kind":"textbox","id":"sh/vm1cnyds","slide":9,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[685,388,85,40]}
+{"kind":"textbox","id":"sh/al8vedc7","slide":9,"text":"1 : N","textPreview":"1 : N","textChars":5,"textLines":1,"bbox":[905,413,85,40]}
+{"kind":"textbox","id":"sh/5cjetsvu","slide":9,"text":"users เป็นเจ้าของ documents ด้วย  •  bots ↔ documents เป็น N : M ผ่านตารางเชื่อม","textPreview":"users เป็นเจ้าของ documents ด้วย  •  bots ↔ documents เป็น N : M ผ่านตารางเชื่อม","textChars":80,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/ooorin","slide":9,"text":"เวลา 70 วินาที\nชี้ users เป็นเจ้าของ bots และ documents ได้หลายรายการ\nบอทกับเอกสารเชื่อมผ่าน bot_documents จึงให้เอกสารเดียวใช้กับหลายบอทได้\nบอทหนึ่งมี conversations หลายรายการ และ live_sessions หลายครั้ง แต่ละ live_session มี live_messages หลายข้อความ\nนี่เป็น ER ย่อ ตาราง notifications password_reset_tokens audit_logs อยู่ในฐานเดียวกันแต่ไม่ใส่ในภาพหลักเพื่อให้อ่านง่าย\nส่งต่อ: เมื่อบอทมีเอกสารแล้ว ระบบจะสร้างฐานความรู้ให้บอท\n\nแหล่งอ้างอิง: api/models.py"}
+{"kind":"slide","id":"sl/2eyfvn","slide":10,"title":"RAG ขั้นที่ 1 เตรียมความรู้","textShapes":11}
+{"kind":"textbox","id":"sh/c3eh8zit","slide":10,"text":"RAG ขั้นที่ 1 เตรียมความรู้","textPreview":"RAG ขั้นที่ 1 เตรียมความรู้","textChars":27,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/b25gzuh8","slide":10,"text":"ทำเมื่อเพิ่ม เปลี่ยน หรือสั่งประมวลผลเอกสารของบอท","textPreview":"ทำเมื่อเพิ่ม เปลี่ยน หรือสั่งประมวลผลเอกสารของบอท","textChars":49,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/a1cz690n","slide":10,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/lsni5oza","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/krehcji5","slide":10,"text":"1  เอกสาร\nของบอท","textPreview":"1  เอกสาร | ของบอท","textChars":16,"textLines":2,"bbox":[60,270,260,130]}
+{"kind":"textbox","id":"sh/jq5g3ehk","slide":10,"text":"2  อ่านและแบ่ง\nข้อความ","textPreview":"2  อ่านและแบ่ง | ข้อความ","textChars":22,"textLines":2,"bbox":[360,270,260,130]}
+{"kind":"textbox","id":"sh/ypwza90z","slide":10,"text":"3  BGE-M3\nสร้างเวกเตอร์","textPreview":"3  BGE-M3 | สร้างเวกเตอร์","textChars":23,"textLines":2,"bbox":[660,270,260,130]}
+{"kind":"textbox","id":"sh/1w3ytkz6","slide":10,"text":"4  ChromaDB\nเก็บดัชนี","textPreview":"4  ChromaDB | เก็บดัชนี","textChars":21,"textLines":2,"bbox":[960,270,260,130]}
+{"kind":"shape","id":"sh/0vuh0fil","slide":10,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/2hgrydsr","slide":10,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/nip87itc","slide":10,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/ojy90nax","slide":10,"text":"PDF / DOCX / TXT / CSV","textPreview":"PDF / DOCX / TXT / CSV","textChars":22,"textLines":1,"bbox":[70,465,530,46]}
+{"kind":"textbox","id":"sh/pk7q9sb2","slide":10,"text":"แยกที่ vector_db/{bot_id}","textPreview":"แยกที่ vector_db/{bot_id}","textChars":25,"textLines":1,"bbox":[680,465,530,46]}
+{"kind":"textbox","id":"sh/algr2dsn","slide":10,"text":"การอัปเดตเอกสารทำให้บอทที่ใช้เอกสารนั้นต้องประมวลผลความรู้ใหม่","textPreview":"การอัปเดตเอกสารทำให้บอทที่ใช้เอกสารนั้นต้องประมวลผลความรู้ใหม่","textChars":62,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/2eyfvn","slide":10,"text":"เวลา 60 วินาที\nอ่าน 1 ถึง 4 ผู้ใช้ส่งเอกสาร ระบบอ่านและแบ่งข้อความ BGE-M3 แปลงข้อความย่อยเป็น embeddings แล้ว ChromaDB เก็บไว้แยกตามบอท\nขั้นนี้เป็นการเตรียมดัชนีความรู้ ไม่ใช่ฝึกโมเดลภาษาใหม่ และยังไม่ใช่ขั้นตอบคำถาม\nส่งต่อ: เมื่อผู้ใช้ถาม ระบบใช้ดัชนีนี้อย่างไร\n\nแหล่งอ้างอิง: rag/ingest.py; rag/document_loader.py; rag/chunker.py; api/routers/documents.py"}
+{"kind":"slide","id":"sl/vxcd69","slide":11,"title":"RAG ขั้นที่ 2 ตอบคำถาม","textShapes":11}
+{"kind":"textbox","id":"sh/et8z2xgz","slide":11,"text":"RAG ขั้นที่ 2 ตอบคำถาม","textPreview":"RAG ขั้นที่ 2 ตอบคำถาม","textChars":22,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/1wjydczq","slide":11,"text":"ค้นเนื้อหาที่เกี่ยวข้องก่อนให้โมเดลเรียบเรียงคำตอบ","textPreview":"ค้นเนื้อหาที่เกี่ยวข้องก่อนให้โมเดลเรียบเรียงคำตอบ","textChars":50,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/gvah47y5","slide":11,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/7qhg7ih8","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/6p8fyxg3","slide":11,"text":"1  คำถาม\nและบริบท","textPreview":"1  คำถาม | และบริบท","textChars":17,"textLines":2,"bbox":[60,235,260,130]}
+{"kind":"textbox","id":"sh/tszy9sze","slide":11,"text":"2  ค้นข้อความ\nที่เกี่ยวข้อง","textPreview":"2  ค้นข้อความ | ที่เกี่ยวข้อง","textChars":27,"textLines":2,"bbox":[360,235,260,130]}
+{"kind":"textbox","id":"sh/srqh0nyt","slide":11,"text":"3  Ollama\nอ่าน context","textPreview":"3  Ollama | อ่าน context","textChars":22,"textLines":2,"bbox":[660,235,260,130]}
+{"kind":"textbox","id":"sh/bmlgjmhs","slide":11,"text":"4  คำตอบ\nและแหล่งอ้างอิง","textPreview":"4  คำตอบ | และแหล่งอ้างอิง","textChars":24,"textLines":2,"bbox":[960,235,260,130]}
+{"kind":"shape","id":"sh/qlczahg7","slide":11,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/8za5oj65","slide":11,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/90jmhona","slide":11,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/mdsnm9oz","slide":11,"text":"ChromaDB","textPreview":"ChromaDB","textChars":8,"textLines":1,"bbox":[367,455,255,85]}
+{"kind":"shape","id":"sh/7e14fe5k","slide":11,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/kba5kz6t","slide":11,"text":"BGE-M3 ใช้ค้นหา\nOllama ใช้เรียบเรียงคำตอบ","textPreview":"BGE-M3 ใช้ค้นหา | Ollama ใช้เรียบเรียงคำตอบ","textChars":41,"textLines":2,"bbox":[710,443,500,105]}
+{"kind":"textbox","id":"sh/lcjmd4ne","slide":11,"text":"หากไม่พบข้อมูล ระบบเสนอหรือเริ่มการส่งต่อเจ้าหน้าที่ตามช่องทาง","textPreview":"หากไม่พบข้อมูล ระบบเสนอหรือเริ่มการส่งต่อเจ้าหน้าที่ตามช่องทาง","textChars":62,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/vxcd69","slide":11,"text":"เวลา 75 วินาที\nชี้ 1 คำถามใหม่และบริบทคำถามล่าสุดช่วยให้เข้าใจคำถามต่อเนื่อง\nชี้ 2 ตัว embedding แปลงคำค้นเพื่อหา chunks ที่ใกล้เคียงใน ChromaDB และกรองตาม distance\nชี้ 3 เอาข้อความที่ค้นได้เป็น context ส่งให้ Ollama พร้อมคำสั่งและประวัติ\nชี้ 4 คืนคำตอบพร้อมชื่อไฟล์และ snippet ให้ Web ส่วน LINE ส่งเป็นข้อความตาม router\nChromaDB เชื่อมที่การค้นหา ไม่ได้เป็นเส้นลัดเข้าโมเดล\nส่งต่อ: ดูคำถามเดียวกันในลำดับเวลาตั้งแต่ส่งจนตอบ\n\nแหล่งอ้างอิง: rag/rag_pipeline.py; rag/retriever.py; src/app/hooks/useChatSession.ts; api/routers/line_webhook.py"}
+{"kind":"slide","id":"sl/70g8xg","slide":12,"title":"Sequence ของคำถามหนึ่งครั้ง","textShapes":13}
+{"kind":"textbox","id":"sh/lkjmpw3u","slide":12,"text":"Sequence ของคำถามหนึ่งครั้ง","textPreview":"Sequence ของคำถามหนึ่งครั้ง","textChars":27,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/yhsnu1k3","slide":12,"text":"เวลาเดินจากบนลงล่าง อ่านลูกศรตามเลข 1 ถึง 5","textPreview":"เวลาเดินจากบนลงล่าง อ่านลูกศรตามเลข 1 ถึง 5","textChars":43,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/zi14n6lo","slide":12,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/8na50b25","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/9o3mtg3q","slide":12,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[80,190,220,68]}
+{"kind":"shape","id":"sh/mlsny1kf","slide":12,"bbox":[190,260,0,315]}
+{"kind":"textbox","id":"sh/nm14r6l0","slide":12,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[530,190,220,68]}
+{"kind":"shape","id":"sh/wbu54v2h","slide":12,"bbox":[640,260,0,315]}
+{"kind":"textbox","id":"sh/xc3mxg32","slide":12,"text":"RAG","textPreview":"RAG","textChars":3,"textLines":1,"bbox":[970,190,220,68]}
+{"kind":"shape","id":"sh/1onyxona","slide":12,"bbox":[1080,260,0,315]}
+{"kind":"shape","id":"sh/0nuh4j65","slide":12,"bbox":[190,303,1,1]}
+{"kind":"shape","id":"sh/fmlgvy5k","slide":12,"bbox":[640,303,1,1]}
+{"kind":"shape","id":"sh/elcz2toz","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/pcny18nm","slide":12,"text":"1  ส่งคำถามและ session","textPreview":"1  ส่งคำถามและ session","textChars":22,"textLines":1,"bbox":[208,264,420,36]}
+{"kind":"shape","id":"sh/obeh8361","slide":12,"bbox":[640,365,1,1]}
+{"kind":"shape","id":"sh/na5gzy5g","slide":12,"bbox":[1080,365,1,1]}
+{"kind":"shape","id":"sh/29wz6tov","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/5g3yp4ni","slide":12,"text":"2  เรียก RAG","textPreview":"2  เรียก RAG","textChars":12,"textLines":1,"bbox":[658,326,410,36]}
+{"kind":"shape","id":"sh/4faxwz6x","slide":12,"bbox":[1080,430,1,1]}
+{"kind":"shape","id":"sh/gbyps3ip","slide":12,"bbox":[640,430,1,1]}
+{"kind":"shape","id":"sh/hc7q18za","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/u9g7qt0z","slide":12,"text":"3  คืนคำตอบและ sources","textPreview":"3  คืนคำตอบและ sources","textChars":22,"textLines":1,"bbox":[658,391,410,36]}
+{"kind":"textbox","id":"sh/vap8zyh4","slide":12,"text":"4  บันทึก PostgreSQL","textPreview":"4  บันทึก PostgreSQL","textChars":20,"textLines":1,"bbox":[662,447,455,43]}
+{"kind":"shape","id":"sh/4fipwni1","slide":12,"bbox":[640,553,1,1]}
+{"kind":"shape","id":"sh/50rq5szm","slide":12,"bbox":[190,553,1,1]}
+{"kind":"shape","id":"sh/idg7ud0v","slide":12,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/3ep83ihg","slide":12,"text":"5  ส่งผลกลับ Web","textPreview":"5  ส่งผลกลับ Web","textChars":16,"textLines":1,"bbox":[208,514,420,36]}
+{"kind":"textbox","id":"sh/s3i90nix","slide":12,"text":"ลูกศรแสดงการเรียกและการคืนผล ไม่ได้แสดงเวลาในการประมวลผลจริง","textPreview":"ลูกศรแสดงการเรียกและการคืนผล ไม่ได้แสดงเวลาในการประมวลผลจริง","textChars":60,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/70g8xg","slide":12,"text":"เวลา 60 วินาที\nชี้หัวคอลัมน์ Web FastAPI และ RAG ก่อน แล้วอ่านจากบนลงล่าง\n1 Web ส่งคำถามและ session 2 FastAPI เรียก RAG หลังตรวจสิทธิ์ 3 RAG คืนคำตอบจากเอกสาร 4 Backend บันทึก conversation 5 ส่งคำตอบกลับ Web\nหน้านี้เป็น sequence แบบย่อ รายละเอียดค้นหาและ LLM อยู่หน้าก่อน\nส่งต่อ: อีกเส้นทางหนึ่งเกิดเมื่อบอทตอบไม่ได้\n\nแหล่งอ้างอิง: api/routers/chat.py; rag/rag_pipeline.py"}
+{"kind":"slide","id":"sl/o7acye","slide":13,"title":"เมื่อบอทตอบไม่ได้","textShapes":12}
+{"kind":"textbox","id":"sh/upczypo7","slide":13,"text":"เมื่อบอทตอบไม่ได้","textPreview":"เมื่อบอทตอบไม่ได้","textChars":17,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/hs3yt47y","slide":13,"text":"สถานะการสนทนามี bot waiting และ human","textPreview":"สถานะการสนทนามี bot waiting และ human","textChars":37,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/gruh0z6d","slide":13,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/7mlgnapw","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/6lszup8b","slide":13,"text":"1  bot\nบอทตอบ","textPreview":"1  bot | บอทตอบ","textChars":13,"textLines":2,"bbox":[60,250,260,130]}
+{"kind":"textbox","id":"sh/to3ypk7m","slide":13,"text":"2  waiting\nรอคนรับ","textPreview":"2  waiting | รอคนรับ","textChars":18,"textLines":2,"bbox":[360,250,260,130]}
+{"kind":"textbox","id":"sh/8nuhwf6h","slide":13,"text":"3  human\nคนตอบแชท","textPreview":"3  human | คนตอบแชท","textChars":17,"textLines":2,"bbox":[660,250,260,130]}
+{"kind":"textbox","id":"sh/jy1gjapk","slide":13,"text":"4  bot\nจบ session","textPreview":"4  bot | จบ session","textChars":17,"textLines":2,"bbox":[960,250,260,130]}
+{"kind":"shape","id":"sh/yxsfq58z","slide":13,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/kna90nqt","slide":13,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/loja9s7e","slide":13,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/yl8ryd8n","slide":13,"text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[80,460,150,45]}
+{"kind":"textbox","id":"sh/jmh87ip8","slide":13,"text":"แสดงปุ่มติดต่อเจ้าหน้าที่เมื่อไม่พบคำตอบ","textPreview":"แสดงปุ่มติดต่อเจ้าหน้าที่เมื่อไม่พบคำตอบ","textChars":40,"textLines":1,"bbox":[245,460,950,45]}
+{"kind":"textbox","id":"sh/wzq9wnqh","slide":13,"text":"LINE","textPreview":"LINE","textChars":4,"textLines":1,"bbox":[80,525,150,45]}
+{"kind":"textbox","id":"sh/x0zq5s72","slide":13,"text":"เข้าสู่คิวเมื่อไม่พบคำตอบหรือขอคุยกับคน","textPreview":"เข้าสู่คิวเมื่อไม่พบคำตอบหรือขอคุยกับคน","textChars":39,"textLines":1,"bbox":[245,525,950,45]}
+{"kind":"notes","id":"nt/o7acye","slide":13,"text":"เวลา 60 วินาที\nอ่านตามเลข 1 ถึง 4 bot ตอบจากเอกสาร เมื่อเข้า handoff จะรอใน waiting พอคนตอบครั้งแรกจึงเปลี่ยนเป็น human หลังจบงานกลับ bot และปิด active session\nWeb ที่ไม่พบคำตอบแสดงปุ่มให้เลือกติดต่อเจ้าหน้าที่ ส่วน LINE สามารถเข้าสู่คิวอัตโนมัติ\nคนตอบคือเจ้าของบอทหรือ Admin ที่เป็นเจ้าของ ไม่ใช่ role Support ของแพลตฟอร์ม\nส่งต่อ: ทั้งสองช่องทางเชื่อมผ่าน deployment เดียวกัน\n\nแหล่งอ้างอิง: api/routers/chat.py; api/routers/live_chat.py; api/routers/line_webhook.py; api/auth.py"}
+{"kind":"slide","id":"sl/5phedh","slide":14,"title":"Deployment","textShapes":14}
+{"kind":"textbox","id":"sh/8jehkv69","slide":14,"text":"Deployment","textPreview":"Deployment","textChars":10,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/ni5grqpo","slide":14,"text":"Cloudflare Tunnel รับ Web และ LINE ผ่าน Nginx จุดเดียว","textPreview":"Cloudflare Tunnel รับ Web และ LINE ผ่าน Nginx จุดเดียว","textChars":54,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/mxwzilo3","slide":14,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/lw3yp07i","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/0vuxgv6x","slide":14,"text":"Browser / LINE","textPreview":"Browser / LINE","textChars":14,"textLines":1,"bbox":[60,210,245,95]}
+{"kind":"textbox","id":"sh/zulgnqpc","slide":14,"text":"Cloudflare Tunnel","textPreview":"Cloudflare Tunnel","textChars":17,"textLines":1,"bbox":[355,210,275,95]}
+{"kind":"textbox","id":"sh/ytcfelor","slide":14,"text":"Nginx","textPreview":"Nginx","textChars":5,"textLines":1,"bbox":[695,210,210,95]}
+{"kind":"textbox","id":"sh/5s7y1knm","slide":14,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[980,390,240,95]}
+{"kind":"textbox","id":"sh/kryhsf61","slide":14,"text":"React files","textPreview":"React files","textChars":11,"textLines":1,"bbox":[980,200,240,95]}
+{"kind":"shape","id":"sh/mhcrm503","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/7il8va1o","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/83u9ofi9","slide":14,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/t43qxkje","slide":14,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/yds7i50r","slide":14,"text":"/api/*","textPreview":"/api/*","textChars":6,"textLines":1,"bbox":[820,352,130,45]}
+{"kind":"textbox","id":"sh/ze18ra1c","slide":14,"text":"Docker Compose","textPreview":"Docker Compose","textChars":14,"textLines":1,"bbox":[70,388,670,50]}
+{"kind":"textbox","id":"sh/kfu9kvix","slide":14,"text":"frontend  /  api  /  db  /  cloudflared","textPreview":"frontend  /  api  /  db  /  cloudflared","textChars":39,"textLines":1,"bbox":[70,440,800,45]}
+{"kind":"textbox","id":"sh/lg3qt0ji","slide":14,"text":"Volumes: pgdata  uploads  vectordb","textPreview":"Volumes: pgdata  uploads  vectordb","textChars":34,"textLines":1,"bbox":[70,492,820,45]}
+{"kind":"textbox","id":"sh/i9wrup0b","slide":14,"text":"Ollama รันบน host และ API เรียกผ่าน host.docker.internal:11434","textPreview":"Ollama รันบน host และ API เรียกผ่าน host.docker.internal:11434","textChars":62,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/5phedh","slide":14,"text":"เวลา 60 วินาที\nอ่านซ้ายไปขวา Browser และ LINE ส่ง HTTPS เข้า Tunnel จากนั้นไป Nginx\nNginx ให้ไฟล์ React กับ browser ส่วนเส้นทาง /api/ ส่งไป FastAPI รวม webhook\nFastAPI ติดต่อ PostgreSQL และ volume เอกสารกับ ChromaDB ภายใน deployment ส่วน Ollama รันบน host ตาม compose\nส่งต่อ: ต่อไปคือแผนดำเนินงานและส่วนที่ใช้ Demo\n\nแหล่งอ้างอิง: docker-compose.yml; docker-compose.tunnel.yml; deploy/nginx.conf"}
+{"kind":"slide","id":"sl/cmkcw7","slide":15,"title":"Timeline การทำงาน","textShapes":19}
+{"kind":"textbox","id":"sh/ypojilcn","slide":15,"text":"Timeline การทำงาน","textPreview":"Timeline การทำงาน","textChars":17,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/lsf2d0ve","slide":15,"text":"แผนโครงการ มีนาคม ถึง ตุลาคม 2569","textPreview":"แผนโครงการ มีนาคม ถึง ตุลาคม 2569","textChars":33,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/0r61kvut","slide":15,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/nuxkfadk","slide":15,"text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/mtojm5cz","slide":15,"text":"มี.ค.","textPreview":"มี.ค.","textChars":5,"textLines":1,"bbox":[65,189,225,50]}
+{"kind":"textbox","id":"sh/9wz2hkva","slide":15,"text":"ออกแบบและต้นแบบ","textPreview":"ออกแบบและต้นแบบ","textChars":15,"textLines":1,"bbox":[320,189,480,50]}
+{"kind":"textbox","id":"sh/8vq1ofu5","slide":15,"text":"UX/UI, Database และ RAG","textPreview":"UX/UI, Database และ RAG","textChars":23,"textLines":1,"bbox":[800,189,420,50]}
+{"kind":"shape","id":"sh/3yd036d0","slide":15,"bbox":[65,254,1145,0]}
+{"kind":"textbox","id":"sh/2x4ja1cf","slide":15,"text":"เม.ย. – พ.ค.","textPreview":"เม.ย. – พ.ค.","textChars":12,"textLines":1,"bbox":[65,267,225,50]}
+{"kind":"textbox","id":"sh/wvytwbep","slide":15,"text":"พัฒนาและเชื่อมต่อ","textPreview":"พัฒนาและเชื่อมต่อ","textChars":17,"textLines":1,"bbox":[320,267,480,50]}
+{"kind":"textbox","id":"sh/xw7a5gva","slide":15,"text":"Web, API, LINE และสิทธิ์","textPreview":"Web, API, LINE และสิทธิ์","textChars":24,"textLines":1,"bbox":[800,267,420,50]}
+{"kind":"shape","id":"sh/atgbu1wz","slide":15,"bbox":[65,332,1145,0]}
+{"kind":"textbox","id":"sh/vups36d4","slide":15,"text":"มิ.ย. – ส.ค.","textPreview":"มิ.ย. – ส.ค.","textChars":12,"textLines":1,"bbox":[65,345,225,50]}
+{"kind":"textbox","id":"sh/kjyt0be1","slide":15,"text":"ปรับระบบและทดสอบ","textPreview":"ปรับระบบและทดสอบ","textChars":16,"textLines":1,"bbox":[320,345,480,50]}
+{"kind":"textbox","id":"sh/5k7a9gvm","slide":15,"text":"RAG, Handoff และการติดตั้ง","textPreview":"RAG, Handoff และการติดตั้ง","textChars":26,"textLines":1,"bbox":[800,345,420,50]}
+{"kind":"shape","id":"sh/ixgbylwv","slide":15,"bbox":[65,410,1145,0]}
+{"kind":"textbox","id":"sh/jyps76dg","slide":15,"text":"ก.ย.","textPreview":"ก.ย.","textChars":4,"textLines":1,"bbox":[65,423,225,50]}
+{"kind":"textbox","id":"sh/0ne94reh","slide":15,"text":"เตรียม Demo และ UAT","textPreview":"เตรียม Demo และ UAT","textChars":19,"textLines":1,"bbox":[320,423,480,50]}
+{"kind":"textbox","id":"sh/lonaxwv2","slide":15,"text":"ช่วงดำเนินงานตามแผน","textPreview":"ช่วงดำเนินงานตามแผน","textChars":19,"textLines":1,"bbox":[800,423,420,50]}
+{"kind":"shape","id":"sh/1kfq1876","slide":15,"bbox":[65,488,1145,0]}
+{"kind":"textbox","id":"sh/0j6psn6l","slide":15,"text":"ต.ค.","textPreview":"ต.ค.","textChars":4,"textLines":1,"bbox":[65,501,225,50]}
+{"kind":"textbox","id":"sh/fix8zip0","slide":15,"text":"เอกสารและส่งมอบ","textPreview":"เอกสารและส่งมอบ","textChars":15,"textLines":1,"bbox":[320,501,480,50]}
+{"kind":"textbox","id":"sh/eh47qdof","slide":15,"text":"ขั้นถัดไปตามแผน","textPreview":"ขั้นถัดไปตามแผน","textChars":15,"textLines":1,"bbox":[800,501,420,50]}
+{"kind":"notes","id":"nt/cmkcw7","slide":15,"text":"เวลา 60 วินาที\nเล่าจากบนลงล่าง มีนาคมออกแบบ เมษายนถึงพฤษภาคมพัฒนาแกนหลัก มิถุนายนถึงสิงหาคมปรับ RAG และ handoff กันยายนเตรียม demo และทดสอบ ตุลาคมเตรียมส่งมอบ\nสถานะในสองช่วงท้ายแสดงเป็นแผนตามไฟล์ต้นฉบับ ไม่กล่าวว่า UAT ผ่านแล้วหากยังไม่มีผลทดสอบ\nส่งต่อ: สำหรับการสาธิตรอบนี้จะเดินตามเส้นทางที่เตรียมไว้\n\nแหล่งอ้างอิง: ScopeBot.pdf.pdf หน้า 12 แผนงานเดิม; git log ยืนยันงานที่ปรากฏใน repository ถึง 4 ก.ย. 2569"}
+{"kind":"slide","id":"sl/vs71xv","slide":16,"title":"Demo ScopeBot","textShapes":17}
+{"kind":"textbox","id":"sh/pgb2tkjq","slide":16,"text":"Demo ScopeBot","textPreview":"Demo ScopeBot","textChars":13,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/2dkjypkz","slide":16,"text":"เส้นทางสาธิตประมาณ 4 นาที","textPreview":"เส้นทางสาธิตประมาณ 4 นาที","textChars":25,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/3etkru1k","slide":16,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/gbi1wf29","slide":16,"text":"16","textPreview":"16","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/1cr2pkje","slide":16,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[75,205,70,58]}
+{"kind":"textbox","id":"sh/ep0ju5k3","slide":16,"text":"เลือกบอท","textPreview":"เลือกบอท","textChars":8,"textLines":1,"bbox":[170,205,325,58]}
+{"kind":"textbox","id":"sh/fq9kna1o","slide":16,"text":"ดูเอกสารและสถานะพร้อมใช้งาน","textPreview":"ดูเอกสารและสถานะพร้อมใช้งาน","textChars":27,"textLines":1,"bbox":[510,205,690,58]}
+{"kind":"textbox","id":"sh/sni1sv2x","slide":16,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[75,294,70,58]}
+{"kind":"textbox","id":"sh/toril0ji","slide":16,"text":"ถามคำถาม","textPreview":"ถามคำถาม","textChars":8,"textLines":1,"bbox":[170,294,325,58]}
+{"kind":"textbox","id":"sh/9gfyhcjq","slide":16,"text":"ใช้คำถามที่มีคำตอบอยู่ในเอกสาร","textPreview":"ใช้คำถามที่มีคำตอบอยู่ในเอกสาร","textChars":30,"textLines":1,"bbox":[510,294,690,58]}
+{"kind":"textbox","id":"sh/of6ho725","slide":16,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[75,383,70,58]}
+{"kind":"textbox","id":"sh/nexgf21k","slide":16,"text":"ดูแหล่งอ้างอิง","textPreview":"ดูแหล่งอ้างอิง","textChars":14,"textLines":1,"bbox":[170,383,325,58]}
+{"kind":"textbox","id":"sh/mdofmxkz","slide":16,"text":"เปิดชื่อไฟล์และข้อความอ้างอิงบน Web","textPreview":"เปิดชื่อไฟล์และข้อความอ้างอิงบน Web","textChars":35,"textLines":1,"bbox":[510,383,690,58]}
+{"kind":"textbox","id":"sh/1cfydcje","slide":16,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[75,472,70,58]}
+{"kind":"textbox","id":"sh/0bmxk729","slide":16,"text":"ส่งต่อคน","textPreview":"ส่งต่อคน","textChars":8,"textLines":1,"bbox":[170,472,325,58]}
+{"kind":"textbox","id":"sh/zadgb21o","slide":16,"text":"ขอเจ้าหน้าที่ ตอบในแชทรวม และจบ session","textPreview":"ขอเจ้าหน้าที่ ตอบในแชทรวม และจบ session","textChars":39,"textLines":1,"bbox":[510,472,690,58]}
+{"kind":"textbox","id":"sh/e94fixk3","slide":16,"text":"บัญชีตอบแชทต้องเป็นเจ้าของบอท ไม่ใช่ role Support","textPreview":"บัญชีตอบแชทต้องเป็นเจ้าของบอท ไม่ใช่ role Support","textChars":49,"textLines":1,"bbox":[60,605,1150,54]}
+{"kind":"notes","id":"nt/vs71xv","slide":16,"text":"เวลา 4 นาที\nก่อนเริ่ม เปิดบัญชีเจ้าของบอทที่ได้รับอนุมัติและบอท active เตรียมเอกสารสาธิตที่ไม่มีข้อมูลส่วนบุคคล เปิด LINE OA อีกหน้าจอ\n1 แสดงบอทและเอกสารที่ใช้ 2 ถามเรื่องที่มีคำตอบในเอกสาร 3 เปิดชื่อไฟล์และ snippet บน Web 4 จาก LINE ขอคุยเจ้าหน้าที่ แล้วใช้บัญชีเจ้าของบอทเปิดแชทรวม ตอบและจบ session\nถ้า LINE ยังไม่พร้อมใช้ Web handoff กับบัญชีเจ้าของเดิมคนละหน้าต่างได้ ถ้าระบบช้าให้พูดอธิบายจาก flow ที่เตรียมไว้ ไม่กล่าวว่าทำงานสำเร็จจนเห็นผลจริง\nส่งต่อ: สรุปสิ่งที่ได้เห็นจาก Demo\n\nแหล่งอ้างอิง: src/app/components/chat/BotsPage.tsx; src/app/components/admin/UnifiedChat.tsx; api/routers/live_chat.py"}
+{"kind":"slide","id":"sl/rx2bqk","slide":17,"title":"ScopeBot ทำงานร่วมกันอย่างไร","textShapes":9}
+{"kind":"textbox","id":"sh/cbaps7at","slide":17,"text":"ScopeBot ทำงานร่วมกันอย่างไร","textPreview":"ScopeBot ทำงานร่วมกันอย่างไร","textChars":28,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/ba18j2t8","slide":17,"text":"เอกสารเป็นแหล่งความรู้และเจ้าของบอทรับช่วงเมื่อจำเป็น","textPreview":"เอกสารเป็นแหล่งความรู้และเจ้าของบอทรับช่วงเมื่อจำเป็น","textChars":53,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/q9s7qhsn","slide":17,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/p8jqhcbi","slide":17,"text":"17","textPreview":"17","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/o7qpo7ax","slide":17,"text":"Frontend เป็นจุดใช้งาน","textPreview":"Frontend เป็นจุดใช้งาน","textChars":22,"textLines":1,"bbox":[90,215,1110,65]}
+{"kind":"textbox","id":"sh/3mhof2tc","slide":17,"text":"FastAPI ควบคุมคำขอและข้อมูล","textPreview":"FastAPI ควบคุมคำขอและข้อมูล","textChars":27,"textLines":1,"bbox":[90,302,1110,65]}
+{"kind":"textbox","id":"sh/2l87mxsr","slide":17,"text":"RAG ค้นเอกสารก่อนสร้างคำตอบ","textPreview":"RAG ค้นเอกสารก่อนสร้างคำตอบ","textChars":27,"textLines":1,"bbox":[90,389,1110,65]}
+{"kind":"textbox","id":"sh/1kz6dsb6","slide":17,"text":"คนรับช่วงเมื่อบอทไม่มีคำตอบ","textPreview":"คนรับช่วงเมื่อบอทไม่มีคำตอบ","textChars":27,"textLines":1,"bbox":[90,476,1110,65]}
+{"kind":"textbox","id":"sh/gjqpknal","slide":17,"text":"คำถามและข้อเสนอแนะ","textPreview":"คำถามและข้อเสนอแนะ","textChars":18,"textLines":1,"bbox":[90,588,1110,58]}
+{"kind":"notes","id":"nt/rx2bqk","slide":17,"text":"เวลา 40 วินาที\nสรุปทีละบรรทัด Frontend เป็นจุดใช้งาน FastAPI ควบคุมงานและสิทธิ์ RAG ค้นเอกสารก่อนเรียกโมเดล ส่วนคนรับช่วงเมื่อระบบไม่มีคำตอบ\nปิดด้วย ขอบคุณครับหรือค่ะ ยินดีตอบคำถามเรื่องโครงสร้าง การเก็บข้อมูล หรือการทำงานที่สาธิตไป\nภาคผนวกถัดไปเปิดเมื่อมีคำถามเรื่อง API เท่านั้น\n\nแหล่งอ้างอิง: README.md; api/main.py; rag/rag_pipeline.py"}
+{"kind":"slide","id":"sl/2cu6ht","slide":18,"title":"ภาคผนวก API หลัก","textShapes":16}
+{"kind":"textbox","id":"sh/2lozetwj","slide":18,"text":"ภาคผนวก API หลัก","textPreview":"ภาคผนวก API หลัก","textChars":16,"textLines":1,"bbox":[60,42,1150,66]}
+{"kind":"textbox","id":"sh/pozyp8fa","slide":18,"text":"ใช้เปิดประกอบคำถามด้านเทคนิคหลังจบการนำเสนอ","textPreview":"ใช้เปิดประกอบคำถามด้านเทคนิคหลังจบการนำเสนอ","textChars":43,"textLines":1,"bbox":[60,115,1150,48]}
+{"kind":"textbox","id":"sh/4n6hg3ep","slide":18,"text":"ScopeBot","textPreview":"ScopeBot","textChars":8,"textLines":1,"bbox":[60,678,250,24]}
+{"kind":"textbox","id":"sh/fixgjex8","slide":18,"text":"18","textPreview":"18","textChars":2,"textLines":1,"bbox":[1150,672,70,30]}
+{"kind":"textbox","id":"sh/uhozatwn","slide":18,"text":"บัญชีและสิทธิ์","textPreview":"บัญชีและสิทธิ์","textChars":14,"textLines":1,"bbox":[65,190,380,48]}
+{"kind":"textbox","id":"sh/hkfylofe","slide":18,"text":"/api/auth","textPreview":"/api/auth","textChars":9,"textLines":1,"bbox":[455,190,760,48]}
+{"kind":"textbox","id":"sh/gj6hcjet","slide":18,"text":"บอทและเอกสาร","textPreview":"บอทและเอกสาร","textChars":12,"textLines":1,"bbox":[65,255,380,48]}
+{"kind":"textbox","id":"sh/zeh0vixc","slide":18,"text":"/api/bots    /api/documents","textPreview":"/api/bots    /api/documents","textChars":27,"textLines":1,"bbox":[455,255,760,48]}
+{"kind":"textbox","id":"sh/ed8zmdwr","slide":18,"text":"แชทและเจ้าหน้าที่","textPreview":"แชทและเจ้าหน้าที่","textChars":17,"textLines":1,"bbox":[65,320,380,48]}
+{"kind":"textbox","id":"sh/43ihgfal","slide":18,"text":"/api/chat    /api/live","textPreview":"/api/chat    /api/live","textChars":22,"textLines":1,"bbox":[455,320,760,48]}
+{"kind":"textbox","id":"sh/54ri9kb6","slide":18,"text":"สถิติและการติดตาม","textPreview":"สถิติและการติดตาม","textChars":17,"textLines":1,"bbox":[65,385,380,48]}
+{"kind":"textbox","id":"sh/i10zepsv","slide":18,"text":"/api/dashboard    /api/notifications","textPreview":"/api/dashboard    /api/notifications","textChars":36,"textLines":1,"bbox":[455,385,760,48]}
+{"kind":"textbox","id":"sh/j2907at0","slide":18,"text":"Audit และสถานะ","textPreview":"Audit และสถานะ","textChars":14,"textLines":1,"bbox":[65,450,380,48]}
+{"kind":"textbox","id":"sh/wfihcfap","slide":18,"text":"/api/audit-logs    /api/health","textPreview":"/api/audit-logs    /api/health","textChars":30,"textLines":1,"bbox":[455,450,760,48]}
+{"kind":"textbox","id":"sh/h0ri5kba","slide":18,"text":"LINE Webhook","textPreview":"LINE Webhook","textChars":12,"textLines":1,"bbox":[65,515,380,48]}
+{"kind":"textbox","id":"sh/ud0za5sj","slide":18,"text":"/api/line/webhook/{bot_id}","textPreview":"/api/line/webhook/{bot_id}","textChars":26,"textLines":1,"bbox":[455,515,760,48]}
+{"kind":"notes","id":"nt/2cu6ht","slide":18,"text":"ไม่จำเป็นต้องอ่านหน้านี้ในช่วงหลัก\nอธิบายเฉพาะกลุ่มที่ผู้ฟังถาม เช่น /api/auth สำหรับบัญชี /api/bots และ /api/documents สำหรับความรู้ /api/chat สำหรับคำถามและประวัติ /api/live สำหรับรับช่วงแชท\nLINE webhook จริงมี bot_id ต่อท้าย และตรวจ signature ส่วน /api/health เป็นจุดตรวจสถานะ\n\nแหล่งอ้างอิง: api/main.py; api/routers/*.py"}

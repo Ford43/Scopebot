@@ -106,6 +106,23 @@ Vite จะ proxy `/api` ไปที่ `http://127.0.0.1:8000` — **ต้อ
 
 ## Company pilot checklist
 
+### Regression tests
+
+รันจากโฟลเดอร์โปรเจค (ใช้ฐานข้อมูลจำลองและไฟล์ชั่วคราว ไม่เรียก Ollama หรือส่งข้อความ LINE จริง):
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest test.test_review_fixes test.test_admin_platform test.test_library_delete
+node test/run_frontend.mjs
+npm run build
+```
+
+ชุดทดสอบครอบคลุมการระงับบัญชี, ความปลอดภัยของชื่อไฟล์, ประวัติบอท/เจ้าหน้าที่,
+การแทนที่เอกสารและคืนไฟล์เมื่อผิดพลาด, บริบทคำถามต่อเนื่อง และกรณีบริการ AI ขัดข้อง
+การอัปโหลดเอกสารชื่อเดิมต้องยืนยันก่อนแทนที่ และจะประมวลผลใหม่ทุกบอทที่ใช้เอกสารนั้น
+การเปลี่ยนแปลงชุดนี้ไม่ต้องเพิ่มตารางหรือรัน migration ใหม่
+
+### ก่อนเริ่มใช้งาน
+
 1. คัดลอก `.env.example` → `.env` แล้วตั้งค่าอย่างน้อย:
    - `SECRET_KEY` (สุ่มใหม่)
    - `DATABASE_URL` / `POSTGRES_PASSWORD`

@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
-from rag.rag_pipeline import ask_rag
-from sqlalchemy import func
-from sqlalchemy.types import Integer
+from rag.rag_pipeline import ask_rag, RagUnavailableError, RAG_ERROR_MESSAGE
+from api.chat_history import recent_bot_history, session_rows, session_transcript, iso_utc
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -32,6 +31,7 @@ def _chat_payload(
     sources: list | None = None,
     session_mode: str = "bot",
     offer_handoff: bool = False,
+    response_status: str = "answered",
 ) -> dict:
     return {
         "answer": answer,
@@ -40,6 +40,7 @@ def _chat_payload(
         "sources": sources or [],
         "session_mode": session_mode,
         "offer_handoff": offer_handoff,
+        "response_status": response_status,
     }
 
 
@@ -127,21 +128,24 @@ def chat(
         )
 
     # ---- RAG ปกติ ----
-    # ไม่ส่งประวัติแชทเข้าโมเดล — คำตอบเก่าที่สั้น/ไม่ครบจะถูกเลียนแบบ (โดยเฉพาะโมเดลเล็ก)
     source = (body.source_channel or "web").lower()
-
-    answer, sources = ask_rag(
-        body.question,
-        bot_id,
-        user_system_prompt=bot.system_prompt,
-        history=None,
-    )
+    rag_failed = False
+    try:
+        answer, sources = ask_rag(
+            body.question, bot_id, user_system_prompt=bot.system_prompt,
+            history=recent_bot_history(db, bot.id, body.session_id, source),
+        )
+    except RagUnavailableError:
+        answer, sources, rag_failed = RAG_ERROR_MESSAGE, [], True
 
     # Web: ไม่ auto-handoff — แสดงปุ่มติดต่อเจ้าหน้าที่ให้ลูกค้ากดเอง
     # LINE / ช่องทางอื่น: สร้าง LiveSession เมื่อบอทตอบไม่ได้
     create_live = False
     offer_handoff = False
-    if answer == "REQUIRE_HUMAN_HANDOFF":
+    if rag_failed:
+        is_bot_answered = False
+        offer_handoff = source == "web"
+    elif answer == "REQUIRE_HUMAN_HANDOFF":
         if source == "web":
             answer = (
                 "ไม่พบข้อมูลที่เกี่ยวข้องในฐานความรู้ "
@@ -156,7 +160,7 @@ def chat(
             create_live = True
     else:
         is_bot_answered = "ไม่พบข้อมูล" not in answer
-        create_live = not is_bot_answered
+        create_live = source != "web" and not is_bot_answered
         offer_handoff = source == "web" and not is_bot_answered
 
     if create_live:
@@ -212,6 +216,7 @@ def chat(
         sources=sources if is_bot_answered else [],
         session_mode="waiting" if create_live else "bot",
         offer_handoff=offer_handoff,
+        response_status="error" if rag_failed else ("answered" if is_bot_answered else "unanswered"),
     )
 
 
@@ -302,24 +307,21 @@ def get_session_updates(
             models.LiveSession.line_user_id == session_id,
             models.LiveSession.bot_id == bot.id,
         )
-        .order_by(models.LiveSession.started_at.desc())
+        .order_by(models.LiveSession.started_at.desc(), models.LiveSession.id.desc())
         .first()
     )
 
     if not session:
         return {"mode": "bot", "is_active": False, "messages": []}
 
-    staff_msgs = []
-    if session.is_active:
-        staff_msgs = (
-            db.query(models.LiveMessage)
-            .filter(
-                models.LiveMessage.session_id == session.id,
-                models.LiveMessage.sender_type == models.SenderType.staff,
-            )
-            .order_by(models.LiveMessage.created_at.asc())
-            .all()
-        )
+    staff_msgs = (
+        db.query(models.LiveMessage)
+        .join(models.LiveSession, models.LiveMessage.session_id == models.LiveSession.id)
+        .filter(models.LiveSession.bot_id == bot.id,
+                models.LiveSession.line_user_id == session_id,
+                models.LiveMessage.sender_type == models.SenderType.staff)
+        .order_by(models.LiveMessage.created_at.asc(), models.LiveMessage.id.asc()).all()
+    )
 
     mode = _mode_str(session)
     if not session.is_active:
@@ -333,7 +335,7 @@ def get_session_updates(
                 "id": str(m.id),
                 "message": m.message,
                 "sender_name": m.sender_name or "เจ้าหน้าที่",
-                "created_at": m.created_at.isoformat(),
+                "created_at": iso_utc(m.created_at),
             }
             for m in staff_msgs
         ],
@@ -363,58 +365,32 @@ def get_all_sessions(
             return []
         bot_ids = [bot_obj.id]
 
-    # ดึง unique session_ids
-    session_rows = db.query(
-        models.Conversation.session_id,
-        models.Conversation.bot_id,
-        func.min(models.Conversation.created_at).label("started_at"),
-        func.max(models.Conversation.created_at).label("last_at"),
-        func.count(models.Conversation.id).label("msg_count"),
-        func.sum(
-            models.Conversation.is_answered_by_bot.cast(Integer)
-        ).label("answered_count")
-    ).filter(
-        models.Conversation.bot_id.in_(bot_ids),
-        models.Conversation.session_id.isnot(None)
-    ).group_by(
-        models.Conversation.session_id,
-        models.Conversation.bot_id
-    ).order_by(
-        func.max(models.Conversation.created_at).desc()
-    ).offset((page - 1) * limit).limit(limit).all()
+    rows = session_rows(db, bot_ids, page, max(1, min(limit, 100)))
 
     results = []
-    for row in session_rows:
+    for row in rows:
         bot = bot_map.get(row.bot_id)
-        # ดึงคำถามแรกของ session นี้เป็น "ชื่อแชท"
-        first_conv = db.query(models.Conversation).filter(
-            models.Conversation.session_id == row.session_id,
-            models.Conversation.bot_id == row.bot_id
-        ).order_by(models.Conversation.created_at.asc()).first()
-
-        # ดึงทุก conversation ใน session นี้
-        convs = db.query(models.Conversation).filter(
-            models.Conversation.session_id == row.session_id,
-            models.Conversation.bot_id == row.bot_id
-        ).order_by(models.Conversation.created_at.asc()).all()
+        convs, timeline, source = session_transcript(db, row.bot_id, row.session_id)
+        title = next((m["text"][:50] for m in timeline if m["sender"] == "user"), "ไม่มีข้อความ")
 
         results.append({
             "session_id": row.session_id,
             "bot_id": bot.bot_id if bot else None,
             "bot_name": bot.name if bot else "ไม่ทราบ",
-            "title": first_conv.question[:50] if first_conv else "ไม่มีข้อความ",
-            "source_channel": first_conv.source_channel if first_conv else "web",
-            "started_at": row.started_at.isoformat() if row.started_at else None,
-            "last_at": row.last_at.isoformat() if row.last_at else None,
-            "msg_count": row.msg_count,
-            "answered_count": int(row.answered_count or 0),
+            "title": title,
+            "source_channel": source,
+            "started_at": iso_utc(row.started_at) if row.started_at else None,
+            "last_at": iso_utc(row.last_at) if row.last_at else None,
+            "msg_count": sum(m["sender"] == "user" for m in timeline),
+            "answered_count": sum(bool(c.is_answered_by_bot) for c in convs),
+            "timeline": timeline,
             "messages": [
                 {
                     "id": c.id,
                     "question": c.question,
                     "answer": c.answer,
                     "is_answered_by_bot": c.is_answered_by_bot,
-                    "created_at": c.created_at.isoformat()
+                    "created_at": iso_utc(c.created_at)
                 }
                 for c in convs
             ]

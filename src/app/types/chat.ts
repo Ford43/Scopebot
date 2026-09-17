@@ -18,6 +18,14 @@ export interface ChatSource {
 
 export type ChatMode = "bot" | "waiting" | "human";
 
+export interface SessionTimelineMessage {
+  id: string;
+  sender: "bot" | "user" | "staff";
+  text: string;
+  sender_name?: string;
+  created_at: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: "bot" | "user" | "staff";

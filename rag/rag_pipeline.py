@@ -6,6 +6,12 @@ import ollama
 from rag.retriever import retrieve_docs
 from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG
 
+RAG_ERROR_MESSAGE = "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"
+
+
+class RagUnavailableError(RuntimeError):
+    """Retrieval/model failure, distinct from a valid answer or no match."""
+
 # คำถามวัน/ปฏิทินปัจจุบัน — มักไม่มีในเอกสารองค์กร
 _CALENDAR_ASK = re.compile(
     r"(พรุ่งนี้\s*วันอะไร|เมื่อวาน\s*วันอะไร|วันนี้\s*วันอะไร|"
@@ -95,7 +101,13 @@ def ask_rag(
     sources: [{"filename": "...", "snippet": "..."}, ...]
     history: optional prior turns [{"question","answer"}, ...] oldest → newest
     """
-    docs = retrieve_docs(question, bot_id)
+    history = (history or [])[-6:]
+    prior_questions = [(t.get("question") or "")[:1000] for t in history[-2:]]
+    retrieval_query = "\n".join([*prior_questions, question])
+    try:
+        docs = retrieve_docs(retrieval_query, bot_id)
+    except Exception as exc:
+        raise RagUnavailableError("Knowledge retrieval failed") from exc
 
     if not docs:
         return "REQUIRE_HUMAN_HANDOFF", []
@@ -120,6 +132,7 @@ def ask_rag(
 
 คำสั่ง: ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น
 - ถ้าข้อมูลอ้างอิงไม่ได้ตอบคำถามนี้โดยตรง ให้ตอบว่า ไม่พบข้อมูล
+- ใช้ประวัติสนทนาเพื่อเข้าใจว่าคำถามต่อเนื่องหมายถึงเรื่องใดเท่านั้น ห้ามใช้คำตอบเก่าเป็นข้อเท็จจริงแทนข้อมูลอ้างอิง
 - ห้ามเดาวัน/วันที่/เวลาปัจจุบันจากตารางเวลาทำงานหรือคำที่คล้ายกันในเอกสาร
 - ตอบเป็นข้อความคำตอบอย่างเดียว ห้ามเขียนคำว่า คำถาม: หรือ คำตอบ: และห้ามถามซ้ำ
 - ถ้าคำถามถามภาพรวม/ระเบียบ/รายการ และในข้อมูลอ้างอิงมีหลายข้อ ให้ตอบครบทุกข้อที่เกี่ยวข้อง ห้ามสรุปเหลือเพียงบางข้อ
@@ -172,4 +185,4 @@ def ask_rag(
 
     except Exception as e:
         print(f"LLM error: {e}")
-        return "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง", []
+        raise RagUnavailableError("Language model unavailable") from e
