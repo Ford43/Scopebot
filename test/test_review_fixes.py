@@ -1,6 +1,7 @@
 """Regression coverage for the six reviewed issues; no real DB, LLM or LINE calls."""
 import asyncio
 import io
+import json
 import os
 import sys
 import tempfile
@@ -191,6 +192,14 @@ class ReviewFixTests(unittest.TestCase):
         timeline = self.history()[0]["timeline"]
         self.assertEqual(sum(m["text"] == "Staff answer" for m in timeline), 1)
 
+    def test_web_grounding_rejection_offers_handoff(self):
+        with patch.object(chat, "ask_rag", return_value=("REQUIRE_HUMAN_HANDOFF", [])):
+            result = self.send("Unknown policy question")
+
+        self.assertFalse(result["is_answered_by_bot"])
+        self.assertTrue(result["offer_handoff"])
+        self.assertEqual(result["response_status"], "unanswered")
+
     def test_line_transcript_does_not_duplicate_conversation_and_live_messages(self):
         session = models.LiveSession(line_user_id="U-line", line_display_name="Customer", bot_id=self.bot.id, mode=models.SessionMode.bot)
         self.db.add(session)
@@ -218,7 +227,11 @@ class ReviewFixTests(unittest.TestCase):
         doc = types.SimpleNamespace(page_content="Annual leave requires a leave form", metadata={"source": "policy.txt"})
         def retrieve(query, bot):
             return [doc] if "Annual leave" in query else []
-        with patch.object(rag_pipeline, "retrieve_docs", side_effect=retrieve), patch.object(rag_pipeline.ollama, "chat", return_value={"message": {"content": "A leave form"}}):
+        grounded = json.dumps({
+            "answer": "A leave form",
+            "evidence": ["Annual leave requires a leave form"],
+        })
+        with patch.object(rag_pipeline, "retrieve_docs", side_effect=retrieve), patch.object(rag_pipeline.ollama, "chat", return_value={"message": {"content": grounded}}):
             answer, _ = rag_pipeline.ask_rag("What documents?", self.bot.bot_id, history=[{"question": "Annual leave", "answer": "Ten days"}])
         self.assertEqual(answer, "A leave form")
 
@@ -383,6 +396,48 @@ class ReviewFixTests(unittest.TestCase):
         self.assertFalse(row.is_answered_by_bot)
         self.assertFalse(row.is_resolved)
         self.assertEqual([m.text for m in sent], [rag_pipeline.RAG_ERROR_MESSAGE])
+
+    def test_line_grounding_rejection_sends_contact_flex(self):
+        from api.routers import line_webhook
+        from linebot.v3.messaging import FlexMessage
+
+        self.bot.is_line_connected = True
+        self.bot.line_channel_token = "test-token"
+        self.bot.line_channel_secret = "test-secret"
+        self.db.commit()
+        app = FastAPI()
+        app.include_router(line_webhook.router)
+        sent = []
+        sdk = MagicMock()
+
+        def capture(_api, _reply, _user, messages):
+            sent.extend(messages)
+
+        with patch.object(line_webhook, "SessionLocal", return_value=self.db), \
+             patch.object(line_webhook, "_verify_signature", return_value=True), \
+             patch.object(line_webhook, "_get_display_name", return_value="Customer"), \
+             patch.object(line_webhook, "_show_line_loading"), \
+             patch.object(line_webhook, "ApiClient", return_value=sdk), \
+             patch.object(line_webhook, "MessagingApi"), \
+             patch.object(line_webhook, "_line_reply_or_push", side_effect=capture), \
+             patch.object(line_webhook, "ask_rag", return_value=("REQUIRE_HUMAN_HANDOFF", [])):
+            with TestClient(app) as client:
+                result = client.post(
+                    f"/api/line/webhook/{self.bot.bot_id}",
+                    json={"events": [{
+                        "type": "message",
+                        "replyToken": "reply",
+                        "message": {"type": "text", "text": "Unknown policy question"},
+                        "source": {"userId": "Utest"},
+                    }]},
+                )
+
+        self.assertEqual(result.status_code, 200)
+        row = self.db.query(models.Conversation).one()
+        self.assertFalse(row.is_answered_by_bot)
+        self.assertFalse(row.is_resolved)
+        self.assertEqual(len(sent), 1)
+        self.assertIsInstance(sent[0], FlexMessage)
 
 
 if __name__ == "__main__":

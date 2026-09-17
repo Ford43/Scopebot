@@ -3,6 +3,14 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 import ollama
+from rag.evidence import (
+    build_retrieval_query,
+    parse_grounded_response,
+    select_evidence_units,
+    split_evidence_units,
+    units_for_evidence_quotes,
+    validate_grounded_answer,
+)
 from rag.retriever import retrieve_docs
 from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG
 
@@ -66,28 +74,11 @@ def extract_sources(docs, limit: int = 3) -> List[Dict]:
     return sources
 
 
-def _clean_llm_answer(answer: str) -> str:
-    """ตัดส่วนที่โมเดลวนซ้ำรูปแบบ คำถาม:/คำตอบ: จาก prompt"""
-    text = (answer or "").strip()
-    if not text:
-        return text
-
-    # ตัดตั้งแต่บรรทัด "คำถาม:" ที่โมเดลเขียนซ้ำท้ายคำตอบ
-    cut = re.split(r"\n\s*คำถาม\s*:", text, maxsplit=1)
-    text = cut[0].strip()
-
-    # ถ้าขึ้นต้นด้วย "คำตอบ:" ให้เหลือเฉพาะเนื้อหา
-    text = re.sub(r"^คำตอบ\s*:\s*", "", text).strip()
-
-    # กันกรณีมีคู่ คำตอบ: ซ้ำอีกครั้งในข้อความ
-    parts = re.split(r"\n\s*คำตอบ\s*:", text, maxsplit=1)
-    if len(parts) == 2 and parts[0].strip() and parts[1].strip():
-        # ถ้าสองฝั่งคล้ายกันมาก เหลือฝั่งแรก
-        a, b = parts[0].strip(), parts[1].strip()
-        if a == b or a in b or b in a:
-            text = a
-
-    return text.strip()
+def _reject_grounding(reason: str, bot_id: str, question: str) -> Tuple[str, List]:
+    print(f"[RAG_GROUNDING] reject reason={reason} bot_id={bot_id}")
+    if DEBUG:
+        print(f"[RAG_GROUNDING] rejected_question={question}")
+    return "REQUIRE_HUMAN_HANDOFF", []
 
 
 def ask_rag(
@@ -102,8 +93,7 @@ def ask_rag(
     history: optional prior turns [{"question","answer"}, ...] oldest → newest
     """
     history = (history or [])[-6:]
-    prior_questions = [(t.get("question") or "")[:1000] for t in history[-2:]]
-    retrieval_query = "\n".join([*prior_questions, question])
+    retrieval_query = build_retrieval_query(question, history)
     try:
         docs = retrieve_docs(retrieval_query, bot_id)
     except Exception as exc:
@@ -112,32 +102,37 @@ def ask_rag(
     if not docs:
         return "REQUIRE_HUMAN_HANDOFF", []
 
-    context = build_context(docs)
-    sources = extract_sources(docs)
+    evidence_units = split_evidence_units(docs)
+    selected_units = select_evidence_units(retrieval_query, evidence_units)
+    if not selected_units:
+        return _reject_grounding("weak_topic_match", bot_id, question)
+
+    context = build_context(selected_units)
 
     # กันเคส: ดึงเอกสาร "จันทร์-ศุกร์" แล้ว LLM มั่วว่าพรุ่งนี้อะไร
     if _calendar_context_mismatch(question, context):
         if DEBUG:
             print(f"[DEBUG] Calendar mismatch — skip LLM for: {question}")
-        return "REQUIRE_HUMAN_HANDOFF", []
+        return _reject_grounding("weak_topic_match", bot_id, question)
 
     if DEBUG:
         print(f"\n[DEBUG] Question: {question}")
         print(f"[DEBUG] Context:\n {context[:500]}...")
 
-    prompt = f"""ข้อมูลอ้างอิง:
+    prompt = f"""ข้อมูลอ้างอิงที่ผ่านการคัดกรอง:
 {context}
 
 คำถาม: {question}
 
-คำสั่ง: ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น
-- ถ้าข้อมูลอ้างอิงไม่ได้ตอบคำถามนี้โดยตรง ให้ตอบว่า ไม่พบข้อมูล
-- ใช้ประวัติสนทนาเพื่อเข้าใจว่าคำถามต่อเนื่องหมายถึงเรื่องใดเท่านั้น ห้ามใช้คำตอบเก่าเป็นข้อเท็จจริงแทนข้อมูลอ้างอิง
-- ห้ามเดาวัน/วันที่/เวลาปัจจุบันจากตารางเวลาทำงานหรือคำที่คล้ายกันในเอกสาร
-- ตอบเป็นข้อความคำตอบอย่างเดียว ห้ามเขียนคำว่า คำถาม: หรือ คำตอบ: และห้ามถามซ้ำ
-- ถ้าคำถามถามภาพรวม/ระเบียบ/รายการ และในข้อมูลอ้างอิงมีหลายข้อ ให้ตอบครบทุกข้อที่เกี่ยวข้อง ห้ามสรุปเหลือเพียงบางข้อ
-
-คำตอบ:"""
+คำสั่ง:
+- ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น ห้ามเดาหรือใช้ความรู้ภายนอก
+- ส่ง JSON object เท่านั้น ห้ามใส่ markdown หรือข้อความอื่น
+- รูปแบบต้องเป็น {{"answer":"คำตอบ", "evidence":["ข้อความหลักฐานแบบคำต่อคำ"]}}
+- evidence ต้องคัดลอกข้อความจากข้อมูลอ้างอิงแบบคำต่อคำ และต้องรองรับข้อเท็จจริงทุกข้อใน answer
+- ถ้าไม่มีหลักฐานที่ตอบคำถามโดยตรง ให้ใช้ answer เป็น "ไม่พบข้อมูล" และ evidence เป็น []
+- ห้ามเปลี่ยนตัวเลข ราคา เวลา วัน วันที่ เปอร์เซ็นต์ ชื่อ หรือรหัสจากหลักฐาน
+- ถ้าคำถามถามภาพรวม/ระเบียบ/รายการ ให้ใส่หลักฐานทุกส่วนที่นำมาใช้ตอบ
+"""
 
     final_system_prompt = SYSTEM_PROMPT
     if user_system_prompt and user_system_prompt.strip() != "":
@@ -148,13 +143,19 @@ def ask_rag(
 
     messages = [{"role": "system", "content": final_system_prompt}]
 
-    for turn in history or []:
-        q = (turn.get("question") or "").strip()
-        a = (turn.get("answer") or "").strip()
-        if q:
-            messages.append({"role": "user", "content": q})
-        if a:
-            messages.append({"role": "assistant", "content": a})
+    prior_questions = [
+        (turn.get("question") or "").strip()
+        for turn in history or []
+        if (turn.get("question") or "").strip()
+    ]
+    if prior_questions:
+        messages.append({
+            "role": "system",
+            "content": (
+                "คำถามก่อนหน้าใช้เพื่อระบุหัวข้อของคำถามต่อเนื่องเท่านั้น "
+                "ห้ามถือเป็นข้อมูลจริง:\n" + "\n".join(prior_questions)
+            ),
+        })
 
     messages.append({"role": "user", "content": prompt})
 
@@ -162,6 +163,7 @@ def ask_rag(
         response = ollama.chat(
             model=MODEL_NAME,
             messages=messages,
+            format="json",
             options={
                 "temperature": 0.0,
                 "top_p": 0.9,
@@ -171,15 +173,36 @@ def ask_rag(
                 "num_predict": 1024,
             },
         )
-        answer = _clean_llm_answer(response["message"]["content"])
+        grounded, parse_reason = parse_grounded_response(
+            response["message"]["content"]
+        )
+        if grounded is None:
+            return _reject_grounding(parse_reason or "invalid_model_json", bot_id, question)
+
+        answer = grounded.answer
+        if not answer or "ไม่พบข้อมูล" in answer:
+            return _reject_grounding("model_no_answer", bot_id, question)
+
+        valid, validation_reason = validate_grounded_answer(
+            retrieval_query,
+            answer,
+            grounded.evidence,
+            selected_units,
+        )
+        if not valid:
+            return _reject_grounding(
+                validation_reason or "unsupported_evidence", bot_id, question
+            )
+
+        accepted_units = units_for_evidence_quotes(
+            grounded.evidence, selected_units
+        )
+        sources = extract_sources(accepted_units)
 
         if DEBUG:
             print(f"[DEBUG] System Prompt:\n {final_system_prompt}")
             print(f"[DEBUG] History turns: {len(history or [])}")
             print(f"[DEBUG] Answer:\n {answer}")
-
-        if not answer or "ไม่พบข้อมูล" in answer:
-            return "REQUIRE_HUMAN_HANDOFF", sources
 
         return answer, sources
 
