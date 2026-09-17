@@ -116,7 +116,7 @@ export default function LoginPage() {
           {/* Email */}
           <div>
             <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
-              ชื่อผู้ใช้งาน / อีเมล
+              อีเมล
             </label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />

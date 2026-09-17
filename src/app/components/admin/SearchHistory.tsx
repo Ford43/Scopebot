@@ -171,7 +171,7 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
                     <div key={msg.id} className="bg-white rounded-lg p-3 border border-gray-100">
                       <div className="flex items-start gap-2">
                         <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${msg.sender === "staff" ? "bg-sky-100 text-sky-700" : msg.sender === "bot" ? "bg-green-100 text-green-700" : "bg-gray-900 text-white"}`}>
-                          {msg.sender === "staff" ? msg.sender_name || "เจ้าหน้าที่" : msg.sender === "bot" ? "บอท" : "ผู้ใช้"}
+                          {msg.sender === "staff" ? "เจ้าหน้าที่" : msg.sender === "bot" ? "บอท" : "ลูกค้า"}
                         </span>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                       </div>

@@ -37,10 +37,10 @@ def _debug_mode() -> bool:
 @router.post("/register", response_model=schemas.UserOut)
 def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == body.email).first():
-        raise HTTPException(status_code=400, detail="Email นี้ถูกใช้แล้ว")
+        raise HTTPException(status_code=400, detail="อีเมลนี้มีผู้ใช้งานแล้ว")
 
     if db.query(models.User).filter(models.User.username == body.username).first():
-        raise HTTPException(status_code=400, detail="Username นี้ถูกใช้แล้ว")
+        raise HTTPException(status_code=400, detail="ชื่อผู้ใช้นี้มีผู้ใช้งานแล้ว")
 
     if len(body.password) < 6:
         raise HTTPException(status_code=400, detail="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร")

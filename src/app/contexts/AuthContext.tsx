@@ -15,7 +15,7 @@ import {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<boolean>;
+  signup: (email: string, password: string, name: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -91,17 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     name: string
-  ): Promise<boolean> => {
+  ): Promise<{ ok: boolean; error?: string }> => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username: name, password }),
       });
-      return res.ok;
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return { ok: true };
+      return { ok: false, error: typeof data?.detail === "string" ? data.detail : undefined };
     } catch (error) {
       console.error("Signup error:", error);
-      return false;
+      return { ok: false };
     }
   };
 

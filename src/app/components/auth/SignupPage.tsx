@@ -34,12 +34,12 @@ export default function SignupPage() {
     if (password.length < 6)                 { setError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"); return; }
     setIsLoading(true);
     try {
-      const ok = await signup(email, password, name);
-      if (ok) {
+      const result = await signup(email, password, name);
+      if (result.ok) {
         setIsSuccess(true); // 🟢 ถ้าสมัครสำเร็จ ให้แสดงหน้าสำเร็จ
       } else {
-        setError("อีเมลนี้มีผู้ใช้งานแล้ว หรือเกิดข้อผิดพลาด");
-      }    setError("อีเมลนี้มีผู้ใช้งานแล้ว");
+        setError(result.error || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      }
     } catch {
       setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
