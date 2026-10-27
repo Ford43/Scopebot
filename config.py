@@ -13,6 +13,8 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
 
 # ===== Vector DB =====
 VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "vector_db")
+QDRANT_URL = os.getenv("QDRANT_URL", "").strip()
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "").strip() or None
 
 # ===== Retriever =====
 TOP_K = int(os.getenv("TOP_K", 5))  

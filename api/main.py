@@ -38,6 +38,12 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+@app.on_event("startup")
+def resume_knowledge_updates():
+    from api.knowledge import resume_updates
+    resume_updates()
+
 # CORS: รายการ origins คั่นด้วย comma ใน .env
 # ตัวอย่าง: CORS_ORIGINS=http://localhost:5173,https://your-domain.com
 _default_origins = "http://localhost:5173,http://127.0.0.1:5173"

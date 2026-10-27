@@ -1,0 +1,16 @@
+# Optional server backend: docker compose -f docker-compose.yml -f docker-compose.qdrant.yml up -d --build
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    volumes:
+      - qdrantdata:/qdrant/storage
+    restart: unless-stopped
+  api:
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+    depends_on:
+      qdrant:
+        condition: service_started
+volumes:
+  qdrantdata:

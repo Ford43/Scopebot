@@ -5,6 +5,7 @@ export interface BotPayload {
   name?: string;
   description?: string;
   system_prompt?: string;
+  vector_backend?: "chroma" | "qdrant";
   line_channel_token?: string;
   line_channel_secret?: string;
 }

@@ -5,7 +5,8 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
 
 from api import models
 from api.routers import documents as documents_router
@@ -25,7 +26,9 @@ class FakeDocList(list):
 
 
 def _make_bot(bot_id: str, name: str, docs: list):
-    bot = MagicMock()
+    class FakeBot(SimpleNamespace):
+        has_usable_knowledge = models.Bot.has_usable_knowledge
+    bot = FakeBot(knowledge_revision=0, knowledge_blocked=False)
     bot.bot_id = bot_id
     bot.id = abs(hash(bot_id)) % 10_000
     bot.name = name
@@ -39,9 +42,12 @@ class LibraryDeleteTests(unittest.TestCase):
         self._cwd = os.getcwd()
         self._tmp = tempfile.TemporaryDirectory()
         os.chdir(self._tmp.name)
+        self.vector_patch = patch("api.knowledge.vector_root", return_value=Path(self._tmp.name) / "vector_db")
+        self.vector_patch.start()
 
     def tearDown(self):
         os.chdir(self._cwd)
+        self.vector_patch.stop()
         self._tmp.cleanup()
 
     def test_purge_last_document_clears_bot_copy_and_vectors(self):
@@ -69,13 +75,12 @@ class LibraryDeleteTests(unittest.TestCase):
         self.assertFalse((bot_dir / filename).exists())
         self.assertEqual(bot.status, models.BotStatus.inactive)
         self.assertNotIn(doc, bot.documents)
-        self.assertEqual(len(bg.tasks), 1)
-        fn, args, _kwargs = bg.tasks[0]
-        self.assertIs(fn, documents_router._clear_bot_vectors)
-        self.assertEqual(args[0], bot_id)
-
-        fn(*args)
-        self.assertFalse(vec_dir.exists())
+        self.assertEqual(len(bg.tasks), 0)
+        self.assertTrue(bot.knowledge_blocked)
+        self.assertFalse(bot.has_usable_knowledge)
+        # Readers can still hold the old directory open on Windows. It must
+        # become inaccessible through readiness checks, not physical deletion.
+        self.assertTrue(vec_dir.exists())
 
     def test_purge_one_of_many_rebuilds_remaining_index(self):
         keep = MagicMock()

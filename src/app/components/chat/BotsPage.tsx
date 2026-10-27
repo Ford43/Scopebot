@@ -220,6 +220,9 @@ export default function BotsPage({
                       >
                         {bot.name}
                       </p>
+                      <span className="text-[10px] font-medium text-gray-500">
+                        {bot.vector_backend === "qdrant" ? "Qdrant" : "Chroma"}
+                      </span>
                       <p className="text-[11px] text-gray-400 mt-0.5">
                         สถานะ:{" "}
                         <span

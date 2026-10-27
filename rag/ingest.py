@@ -1,83 +1,66 @@
+"""Build isolated indexes; only api.knowledge publishes them."""
+import argparse
 import sys
-import os
-import shutil
-import gc
-import chromadb # เพิ่ม chromadb เพื่อเข้าถึงคำสั่งเคลียร์แคช
-
-try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-except Exception:
-    pass
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-from config import EMBEDDING_MODEL
-from rag.document_loader import load_documents
-from rag.chunker import split_documents
-
-from langchain_huggingface import HuggingFaceEmbeddings
-
-try:
-    from langchain_chroma import Chroma
-except:
-    from langchain_community.vectorstores import Chroma
+from pathlib import Path
 
 
-def ingest(bot_id) -> bool:
-    """Ingest documents for a bot. Returns True only when chunks were written."""
-    print(f"Ingest for bot: {bot_id}")
+def build_index(snapshot, output, *, embedding=None, backend="chroma"):
+    from rag.document_loader import load_documents
+    from rag.chunker import split_documents
 
-    embedding = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    persist_path = f"vector_db/{bot_id}"
-
-    if os.path.exists(persist_path):
-        print("Clearing old DB...")
-        
-        # --- [เพิ่มโค้ดส่วนนี้เพื่อปลดล็อคไฟล์] ---
-        try:
-            # สั่งเคลียร์การเชื่อมต่อที่ค้างอยู่ใน ChromaDB
-            chromadb.api.client.SharedSystemClient.clear_system_cache()
-        except Exception:
-            pass
-            
-        gc.collect() # บังคับให้ระบบคืนค่า Memory และ File Handles
-        
-        # ใช้ ignore_errors=True ช่วยข้ามไฟล์ที่ลบไม่ได้ชั่วคราว
-        shutil.rmtree(persist_path, ignore_errors=True)
-
-    print("Loading documents...")
-    docs = load_documents(bot_id)
-
-    # guard — ถ้าไม่มีเอกสารให้หยุดเลย
+    output = Path(output)
+    if output.exists():
+        raise ValueError("A generation must use a new index directory")
+    if backend not in {"chroma", "qdrant"}:
+        raise ValueError("Unknown vector backend")
+    docs = load_documents(data_path=str(snapshot), strict=True)
     if not docs:
-        print(f"[ingest] no documents for bot: {bot_id} (check data/{bot_id}/)")
-        return False
-
-    print("Splitting documents...")
+        raise ValueError("No readable documents")
     chunks = split_documents(docs)
-
-    # guard — ถ้าไม่มี chunks ให้หยุดเลย
     if not chunks:
-        print(f"ไม่มี chunks สำหรับ bot: {bot_id} — ข้ามการบันทึก DB")
-        return False
-
-    for chunk in chunks:
-        chunk.metadata["bot_id"] = bot_id
-
-    print("Creating embeddings & saving to DB...")
-    Chroma.from_documents(
-        documents=chunks,
-        embedding=embedding,
-        persist_directory=persist_path
-    )
-
-    print(f"Ingestion complete for {bot_id}!")
+        raise ValueError("No readable chunks")
+    if embedding is None:
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from config import EMBEDDING_MODEL
+        embedding = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    if backend == "qdrant":
+        from rag.qdrant_store import build_qdrant
+        build_qdrant(chunks, output, embedding)
+        return True
+    from langchain_chroma import Chroma
+    db = Chroma.from_documents(documents=chunks, embedding=embedding, persist_directory=str(output))
+    saved = db.get(limit=1, include=["documents"])
+    if db._collection.count() != len(chunks) or not saved["documents"] or not saved["documents"][0]:
+        raise RuntimeError("Index verification failed")
     return True
 
+
+def ingest(bot_id):
+    """Keep manual reindexing on the safe publication path."""
+    from api.database import SessionLocal
+    from api import models
+    from api.knowledge import state_lock, request_update, run_update
+    with state_lock(), SessionLocal() as db:
+        bot = db.query(models.Bot).filter_by(bot_id=bot_id).one()
+        request_update(bot)
+        db.commit()
+        db_id, owner = bot.id, bot.owner_id
+    run_update(bot_id, db_id, "documents", owner)
+
+
 if __name__ == "__main__":
-    print("INGEST START")
-
-    bot_id = sys.argv[1] if len(sys.argv) > 1 else "bot_nt"
-
-    ingest(bot_id)
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("bot_id", nargs="?")
+    parser.add_argument("--snapshot")
+    parser.add_argument("--output")
+    parser.add_argument("--backend", choices=["chroma", "qdrant"], default="chroma")
+    args = parser.parse_args()
+    if args.snapshot and args.output:
+        build_index(args.snapshot, args.output, backend=args.backend)
+    elif args.bot_id:
+        ingest(args.bot_id)
+    else:
+        parser.error("Provide a bot ID, or --snapshot and --output")

@@ -295,7 +295,7 @@ async def line_webhook(bot_id: str, request: Request):
                     continue
 
                 # ---- ไม่มีเอกสาร / บอทไม่พร้อม → ไม่ค้นจากฐานความรู้เก่า ----
-                if bot.status != models.BotStatus.active or not bot.documents:
+                if not bot.has_usable_knowledge:
                     no_kb_text = "บอทนี้ยังไม่มีข้อมูลในฐานความรู้ในขณะนี้"
                     db.add(models.Conversation(
                         session_id=line_user_id,

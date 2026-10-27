@@ -303,6 +303,107 @@ class ReviewFixTests(unittest.TestCase):
         self.assertEqual(len(self.bot.documents), 1)
         self.assertEqual(len(bg.tasks), 0)
 
+    def test_adding_file_keeps_existing_bot_available_for_web_chat(self):
+        from api.knowledge import state_lock, request_update
+        with state_lock():
+            request_update(self.bot)
+            self.db.commit()
+        with patch.object(chat, "ask_rag", return_value=("Original answer", [])) as ask:
+            result = self.send("What is the policy?")
+        self.assertEqual(result["answer"], "Original answer")
+        ask.assert_called_once()
+        self.assertTrue(schemas.BotOut.model_validate(self.bot).has_usable_knowledge)
+        self.assertEqual(self.bot.knowledge_update_status, "queued")
+
+    def test_create_backend_choice_is_persisted_and_cannot_change_later(self):
+        from api.routers import bots
+        trial = bots.create_bot(schemas.BotCreate(name="Qdrant trial", vector_backend="qdrant"), self.db, self.user)
+        self.assertEqual(trial.vector_backend, "qdrant")
+        self.assertEqual(schemas.BotOut.model_validate(trial).vector_backend, "qdrant")
+        with self.assertRaises(HTTPException) as error:
+            bots.update_bot(trial.bot_id, schemas.BotUpdate(vector_backend="chroma"), self.db, self.user)
+        self.assertEqual(error.exception.status_code, 400)
+        self.db.refresh(trial)
+        self.assertEqual(trial.vector_backend, "qdrant")
+        # Older clients that omit the choice still get the original backend.
+        self.assertEqual(self.bot.vector_backend, "chroma")
+
+    def test_reusing_library_document_for_qdrant_does_not_rebuild_chroma_bot(self):
+        from api.routers import bots
+        doc, _ = self.upload("shared.txt", b"shared knowledge")
+        documents.assign_to_bot(doc.id, self.bot.bot_id, BackgroundTasks(), self.db, self.user)
+        first_revision = self.bot.knowledge_revision
+        trial = bots.create_bot(schemas.BotCreate(name="Qdrant trial", vector_backend="qdrant"), self.db, self.user)
+        documents.assign_to_bot(doc.id, trial.bot_id, BackgroundTasks(), self.db, self.user)
+        self.db.refresh(self.bot)
+        self.assertEqual(self.bot.knowledge_revision, first_revision)
+        self.assertTrue(self.bot.has_usable_knowledge)
+        self.assertEqual(Path(doc.file_path).read_bytes(), b"shared knowledge")
+        self.assertEqual({bot.id for bot in doc.bots}, {self.bot.id, trial.id})
+
+    def test_destructive_update_blocks_web_chat_until_success(self):
+        from api.knowledge import state_lock, request_update
+        with state_lock():
+            request_update(self.bot, destructive=True)
+            self.db.commit()
+        with patch.object(chat, "ask_rag") as ask:
+            with self.assertRaises(HTTPException):
+                self.send("What is the policy?")
+        ask.assert_not_called()
+
+    def test_account_delete_revokes_index_without_removing_open_files(self):
+        from api.routers import auth as auth_router
+        from api.knowledge import resolve_index_path
+        admin = models.User(email="admin-delete@example.test", username="admin-delete",
+                            hashed_password="unused", role=models.UserRole.admin,
+                            is_active=True, is_approved=True)
+        self.db.add(admin)
+        self.user.is_active = False
+        self.db.commit()
+        bot_id, db_id = self.bot.bot_id, self.bot.id
+        index = Path("vector_db") / bot_id
+        index.mkdir(parents=True)
+        marker = index / "open-index"
+        marker.write_text("old index")
+        auth_router.delete_user(self.user.id, self.db, admin)
+        self.assertIsNone(self.db.get(models.Bot, db_id))
+        self.assertTrue(marker.exists())
+        with patch("api.knowledge.SessionLocal", return_value=self.db):
+            self.assertIsNone(resolve_index_path(bot_id))
+
+    def test_line_answers_during_additive_update_but_blocks_destructive_update(self):
+        from api.knowledge import state_lock, request_update
+        from api.routers import line_webhook
+        self.bot.is_line_connected = True
+        self.bot.line_channel_token = "test-token"
+        self.bot.line_channel_secret = "test-secret"
+        self.db.commit()
+        app = FastAPI()
+        app.include_router(line_webhook.router)
+        db_id = self.bot.id
+        for destructive in (False, True):
+            with self.subTest(destructive=destructive):
+                self.bot = self.db.get(models.Bot, db_id)
+                with state_lock():
+                    request_update(self.bot, destructive=destructive)
+                    self.db.commit()
+                with patch.object(line_webhook, "SessionLocal", return_value=self.db), \
+                     patch.object(line_webhook, "_verify_signature", return_value=True), \
+                     patch.object(line_webhook, "_get_display_name", return_value="Customer"), \
+                     patch.object(line_webhook, "_show_line_loading"), \
+                     patch.object(line_webhook, "ApiClient"), \
+                     patch.object(line_webhook, "MessagingApi"), \
+                     patch.object(line_webhook, "_line_reply_or_push") as send, \
+                     patch.object(line_webhook, "ask_rag", return_value=("Original answer", [])) as ask:
+                    with TestClient(app) as client:
+                        result = client.post(f"/api/line/webhook/{self.bot.bot_id}", json={"events": [{
+                            "type": "message", "replyToken": "reply", "message": {"type": "text", "text": "Policy question"},
+                            "source": {"userId": "Utest"}}]})
+                self.assertEqual(result.status_code, 200)
+                self.assertEqual(ask.call_count, 0 if destructive else 1)
+                if not destructive:
+                    self.assertEqual(send.call_args.args[3][0].text, "Original answer")
+
     def test_legacy_filename_can_be_detached_without_new_upload_validation(self):
         # Such names were accepted on Linux by the previous uploader. A missing
         # local copy (e.g. after restoring on Windows) must not trap the record.

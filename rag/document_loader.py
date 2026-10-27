@@ -48,9 +48,9 @@ def load_md(path):
         return f.read()
 
 
-def load_documents(bot_id):
+def load_documents(bot_id=None, *, data_path=None, strict=False):
 
-    data_path = os.path.join(BASE_DIR, "data", bot_id)
+    data_path = data_path or os.path.join(BASE_DIR, "data", bot_id)
     print(f"[loader] Looking in: {data_path}")
 
     documents = []
@@ -64,23 +64,29 @@ def load_documents(bot_id):
         path = os.path.join(data_path, file)
 
         try:
-            if file.endswith(".pdf"):
+            extension = os.path.splitext(file)[1].lower()
+            if extension == ".pdf":
                 text = load_pdf(path)
-            elif file.endswith(".docx"):
+            elif extension == ".docx":
                 text = load_docx(path)
-            elif file.endswith(".txt"):
+            elif extension == ".txt":
                 text = load_txt(path)
-            elif file.endswith(".csv"):
+            elif extension == ".csv":
                 text = load_csv(path)
-            elif file.endswith(".json"):
+            elif extension == ".json":
                 text = load_json(path)
-            elif file.endswith(".html"):
+            elif extension == ".html":
                 text = load_html(path)
-            elif file.endswith(".md"):
+            elif extension == ".md":
                 text = load_md(path)
             else:
+                if strict:
+                    raise ValueError(f"Unsupported file: {file}")
                 print(f"[loader] Unsupported file: {file}")
                 continue
+
+            if strict and not text.strip():
+                raise ValueError(f"No readable text: {file}")
 
             documents.append(
                 Document(
@@ -91,6 +97,8 @@ def load_documents(bot_id):
             print(f"Loaded: {file}")
 
         except Exception as e:
+            if strict:
+                raise ValueError(f"Cannot read document: {file}") from e
             print(f"[loader] Error loading {file}: {e}")
 
     print(f"Total docs: {len(documents)}")

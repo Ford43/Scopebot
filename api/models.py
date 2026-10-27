@@ -54,6 +54,18 @@ class Bot(Base):
     description = Column(Text, nullable=True)
     status = Column(Enum(BotStatus), default=BotStatus.inactive)
     system_prompt = Column(Text, nullable=True)
+    active_index_path = Column(Text, nullable=True)
+    vector_backend = Column(String(20), nullable=False, default="chroma", server_default="chroma")
+    knowledge_revision = Column(Integer, nullable=False, default=0, server_default="0")
+    indexed_revision = Column(Integer, nullable=False, default=0, server_default="0")
+    knowledge_blocked = Column(Boolean, nullable=False, default=False, server_default="false")
+    knowledge_update_status = Column(String(20), nullable=False, default="idle", server_default="idle")
+    knowledge_update_error = Column(Text, nullable=True)
+    knowledge_update_started_at = Column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def has_usable_knowledge(self):
+        return bool(self.status == BotStatus.active and self.documents and not self.knowledge_blocked)
     is_line_connected = Column(Boolean, default=False)
     is_web_connected = Column(Boolean, default=False)
     line_channel_token = Column(String, nullable=True)

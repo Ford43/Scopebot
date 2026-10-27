@@ -1,15 +1,14 @@
 import os
 import shutil
-import concurrent.futures
 import uuid
 import logging
 from pathlib import Path
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Form
 from sqlalchemy.orm import Session
-from api.database import get_db, SessionLocal
+from api.database import get_db
 from api import models, schemas, auth
-from rag.ingest import ingest
+from api.knowledge import request_update, run_update, state_lock, knowledge_mutation
 
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
 
@@ -17,7 +16,6 @@ UPLOAD_BASE = "data/library"
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".csv"}
 ALLOWED_EXTENSIONS_LABEL = "PDF, DOCX, TXT, CSV"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-INGEST_TIMEOUT_SEC = 180
 logger = logging.getLogger(__name__)
 
 
@@ -81,7 +79,7 @@ def _replace_document(doc, file_path, category, size, db):
         doc.file_size = size
         doc.category = category
         for bot in doc.bots:
-            bot.status = models.BotStatus.processing
+            request_update(bot, destructive=True)
         db.commit()
     except Exception:
         db.rollback()
@@ -142,66 +140,67 @@ async def upload_document(
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="ไฟล์ใหญ่เกิน 10 MB")
 
-    # A document row may not exist yet. Lock its existing owner first so two
-    # concurrent PostgreSQL uploads cannot both insert the same new filename.
-    db.query(models.User).filter(models.User.id == current_user.id).with_for_update().one()
+    with state_lock():
+        # A document row may not exist yet. Lock its existing owner first so two
+        # concurrent PostgreSQL uploads cannot both insert the same new filename.
+        db.query(models.User).filter(models.User.id == current_user.id).with_for_update().one()
 
-    # เช็คชื่อไฟล์ซ้ำ
-    existing = db.query(models.Document).filter(
-        models.Document.filename == filename,
-        models.Document.owner_id == current_user.id
-    ).with_for_update().first()
+        # เช็คชื่อไฟล์ซ้ำ
+        existing = db.query(models.Document).filter(
+            models.Document.filename == filename,
+            models.Document.owner_id == current_user.id
+        ).with_for_update().first()
 
-    category = (category or "ทั่วไป").strip()[:40] or "ทั่วไป"
+        category = (category or "ทั่วไป").strip()[:40] or "ทั่วไป"
 
-    if existing and not replace_existing:
-        raise HTTPException(status_code=409, detail={
-            "code": "document_exists",
-            "message": "มีเอกสารชื่อนี้แล้ว ต้องยืนยันก่อนแทนที่เนื้อหา",
-            "assigned_bots": [b.name for b in existing.bots],
-        })
+        if existing and not replace_existing:
+            raise HTTPException(status_code=409, detail={
+                "code": "document_exists",
+                "message": "มีเอกสารชื่อนี้แล้ว ต้องยืนยันก่อนแทนที่เนื้อหา",
+                "assigned_bots": [b.name for b in existing.bots],
+            })
 
-    # บันทึกไฟล์
-    folder = _library_folder(current_user.id)
-    file_path = _contained_path(folder, f"{uuid.uuid4().hex}{ext}")
-    folder.mkdir(parents=True, exist_ok=True)
-    with open(file_path, "wb") as f:
-        f.write(content)
+        # บันทึกไฟล์
+        folder = _library_folder(current_user.id)
+        file_path = _contained_path(folder, f"{uuid.uuid4().hex}{ext}")
+        folder.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "wb") as f:
+            f.write(content)
 
-    if existing:
-        old_path = Path(existing.file_path).resolve()
-        _replace_document(existing, file_path, category, len(content), db)
-        db.refresh(existing)
-        for bot in existing.bots:
-            background_tasks.add_task(_run_ingest_and_notify, bot.bot_id, bot.id, filename, current_user.id)
-        if old_path.is_relative_to(folder.resolve()) and old_path != file_path:
-            try:
-                old_path.unlink(missing_ok=True)
-            except OSError:
-                logger.warning("Could not remove superseded library file %s", old_path)
-        return existing
+        if existing:
+            old_path = Path(existing.file_path).resolve()
+            _replace_document(existing, file_path, category, len(content), db)
+            db.refresh(existing)
+            for bot in existing.bots:
+                background_tasks.add_task(_run_ingest_and_notify, bot.bot_id, bot.id, filename, current_user.id)
+            if old_path.is_relative_to(folder.resolve()) and old_path != file_path:
+                try:
+                    old_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.warning("Could not remove superseded library file %s", old_path)
+            return existing
 
-    # บันทึก metadata
-    doc = models.Document(
-        filename=filename,
-        file_path=str(file_path),
-        file_size=len(content),
-        category=category,
-        owner_id=current_user.id
-    )
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
+        # บันทึก metadata
+        doc = models.Document(
+            filename=filename,
+            file_path=str(file_path),
+            file_size=len(content),
+            category=category,
+            owner_id=current_user.id
+        )
+        db.add(doc)
+        db.commit()
+        db.refresh(doc)
 
-    # แจ้งเตือน
-    background_tasks.add_task(
-        _create_notification, db, current_user.id,
-        "อัปโหลดเอกสารสำเร็จ",
-        f"ไฟล์ '{file.filename}' ถูกเพิ่มเข้า Library เรียบร้อยแล้ว",
-        "success"
-    )
+        # แจ้งเตือน
+        background_tasks.add_task(
+            _create_notification, db, current_user.id,
+            "อัปโหลดเอกสารสำเร็จ",
+            f"ไฟล์ '{file.filename}' ถูกเพิ่มเข้า Library เรียบร้อยแล้ว",
+            "success"
+        )
 
-    return doc
+        return doc
 
 
 # =====================
@@ -283,15 +282,12 @@ def _sync_bot_knowledge_after_doc_change(
     user_id: int,
     background_tasks: BackgroundTasks,
 ) -> None:
-    remaining = len(bot.documents)
-    if remaining == 0:
-        bot.status = models.BotStatus.inactive
-        background_tasks.add_task(_clear_bot_vectors, bot.bot_id)
-    else:
-        bot.status = models.BotStatus.processing
+    request_update(bot, destructive=True)
+    if bot.documents:
         background_tasks.add_task(
             _run_ingest_and_notify, bot.bot_id, bot.id, filename, user_id
         )
+
 
 
 def _purge_document_from_assigned_bots(
@@ -299,7 +295,7 @@ def _purge_document_from_assigned_bots(
     user_id: int,
     background_tasks: BackgroundTasks,
 ) -> list[str]:
-    """Detach a library file from every bot, drop copies, rebuild or clear vectors."""
+    """Detach copies and invalidate removed content before scheduling a rebuild."""
     assigned = list(doc.bots)
     bot_names = [b.name for b in assigned]
     filename = doc.filename
@@ -315,6 +311,7 @@ def _purge_document_from_assigned_bots(
 # ลบเอกสาร (พร้อมแจ้งเตือน)
 # =====================
 @router.delete("/{doc_id}")
+@knowledge_mutation
 def delete_document(
     doc_id: int,
     background_tasks: BackgroundTasks,
@@ -367,6 +364,7 @@ def delete_document(
 # กำหนดเอกสารให้ Bot
 # =====================
 @router.post("/{doc_id}/assign/{bot_id}")
+@knowledge_mutation
 def assign_to_bot(
     doc_id: int,
     bot_id: str,
@@ -402,7 +400,7 @@ def assign_to_bot(
 
     # เชื่อม relation
     bot.documents.append(doc)
-    bot.status = models.BotStatus.processing
+    request_update(bot)
     db.commit()
 
     # รัน ingest ใน background (ใช้ Session ใหม่ — อย่าใช้ request session)
@@ -417,6 +415,7 @@ def assign_to_bot(
 # ถอด เอกสารออกจาก Bot
 # =====================
 @router.delete("/{doc_id}/unassign/{bot_id}")
+@knowledge_mutation
 def unassign_from_bot(
     doc_id: int,
     bot_id: str,
@@ -459,91 +458,12 @@ def unassign_from_bot(
 
 
 def _clear_bot_vectors(bot_id_str: str):
-    import shutil
-    import gc
-    try:
-        import chromadb
-        try:
-            chromadb.api.client.SharedSystemClient.clear_system_cache()
-        except Exception:
-            pass
-        gc.collect()
-    except Exception as e:
-        print(f"clear vectors cache error for {bot_id_str}: {e}")
-    persist_path = f"vector_db/{bot_id_str}"
-    if os.path.exists(persist_path):
-        shutil.rmtree(persist_path, ignore_errors=True)
+    """Legacy hook: indexes are retained to avoid deleting files held by readers.
+
+    Detaching documents invalidates access transactionally via knowledge_blocked.
+    """
+    return None
 
 
 def _run_ingest_and_notify(bot_id_str: str, bot_db_id: int, filename: str, user_id: int):
-    db = SessionLocal()
-    timed_out = False
-    ok = False
-    try:
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        future = pool.submit(ingest, bot_id_str)
-        try:
-            ok = bool(future.result(timeout=INGEST_TIMEOUT_SEC))
-        except concurrent.futures.TimeoutError:
-            timed_out = True
-            ok = False
-        finally:
-            pool.shutdown(wait=False, cancel_futures=False)
-
-        bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
-        if not bot:
-            return
-
-        if timed_out:
-            bot.status = models.BotStatus.inactive
-            db.commit()
-            _create_notification(
-                db, user_id,
-                "ประมวลผลเอกสารหมดเวลา",
-                f"ไฟล์ '{filename}' ใช้เวลานานเกิน {INGEST_TIMEOUT_SEC // 60} นาที — บอทยังไม่พร้อม ลองอัปโหลดใหม่หรือลบบอทได้",
-                "warning",
-            )
-            return
-
-        if ok:
-            bot.status = models.BotStatus.active
-            db.commit()
-            _create_notification(
-                db, user_id,
-                "เพิ่มเอกสารให้ Bot สำเร็จ",
-                f"ไฟล์ '{filename}' พร้อมใช้งานใน Bot แล้ว",
-                "success",
-            )
-        else:
-            bot.status = models.BotStatus.inactive
-            db.commit()
-            _create_notification(
-                db, user_id,
-                "ประมวลผลเอกสารไม่สำเร็จ",
-                f"ไฟล์ '{filename}' ไม่สามารถสร้างฐานความรู้ได้ (ไม่มีเนื้อหาที่อ่านได้) — บอทยังไม่พร้อมใช้งาน",
-                "warning",
-            )
-    except Exception as e:
-        try:
-            bot = db.query(models.Bot).filter(models.Bot.id == bot_db_id).first()
-            if bot:
-                bot.status = models.BotStatus.inactive
-                db.commit()
-            _create_notification(
-                db, user_id,
-                "เกิดข้อผิดพลาด",
-                f"ไม่สามารถประมวลผลไฟล์ '{filename}' ได้: {str(e)}",
-                "danger",
-            )
-        except Exception:
-            db.rollback()
-        import traceback
-        try:
-            print(f"\n{'='*50}")
-            print(f"[ingest] ERROR ingesting file: {filename}")
-            traceback.print_exc()
-            print(f"{'='*50}\n")
-        except Exception:
-            traceback.print_exc()
-    finally:
-        db.close()
+    run_update(bot_id_str, bot_db_id, filename, user_id)

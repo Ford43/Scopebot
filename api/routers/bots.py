@@ -7,6 +7,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from api.database import get_db
 from api import models, schemas, auth
+from api.knowledge import request_update, knowledge_mutation
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
 router = APIRouter(prefix="/api/bots", tags=["Bots"])
@@ -25,6 +26,8 @@ def _as_utc(ts: datetime) -> datetime:
 def expire_stale_processing(bot: Optional[models.Bot], db: Session) -> Optional[models.Bot]:
     """If ingest hung, flip processing → inactive so the bot can be edited or deleted."""
     if bot is None or bot.status != models.BotStatus.processing:
+        return bot
+    if bot.knowledge_update_status in {"queued", "processing"}:
         return bot
     ts = bot.updated_at or bot.created_at
     if ts is None:
@@ -83,6 +86,7 @@ def create_bot(
         name=body.name,
         description=body.description,
         system_prompt=body.system_prompt,
+        vector_backend=body.vector_backend,
         owner_id=current_user.id
     )
     db.add(bot)
@@ -122,7 +126,11 @@ def update_bot(
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
+    if body.vector_backend is not None and body.vector_backend != bot.vector_backend:
+        raise HTTPException(status_code=400, detail="เปลี่ยนฐานค้นหาของบอทเดิมไม่ได้ กรุณาสร้างบอททดลองใหม่")
     for field, value in body.dict(exclude_unset=True).items():
+        if field == "vector_backend":
+            continue
         setattr(bot, field, value)
     db.commit()
     db.refresh(bot)
@@ -132,7 +140,7 @@ def update_bot(
 def _wipe_bot_files(bot_id_str: str) -> None:
     for folder_path in (
         os.path.join(UPLOAD_BASE, bot_id_str),
-        os.path.join("vector_db", bot_id_str),
+
     ):
         if not os.path.exists(folder_path):
             continue
@@ -147,6 +155,7 @@ def _wipe_bot_files(bot_id_str: str) -> None:
 
 
 @router.delete("/{bot_id}")
+@knowledge_mutation
 def delete_bot(
     bot_id: str,
     background_tasks: BackgroundTasks,
@@ -187,6 +196,7 @@ def list_documents(
 
 
 @router.post("/{bot_id}/reindex")
+@knowledge_mutation
 def reindex_bot(
     bot_id: str,
     background_tasks: BackgroundTasks,
@@ -200,7 +210,7 @@ def reindex_bot(
     if not bot.documents:
         raise HTTPException(status_code=400, detail="ยังไม่มีเอกสารในบอทนี้")
 
-    bot.status = models.BotStatus.processing
+    request_update(bot)
     db.commit()
     first_name = bot.documents[0].filename if bot.documents else "documents"
     background_tasks.add_task(

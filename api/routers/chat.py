@@ -54,7 +54,7 @@ def chat(
     bot = db.query(models.Bot).filter(models.Bot.bot_id == bot_id).first()
     auth.assert_bot_access(current_user, bot)
 
-    if bot.status != models.BotStatus.active or not bot.documents:
+    if not bot.has_usable_knowledge:
         raise HTTPException(status_code=400, detail="Bot ยังไม่พร้อมใช้งาน")
 
     # กรอง question สั้นเกินไป

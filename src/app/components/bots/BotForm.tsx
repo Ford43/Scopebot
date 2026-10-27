@@ -24,7 +24,7 @@ import {
   unassignDocumentFromBot,
   uploadDocument,
   updateDocumentCategory,
-  deleteDocument,
+  fetchLibraryDocuments,
 } from "../../lib/documents";
 import {
   ALLOWED_DOC_ACCEPT,
@@ -72,9 +72,12 @@ export default function BotForm({
   const [name, setName] = useState(existing?.name ?? "");
   const [desc, setDesc] = useState(existing?.description ?? "");
   const [systemPrompt, setSystemPrompt] = useState(existing?.system_prompt ?? "");
+  const [vectorBackend, setVectorBackend] = useState<"chroma" | "qdrant">(existing?.vector_backend ?? "chroma");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [docs, setDocs] = useState<BotDocument[]>([]);
+  const [libraryDocs, setLibraryDocs] = useState<BotDocument[]>([]);
+  const [isAssigningDoc, setIsAssigningDoc] = useState(false);
   const [docSearch, setDocSearch] = useState("");
   const [uploadCategory, setUploadCategory] = useState("ทั่วไป");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -89,19 +92,38 @@ export default function BotForm({
     existing?.status || "inactive"
   );
   const [processingStuck, setProcessingStuck] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState(existing?.knowledge_update_status ?? "idle");
+  const [updateError, setUpdateError] = useState<string | null>(existing?.knowledge_update_error ?? null);
+  const prevUpdateRef = useRef(updateStatus);
   const prevStatusRef = useRef<string>(existing?.status || "inactive");
 
   const isNewBot = !currentBot;
   const needsName = isNewBot && !name.trim();
-  const isProcessing = botStatus === "processing" && !processingStuck;
+  const updatePending = updateStatus === "queued" || updateStatus === "processing";
+  const isProcessing = (botStatus === "processing" || updatePending) && !processingStuck;
+  const syncKnowledge = useCallback((data: BotItem) => {
+    setBotStatus(data.status);
+    setUpdateStatus(data.knowledge_update_status ?? "idle");
+    setUpdateError(data.knowledge_update_error ?? null);
+  }, []);
   const canCreate = !!name.trim() && docs.length > 0;
   const canSave =
     !isSaving &&
     !isUploading &&
     !isDeleting &&
+    !isAssigningDoc &&
     !isProcessing &&
     (isNewBot ? canCreate : !!name.trim());
-  const isBusy = isUploading || isDeleting;
+  const isBusy = isUploading || isDeleting || isAssigningDoc;
+
+  useEffect(() => {
+    if (activeTab !== "knowledge" || isUploading) return;
+    let cancelled = false;
+    fetchLibraryDocuments().then((data) => {
+      if (!cancelled) setLibraryDocs(data);
+    }).catch((error) => console.error("Failed to fetch library", error));
+    return () => { cancelled = true; };
+  }, [activeTab, isUploading]);
 
   const fetchDocs = useCallback(async (botId?: string) => {
     const id = botId ?? currentBot?.bot_id;
@@ -129,9 +151,7 @@ export default function BotForm({
       try {
         const data = await fetchBot(currentBot.bot_id);
         if (cancelled) return;
-        setBotStatus((prev) =>
-          prev === "processing" && data.status === "inactive" ? prev : data.status
-        );
+        syncKnowledge(data);
       } catch (error) {
         console.error("Initial status sync error:", error);
       }
@@ -140,17 +160,19 @@ export default function BotForm({
     return () => {
       cancelled = true;
     };
-  }, [currentBot?.bot_id, isUploading]);
+  }, [currentBot?.bot_id, isUploading, syncKnowledge]);
 
   useEffect(() => {
     if (!currentBot?.bot_id) return;
-    if (botStatus !== "processing") return;
+    if (botStatus !== "processing" && !updatePending) return;
+    let cancelled = false;
 
     const checkBotStatus = async () => {
       try {
         const data = await fetchBot(currentBot.bot_id);
-        setBotStatus(data.status);
-        if (data.status !== "processing") {
+        if (cancelled) return;
+        syncKnowledge(data);
+        if (!["queued", "processing"].includes(data.knowledge_update_status ?? "idle")) {
           fetchDocs();
         }
       } catch (error) {
@@ -160,12 +182,27 @@ export default function BotForm({
 
     checkBotStatus();
     const interval = setInterval(checkBotStatus, 2000);
-    const stuckTimer = setTimeout(() => setProcessingStuck(true), 90000);
+    const stuckTimer = setTimeout(() => setProcessingStuck(true), 210000);
     return () => {
+      cancelled = true;
       clearInterval(interval);
       clearTimeout(stuckTimer);
     };
-  }, [currentBot?.bot_id, botStatus, fetchDocs]);
+  }, [currentBot?.bot_id, botStatus, updatePending, fetchDocs, syncKnowledge]);
+
+  useEffect(() => {
+    const wasPending = ["queued", "processing"].includes(prevUpdateRef.current);
+    if (wasPending && updateStatus === "ready") {
+      setProcessingStuck(false);
+      toast.success("อัปเดตฐานความรู้สำเร็จแล้ว");
+    } else if (wasPending && updateStatus === "error") {
+      setProcessingStuck(false);
+      toast.error("อัปเดตข้อมูลไม่สำเร็จ", {
+        description: botStatus === "active" ? "บอทยังตอบจากข้อมูลเดิมได้" : "ตรวจสอบเอกสารแล้วลองประมวลผลใหม่",
+      });
+    }
+    prevUpdateRef.current = updateStatus;
+  }, [updateStatus, botStatus]);
 
   // Toast when ingest finishes
   useEffect(() => {
@@ -219,7 +256,7 @@ export default function BotForm({
   };
 
   const handleSave = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isBusy) return;
     if (!validate()) return;
     setIsSaving(true);
     try {
@@ -227,12 +264,15 @@ export default function BotForm({
         name: name.trim(),
         description: desc.trim(),
         system_prompt: systemPrompt.trim(),
+        vector_backend: vectorBackend,
       };
 
       const wasNew = !currentBot;
       const savedBot = currentBot
         ? await updateBot(currentBot.bot_id, payload)
         : await createBot(payload);
+      setCurrentBot(savedBot);
+      if (wasNew) onBotCreated?.(savedBot);
 
       if (wasNew && docs.length > 0) {
         skipDocsFetchRef.current = true;
@@ -242,7 +282,6 @@ export default function BotForm({
         setCurrentBot(savedBot);
         setBotStatus("processing");
         prevStatusRef.current = "processing";
-        onBotCreated?.(savedBot);
         toast.success("สร้างบอทแล้ว", {
           description: "กำลังประมวลผลเอกสาร — อยู่หน้านี้จนกว่าสถานะจะเป็นพร้อมใช้งาน",
         });
@@ -252,13 +291,13 @@ export default function BotForm({
       } else {
         setCurrentBot(savedBot);
         toast.success("บันทึกการตั้งค่าเรียบร้อย");
-        if (wasNew) onBotCreated?.(savedBot);
         onSaveSuccess({ leave: true });
       }
     } catch (error) {
       console.error("Save bot error:", error);
       toast.error(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");
     } finally {
+      skipDocsFetchRef.current = false;
       setIsSaving(false);
     }
   };
@@ -287,7 +326,7 @@ export default function BotForm({
   const addFiles = async (incoming: FileList | File[] | null) => {
     const list = incoming ? Array.from(incoming) : [];
     if (list.length === 0) return;
-    if (isProcessing) return;
+    if (isProcessing || isBusy || isSaving) return;
     if (!currentBot && !name.trim()) {
       toast.error("กรอกชื่อบอทก่อน", {
         description: "จากนั้นเลือกไฟล์ — ระบบจะสร้างบอทและเริ่มประมวลผลทันที",
@@ -309,6 +348,7 @@ export default function BotForm({
             name: name.trim(),
             description: desc.trim(),
             system_prompt: systemPrompt.trim(),
+            vector_backend: vectorBackend,
           });
           setCurrentBot(bot);
           toast.success("สร้างบอทแล้ว", {
@@ -365,8 +405,7 @@ export default function BotForm({
 
       if (assignedAny) {
         setProcessingStuck(false);
-        setBotStatus("processing");
-        prevStatusRef.current = "processing";
+        syncKnowledge(await fetchBot(bot.bot_id));
         await fetchDocs(bot.bot_id);
       }
 
@@ -400,9 +439,8 @@ export default function BotForm({
     if (!currentBot?.bot_id) return;
     try {
       setProcessingStuck(false);
-      setBotStatus("processing");
-      prevStatusRef.current = "processing";
       await reindexBot(currentBot.bot_id);
+      syncKnowledge(await fetchBot(currentBot.bot_id));
       toast.success("เริ่มประมวลผลเอกสารใหม่แล้ว");
     } catch (error) {
       toast.error(
@@ -428,11 +466,6 @@ export default function BotForm({
   const handleDeleteDoc = async (docId: number) => {
     if (isNewBot) {
       setDocs((prev) => prev.filter((d) => d.id !== docId));
-      try {
-        await deleteDocument(docId);
-      } catch {
-        /* staged file may already be gone */
-      }
       return;
     }
     if (!currentBot?.bot_id) return;
@@ -445,6 +478,7 @@ export default function BotForm({
 
     try {
       await unassignDocumentFromBot(docId, currentBot.bot_id);
+      syncKnowledge(await fetchBot(currentBot.bot_id));
       toast.success("ถอดเอกสารออกจากบอทแล้ว");
       fetchDocs();
     } catch (error) {
@@ -452,6 +486,37 @@ export default function BotForm({
       toast.error(
         error instanceof Error ? error.message : "ถอดเอกสารไม่สำเร็จ"
       );
+    }
+  };
+
+  const useLibraryDocument = async (doc: BotDocument) => {
+    if (isBusy || isSaving) return;
+    if (!currentBot && !name.trim()) {
+      toast.error("กรอกชื่อบอทก่อนเลือกเอกสารจากคลัง");
+      setErrors((prev) => ({ ...prev, name: "กรุณากรอกชื่อบอท" }));
+      return;
+    }
+    setIsAssigningDoc(true);
+    try {
+      let bot = currentBot;
+      if (!bot) {
+        bot = await createBot({ name: name.trim(), description: desc.trim(),
+          system_prompt: systemPrompt.trim(), vector_backend: vectorBackend });
+        // Preserve the created bot even if assignment fails, so retry cannot
+        // create another bot or lose partially assigned documents.
+        setCurrentBot(bot);
+        syncKnowledge(bot);
+        onBotCreated?.(bot);
+      }
+      await assignDocumentToBot(doc.id, bot.bot_id);
+      await fetchDocs(bot.bot_id);
+      syncKnowledge(await fetchBot(bot.bot_id));
+      toast.success(`เพิ่ม ${doc.filename} จากคลังแล้ว`);
+      onSaveSuccess({ leave: false });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "เพิ่มเอกสารจากคลังไม่สำเร็จ");
+    } finally {
+      setIsAssigningDoc(false);
     }
   };
 
@@ -565,6 +630,27 @@ export default function BotForm({
           ))}
         </div>
 
+        <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <label htmlFor="vector-backend" className="block text-sm font-semibold text-gray-800 mb-2">
+            ฐานค้นหาของบอท
+          </label>
+          <select
+            id="vector-backend"
+            value={vectorBackend}
+            onChange={(e) => setVectorBackend(e.target.value as "chroma" | "qdrant")}
+            disabled={!isNewBot || isBusy || isSaving}
+            className="w-full sm:w-72 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:opacity-70"
+          >
+            <option value="chroma">Chroma — ค่าเริ่มต้น</option>
+            <option value="qdrant">Qdrant — ทดลองเปรียบเทียบ</option>
+          </select>
+          <p className="mt-2 text-xs text-gray-500">
+            {isNewBot
+              ? "เลือกก่อนอัปโหลดไฟล์ ใช้เอกสารและคำถามเดียวกับอีกบอทเพื่อเทียบผล"
+              : "บอทนี้ใช้ฐานค้นหาที่เลือกไว้ตอนสร้าง หากต้องการลองอีกระบบ ให้สร้างบอทใหม่"}
+          </p>
+        </div>
+
         {activeTab === "general" && (
           <div className="space-y-6 max-w-2xl">
             <div>
@@ -656,6 +742,26 @@ export default function BotForm({
 
         {activeTab === "knowledge" && (
           <div className="space-y-6">
+            <details className="rounded-xl border border-gray-200 p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-gray-800">
+                ใช้เอกสารจากคลัง — ไม่ต้องอัปโหลดซ้ำ
+              </summary>
+              <p className="mt-2 text-xs text-gray-500">เลือกไฟล์เดิมเพื่อทดลองกับอีกบอท โดยไม่แทนที่เนื้อหา</p>
+              <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+                {libraryDocs.filter((doc) => !docs.some((item) => item.id === doc.id)).map((doc) => (
+                  <div key={doc.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                    <span className="min-w-0 flex-1 truncate text-sm text-gray-700">{doc.filename}</span>
+                    <button type="button" onClick={() => useLibraryDocument(doc)} disabled={isBusy || isSaving}
+                      className="rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 disabled:opacity-40">
+                      ใช้ไฟล์นี้
+                    </button>
+                  </div>
+                ))}
+                {!libraryDocs.some((doc) => !docs.some((item) => item.id === doc.id)) && (
+                  <p className="text-xs text-gray-400">ไม่มีเอกสารอื่นในคลังให้เลือก</p>
+                )}
+              </div>
+            </details>
             {errors.docs && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 {errors.docs}
@@ -667,22 +773,25 @@ export default function BotForm({
                 <Clock className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">
-                    กำลังประมวลผลเอกสาร...
+                    {botStatus === "active"
+                      ? "กำลังเพิ่มข้อมูล — บอทยังตอบจากข้อมูลเดิมได้"
+                      : "กำลังประมวลผลเอกสาร..."}
                   </p>
                   <p className="text-xs opacity-80">
-                    ระบบกำลังหั่นเอกสารและสร้างฐานความรู้ — สถานะจะเปลี่ยนเป็น
-                    “พร้อมใช้งาน” เมื่อเสร็จ
+                    ระบบจะใช้ฐานความรู้ใหม่เมื่อประมวลผลสำเร็จ
                   </p>
                 </div>
               </div>
             )}
 
-            {processingStuck && botStatus === "processing" && (
+            {(updateStatus === "error" || (processingStuck && (updatePending || botStatus === "processing"))) && (
               <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex-1">
-                  <p className="text-sm font-semibold">ประมวลผลเอกสารค้างอยู่</p>
+                  <p className="text-sm font-semibold">{updateStatus === "error" ? "อัปเดตข้อมูลไม่สำเร็จ" : "ประมวลผลเอกสารค้างอยู่"}</p>
+                  {updateError && <p className="text-xs mt-1">{updateError}</p>}
+                  {botStatus === "active" && <p className="text-xs mt-1">บอทยังตอบจากข้อมูลเดิมได้</p>}
                   <p className="text-xs opacity-80 mt-0.5">
-                    มักเกิดจากไฟล์ที่อ่านไม่ได้หรือโมเดลใช้เวลานาน — ลองใหม่ หรือลบบอทนี้แล้วสร้างใหม่
+                    ตรวจสอบไฟล์ที่เพิ่มล่าสุด แล้วลองประมวลผลใหม่ได้
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
