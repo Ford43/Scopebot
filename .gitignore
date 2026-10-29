@@ -39,3 +39,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temporary work and presentation inspection output
+/tmp/
+*.inspect.ndjson
