@@ -98,6 +98,7 @@ class ChatRequest(BaseModel):
 class ChatSource(BaseModel):
     filename: str
     snippet: Optional[str] = None
+    page: Optional[int] = None
 
 
 class ChatResponse(BaseModel):

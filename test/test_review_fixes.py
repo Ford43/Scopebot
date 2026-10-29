@@ -225,7 +225,7 @@ class ReviewFixTests(unittest.TestCase):
 
     def test_retrieval_uses_followup_context(self):
         doc = types.SimpleNamespace(page_content="Annual leave requires a leave form", metadata={"source": "policy.txt"})
-        def retrieve(query, bot):
+        def retrieve(query, bot, **kwargs):
             return [doc] if "Annual leave" in query else []
         grounded = json.dumps({
             "answer": "A leave form",

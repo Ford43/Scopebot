@@ -91,3 +91,13 @@ class QdrantIndex:
 
     def close(self):
         """Connections are scoped to each query; kept for explicit client usage."""
+
+    def get_section_documents(self, source, section):
+        from qdrant_client import models
+        with self._connection() as client:
+            points, _ = client.scroll(collection_name=self.manifest["collection"],
+                scroll_filter=models.Filter(must=[
+                    models.FieldCondition(key="metadata.source", match=models.MatchValue(value=source)),
+                    models.FieldCondition(key="metadata.section", match=models.MatchValue(value=section))]),
+                limit=81, with_payload=True, with_vectors=False)
+        return [Document(page_content=p.payload["page_content"], metadata=p.payload.get("metadata") or {}) for p in points]

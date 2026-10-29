@@ -18,6 +18,9 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "").strip() or None
 
 # ===== Retriever =====
 TOP_K = int(os.getenv("TOP_K", 5))  
+SEMANTIC_SEARCH_ENABLED = os.getenv("SEMANTIC_SEARCH_ENABLED", "true").lower() == "true"
+RERANKER_MODEL = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+RERANK_MIN_SCORE = float(os.getenv("RERANK_MIN_SCORE", "0.35"))
 
 # ===== Chunker =====
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1000)) 

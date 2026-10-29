@@ -1,3 +1,7 @@
+from api.native_runtime import prepare_native_runtime
+
+prepare_native_runtime()
+
 import sys
 
 # Windows consoles default to cp1252 — emoji/Thai in print() crash ingest

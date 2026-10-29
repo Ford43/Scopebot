@@ -7,6 +7,9 @@ from rag.evidence import (
     build_retrieval_query,
     parse_grounded_response,
     select_evidence_units,
+    extract_shift_start_answer,
+    extract_section_answer,
+    extract_relevant_quote,
     split_evidence_units,
     units_for_evidence_quotes,
     validate_grounded_answer,
@@ -62,13 +65,19 @@ def extract_sources(docs, limit: int = 3) -> List[Dict]:
             or "เอกสาร"
         )
         filename = os.path.basename(str(raw))
-        if filename in seen:
+        page = doc.metadata.get("page")
+        page = page if type(page) is int and page > 0 else None
+        key = (filename, page)
+        if key in seen:
             continue
-        seen.add(filename)
+        seen.add(key)
         snippet = (doc.page_content or "").strip().replace("\n", " ")
         if len(snippet) > 140:
             snippet = snippet[:140] + "…"
-        sources.append({"filename": filename, "snippet": snippet})
+        source = {"filename": filename, "snippet": snippet}
+        if page is not None:
+            source["page"] = page
+        sources.append(source)
         if len(sources) >= limit:
             break
     return sources
@@ -95,7 +104,7 @@ def ask_rag(
     history = (history or [])[-6:]
     retrieval_query = build_retrieval_query(question, history)
     try:
-        docs = retrieve_docs(retrieval_query, bot_id)
+        docs = retrieve_docs(retrieval_query, bot_id, history=history, original_question=question)
     except Exception as exc:
         raise RagUnavailableError("Knowledge retrieval failed") from exc
 
@@ -103,11 +112,23 @@ def ask_rag(
         return "REQUIRE_HUMAN_HANDOFF", []
 
     evidence_units = split_evidence_units(docs)
+    resolved_question = next((d.metadata.get("resolved_question") for d in docs if d.metadata.get("resolved_question")), question)
+    retrieval_query = resolved_question if any(d.metadata.get("resolved_question") for d in docs) else retrieval_query
     selected_units = select_evidence_units(retrieval_query, evidence_units)
     if not selected_units:
         return _reject_grounding("weak_topic_match", bot_id, question)
+    if any(unit.metadata.get("section_incomplete") for unit in selected_units):
+        return _reject_grounding("section_too_large", bot_id, question)
 
     context = build_context(selected_units)
+    structured = extract_section_answer(question, selected_units)
+    if structured is None and any(word in question for word in ('กะ','เข้างาน','เริ่มงาน','กี่โมง')):
+        structured = extract_shift_start_answer(resolved_question, selected_units)
+    if structured is not None:
+        valid, _ = validate_grounded_answer(retrieval_query, structured.answer, structured.evidence, selected_units)
+        if valid:
+            accepted = units_for_evidence_quotes(structured.evidence, selected_units)
+            return structured.answer, extract_sources(accepted)
 
     # กันเคส: ดึงเอกสาร "จันทร์-ศุกร์" แล้ว LLM มั่วว่าพรุ่งนี้อะไร
     if _calendar_context_mismatch(question, context):
@@ -123,14 +144,17 @@ def ask_rag(
 {context}
 
 คำถาม: {question}
+คำถามที่ระบุหัวข้อจากบริบท: {resolved_question}
 
 คำสั่ง:
 - ตอบจากข้อมูลอ้างอิงด้านบนเท่านั้น ห้ามเดาหรือใช้ความรู้ภายนอก
 - ส่ง JSON object เท่านั้น ห้ามใส่ markdown หรือข้อความอื่น
-- รูปแบบต้องเป็น {{"answer":"คำตอบ", "evidence":["ข้อความหลักฐานแบบคำต่อคำ"]}}
-- evidence ต้องคัดลอกข้อความจากข้อมูลอ้างอิงแบบคำต่อคำ และต้องรองรับข้อเท็จจริงทุกข้อใน answer
-- ถ้าไม่มีหลักฐานที่ตอบคำถามโดยตรง ให้ใช้ answer เป็น "ไม่พบข้อมูล" และ evidence เป็น []
+- รูปแบบต้องเป็น {{"answer":"คำตอบ", "evidence_ids":[1]}}
+- evidence_ids คือหมายเลข [เอกสารที่ ...] ที่รองรับคำตอบ เลือกได้หลายหมายเลข ห้ามสร้างหมายเลขใหม่
+- ถ้าไม่มีหลักฐานที่ตอบคำถามโดยตรง ให้ใช้ answer เป็น "ไม่พบข้อมูล" และ evidence_ids เป็น []
 - ห้ามเปลี่ยนตัวเลข ราคา เวลา วัน วันที่ เปอร์เซ็นต์ ชื่อ หรือรหัสจากหลักฐาน
+- ใช้ข้อความจากหลักฐานโดยตรง คงคำปฏิเสธและเงื่อนไขทั้งหมด ห้ามย้ายค่าของรายการหนึ่งไปใช้อีกชื่อหนึ่ง
+- หากย่อแล้วทำให้เงื่อนไขไม่ครบ ให้คัดข้อความเต็มของรายการนั้นแทน
 - ถ้าคำถามถามภาพรวม/ระเบียบ/รายการ ให้ใส่หลักฐานทุกส่วนที่นำมาใช้ตอบ
 """
 
@@ -163,7 +187,10 @@ def ask_rag(
         response = ollama.chat(
             model=MODEL_NAME,
             messages=messages,
-            format="json",
+            format={"type": "object", "properties": {
+                "answer": {"type": "string"},
+                "evidence_ids": {"type": "array", "items": {"type": "integer", "enum": list(range(1, len(selected_units) + 1))}}
+            }, "required": ["answer", "evidence_ids"], "additionalProperties": False},
             options={
                 "temperature": 0.0,
                 "top_p": 0.9,
@@ -174,14 +201,17 @@ def ask_rag(
             },
         )
         grounded, parse_reason = parse_grounded_response(
-            response["message"]["content"]
+            response["message"]["content"], selected_units
         )
         if grounded is None:
             return _reject_grounding(parse_reason or "invalid_model_json", bot_id, question)
 
         answer = grounded.answer
         if not answer or "ไม่พบข้อมูล" in answer:
-            return _reject_grounding("model_no_answer", bot_id, question)
+            quote = extract_relevant_quote(retrieval_query, selected_units)
+            if quote is None:
+                return _reject_grounding("model_no_answer", bot_id, question)
+            grounded, answer = quote, quote.answer
 
         valid, validation_reason = validate_grounded_answer(
             retrieval_query,

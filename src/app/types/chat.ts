@@ -14,6 +14,7 @@ export type ActiveView =
 export interface ChatSource {
   filename: string;
   snippet?: string;
+  page?: number | null;
 }
 
 export type ChatMode = "bot" | "waiting" | "human";

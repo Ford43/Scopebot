@@ -396,7 +396,7 @@ function MessageList({
                   </p>
                   {message.sources.map((s) => (
                     <div
-                      key={s.filename + (s.snippet || "")}
+                      key={s.filename + (s.page ?? "") + (s.snippet || "")}
                       className="rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2"
                     >
                       <p
@@ -404,6 +404,7 @@ function MessageList({
                         style={{ fontWeight: 600 }}
                       >
                         {s.filename}
+                        {s.page != null && ` · หน้า ${s.page}`}
                       </p>
                       {s.snippet && (
                         <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">
