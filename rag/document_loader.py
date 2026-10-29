@@ -65,8 +65,10 @@ def load_docx(path):
 
 
 def load_csv(path):
-    df = pd.read_csv(path)
-    return df.to_string(index=False)
+    df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding='utf-8-sig')
+    return '\n'.join('- ' + ' | '.join(
+        f'{column}: {" ".join(value.split())}' for column, value in zip(df.columns, row)
+    ) for row in df.itertuples(index=False, name=None))
 
 
 def load_json(path):

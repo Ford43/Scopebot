@@ -282,7 +282,27 @@ def _sync_bot_knowledge_after_doc_change(
     user_id: int,
     background_tasks: BackgroundTasks,
 ) -> None:
+    # Only mutate a fully published index with no pending update. Otherwise a
+    # queued build may contain newer content and must remain the authority.
+    incremental = (bool(bot.documents) and bool(getattr(bot, 'active_index_path', None))
+                   and bot.knowledge_update_status == 'ready'
+                   and not bot.knowledge_blocked
+                   and bot.indexed_revision == bot.knowledge_revision)
     request_update(bot, destructive=True)
+    if incremental:
+        try:
+            from rag.index_delete import delete_source
+            delete_source(bot.active_index_path, filename)
+        except Exception:
+            # Keep knowledge blocked until a clean generation is published.
+            import logging
+            logging.getLogger(__name__).exception('Incremental deletion failed; rebuilding knowledge')
+        else:
+            bot.indexed_revision = bot.knowledge_revision
+            bot.knowledge_update_status = 'ready'
+            bot.knowledge_blocked = False
+            bot.status = models.BotStatus.active
+            return
     if bot.documents:
         background_tasks.add_task(
             _run_ingest_and_notify, bot.bot_id, bot.id, filename, user_id

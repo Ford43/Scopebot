@@ -99,7 +99,7 @@ assert len(reopened.similarity_search_with_score("Alpha service", k=8)) == 2
 reopened.close()
 from rag.retriever import retrieve_docs
 with patch("api.knowledge.resolve_index_path", return_value=root / "second"), patch("rag.retriever.get_embedding_model", return_value=embedding):
-    selected = retrieve_docs("Beta service", "trial")
+    selected = retrieve_docs("Beta service", "trial", semantic=False)
     assert len(selected) == 1 and "Beta" in selected[0].page_content
 '''
             result = subprocess.run([sys.executable, "-c", script, temp], cwd=ROOT,

@@ -29,11 +29,14 @@ The reranker requires approximately 2.3 GB of model files. Download it before
 exposing a new API process to users:
 
 ```powershell
-python -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-reranker-v2-m3', allow_patterns=['*.json','*.safetensors','*.model'])"
+.\.venv\Scripts\python.exe -c "from huggingface_hub import snapshot_download; snapshot_download('BAAI/bge-reranker-v2-m3', allow_patterns=['*.json','*.safetensors','*.bin','*.model'])"
 ```
 
 The API loads cached model files only, so a missing cache does not trigger a
 large download during a chat request. It adds CPU time and RAM requirements.
+Include `.bin` weights: some model revisions publish `pytorch_model.bin` rather
+than safetensors. A `.incomplete` file is not usable model weights; finish the
+download before starting the API. Run the API with `.venv` as well.
 The embedding and generation models remain unchanged. Configure
 `RERANKER_MODEL` only with a compatible multilingual cross-encoder.
 

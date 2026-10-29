@@ -185,7 +185,7 @@ def _is_heading(lines: list[str], index: int, first_content_index: int) -> bool:
         return False
     if re.match(r"^\d+[.)]\s+\S", line):
         next_line = next((item.strip() for item in lines[index + 1:] if item.strip()), "")
-        return next_line.startswith(("-", "*", "•"))
+        return bool(next_line) and not re.match(r"^\d+[.)]\s+", next_line)
     if index == first_content_index:
         return True
     next_line = next((item.strip() for item in lines[index + 1 :] if item.strip()), "")
@@ -437,7 +437,8 @@ def section_matches(question: str, heading: str) -> bool:
 
 
 def extract_section_answer(question: str, units: Sequence[EvidenceUnit]) -> GroundedAnswer | None:
-    matched = [u for u in units if section_matches(question, u.metadata.get("section", "")) or u.metadata.get('semantic_section_match')]
+    matched = [u for u in units if section_matches(question, u.metadata.get("section", "")) or (
+        u.metadata.get('semantic_section_match') and re.match(r'^\d+[.)]\s+', u.metadata.get('section', '')))]
     if not matched:
         return None
     if any(u.metadata.get("section_incomplete") for u in matched):
