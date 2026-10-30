@@ -61,7 +61,7 @@ class SectionKnowledgeTests(unittest.TestCase):
         from unittest.mock import patch
         from rag import rag_pipeline
         doc=SimpleNamespace(page_content='1. เปิดร้าน\nเปิดเครื่อง',metadata={'section_incomplete':True})
-        with patch.object(rag_pipeline,'retrieve_docs',return_value=[doc]), patch.object(rag_pipeline.ollama,'chat') as model:
+        with patch.object(rag_pipeline,'retrieve_docs',return_value=[doc]), patch.object(rag_pipeline,'generate_answer') as model:
             answer,_=rag_pipeline.ask_rag('เปิดร้านต้องทำอะไรบ้าง','test')
         self.assertEqual(answer,'REQUIRE_HUMAN_HANDOFF')
         model.assert_not_called()
@@ -89,7 +89,7 @@ class SectionKnowledgeTests(unittest.TestCase):
         from unittest.mock import patch
         from rag import rag_pipeline
         doc=SimpleNamespace(page_content='รองเท้าหัวปิดสีเข้ม ห้ามรองเท้าแตะ',metadata={'source':'manual.txt'})
-        with patch.object(rag_pipeline,'retrieve_docs',return_value=[doc]), patch.object(rag_pipeline.ollama,'chat',return_value={'message':{'content':'{"answer":"ไม่พบข้อมูล","evidence_ids":[]}'}}):
+        with patch.object(rag_pipeline,'retrieve_docs',return_value=[doc]), patch.object(rag_pipeline,'generate_answer',return_value={'message':{'content':'{"answer":"ไม่พบข้อมูล","evidence_ids":[]}'}}):
             answer,sources=rag_pipeline.ask_rag('รองเท้าแตะใส่ได้ไหม','test')
         self.assertIn('ห้ามรองเท้าแตะ',answer)
         self.assertTrue(sources)

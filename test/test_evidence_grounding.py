@@ -101,8 +101,8 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
         from rag import rag_pipeline
 
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama,
-            "chat",
+            rag_pipeline,
+            "generate_answer",
             return_value={"message": {"content": "ราคา 1,490 บาท"}},
         ) as chat:
             answer, sources = rag_pipeline.ask_rag(
@@ -123,8 +123,8 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
             ensure_ascii=False,
         )
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama,
-            "chat",
+            rag_pipeline,
+            "generate_answer",
             return_value={"message": {"content": payload}},
         ):
             answer, sources = rag_pipeline.ask_rag(
@@ -145,8 +145,8 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
             ensure_ascii=False,
         )
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama,
-            "chat",
+            rag_pipeline,
+            "generate_answer",
             return_value={"message": {"content": payload}},
         ):
             answer, sources = rag_pipeline.ask_rag(
@@ -159,7 +159,7 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
         from rag import rag_pipeline
 
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama, "chat"
+            rag_pipeline, "generate_answer"
         ) as chat:
             answer, sources = rag_pipeline.ask_rag(
                 "เปลี่ยนหัวเทียนราคาเท่าไหร่ครับ", "bot_garage"
@@ -181,8 +181,8 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
             ensure_ascii=False,
         )
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama,
-            "chat",
+            rag_pipeline,
+            "generate_answer",
             return_value={"message": {"content": payload}},
         ):
             answer, sources = rag_pipeline.ask_rag(
@@ -204,8 +204,8 @@ class EvidenceGatedPipelineTests(unittest.TestCase):
             ensure_ascii=False,
         )
         with patch.object(rag_pipeline, "retrieve_docs", return_value=[_doc()]), patch.object(
-            rag_pipeline.ollama,
-            "chat",
+            rag_pipeline,
+            "generate_answer",
             return_value={"message": {"content": payload}},
         ):
             answer, sources = rag_pipeline.ask_rag("อู่เปิดปิดกี่โมงครับ", "bot_garage")

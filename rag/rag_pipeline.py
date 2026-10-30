@@ -15,13 +15,19 @@ from rag.evidence import (
     validate_grounded_answer,
 )
 from rag.retriever import retrieve_docs
-from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG
+from config import MODEL_NAME, SYSTEM_PROMPT, DEBUG, LLM_TIMEOUT_SEC
 
 RAG_ERROR_MESSAGE = "ขออภัย ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง"
 
 
 class RagUnavailableError(RuntimeError):
     """Retrieval/model failure, distinct from a valid answer or no match."""
+
+
+def generate_answer(**kwargs):
+    """Bound network waits and release the client on success or timeout."""
+    with ollama.Client(timeout=LLM_TIMEOUT_SEC) as client:
+        return client.chat(**kwargs)
 
 # คำถามวัน/ปฏิทินปัจจุบัน — มักไม่มีในเอกสารองค์กร
 _CALENDAR_ASK = re.compile(
@@ -195,7 +201,7 @@ def ask_rag(
     messages.append({"role": "user", "content": prompt})
 
     try:
-        response = ollama.chat(
+        response = generate_answer(
             model=MODEL_NAME,
             messages=messages,
             format={"type": "object", "properties": {

@@ -5,6 +5,7 @@ import json
 import urllib.error
 import urllib.request
 from fastapi import APIRouter, Request, HTTPException
+from starlette.concurrency import run_in_threadpool
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
     ReplyMessageRequest, PushMessageRequest, TextMessage,
@@ -161,6 +162,13 @@ def _get_display_name(token: str, line_user_id: str) -> str:
 
 @router.post("/webhook/{bot_id}")
 async def line_webhook(bot_id: str, request: Request):
+    body = await request.body()
+    signature = request.headers.get("X-Line-Signature", "")
+    # Keep the DB session, synchronous LINE SDK and RAG in the same worker.
+    return await run_in_threadpool(_process_line_webhook, bot_id, body, signature)
+
+
+def _process_line_webhook(bot_id: str, body: bytes, signature: str):
     db = SessionLocal()
     try:
         bot = db.query(models.Bot).filter(
@@ -173,9 +181,7 @@ async def line_webhook(bot_id: str, request: Request):
         if not bot.line_channel_secret or not bot.line_channel_token:
             raise HTTPException(status_code=400, detail="ยังไม่ได้ตั้งค่า Line credentials")
 
-        body = await request.body()
         body_str = body.decode("utf-8")
-        signature = request.headers.get("X-Line-Signature", "")
 
         if not _verify_signature(bot.line_channel_secret, body_str, signature):
             raise HTTPException(status_code=400, detail="Invalid signature")

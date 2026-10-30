@@ -7,6 +7,7 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 # ===== LLM =====
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
+LLM_TIMEOUT_SEC = max(1.0, float(os.getenv("LLM_TIMEOUT_SEC", "120")))
 
 # ===== Embedding =====
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")

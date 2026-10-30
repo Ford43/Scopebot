@@ -5,6 +5,8 @@ import type { BotItem } from "../types/bot";
 import { authHeaders } from "../lib/api";
 import { timeNow } from "../utils/date";
 
+const CHAT_REQUEST_TIMEOUT_MS = 180_000;
+
 interface UseChatSessionOptions {
   isAuthenticated: boolean;
   activeBot: BotItem | null;
@@ -71,9 +73,29 @@ export function useChatSession({
   const [chatMode, setChatMode] = useState<ChatMode>("bot");
 
   const currentSessionId = useRef(Date.now().toString());
+  const sessionGeneration = useRef(0);
+  const pendingRequest = useRef<AbortController | null>(null);
+  const currentBotId = useRef(activeBot?.bot_id);
+  currentBotId.current = activeBot?.bot_id;
   const chatModeRef = useRef<ChatMode>("bot");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const cancelPending = useCallback(() => {
+    sessionGeneration.current += 1;
+    pendingRequest.current?.abort();
+    pendingRequest.current = null;
+    setIsTyping(false);
+  }, []);
+
+  useEffect(() => {
+    cancelPending();
+    return () => {
+      sessionGeneration.current += 1;
+      pendingRequest.current?.abort();
+      pendingRequest.current = null;
+    };
+  }, [activeBot?.bot_id, cancelPending]);
 
   const applyMode = useCallback((next: ChatMode, opts?: { ended?: boolean }) => {
     const prev = chatModeRef.current;
@@ -186,15 +208,23 @@ export function useChatSession({
   useEffect(() => {
     if (!activeBot || !isChatActive) return;
 
+    let disposed = false;
+    const controller = new AbortController();
+
     const pollAdminReply = async () => {
+      const generation = sessionGeneration.current;
+      const sessionId = currentSessionId.current;
+      const isCurrent = () => !disposed && generation === sessionGeneration.current &&
+        sessionId === currentSessionId.current && activeBot.bot_id === currentBotId.current;
       try {
         const res = await fetch(
-          `/api/chat/${activeBot.bot_id}/session/${currentSessionId.current}/updates`,
-          { headers: authHeaders() }
+          `/api/chat/${activeBot.bot_id}/session/${sessionId}/updates`,
+          { headers: authHeaders(), signal: controller.signal }
         );
         if (!res.ok) return;
 
         const data = await res.json();
+        if (!isCurrent()) return;
         const payload = Array.isArray(data)
           ? { mode: "bot" as const, is_active: true, messages: data }
           : data;
@@ -231,16 +261,21 @@ export function useChatSession({
         });
         if (payload.is_active === false) applyMode(nextMode, { ended: true });
       } catch (e) {
-        console.error(e);
+        if (isCurrent()) console.error(e);
       }
     };
 
     void pollAdminReply();
     const interval = setInterval(pollAdminReply, 3000);
-    return () => clearInterval(interval);
+    return () => {
+      disposed = true;
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [activeBot, isChatActive, applyMode]);
 
   const restoreSession = useCallback((item: HistoryItem) => {
+    cancelPending();
     if (item.sessionId) {
       currentSessionId.current = item.sessionId;
     }
@@ -252,17 +287,30 @@ export function useChatSession({
       setMessages([]);
     }
     setInputValue("");
-  }, []);
+  }, [cancelPending]);
 
   const handleSend = useCallback(
     async (overrideText?: string) => {
       const text = (overrideText ?? inputValue).trim();
-      if (!text || isTyping) return;
+      if (!text || isTyping || pendingRequest.current) return;
 
       if (!activeBot?.bot_id) {
         toast.error("กรุณาเลือกบอทก่อนเริ่มการสนทนา");
         return;
       }
+
+      const generation = sessionGeneration.current;
+      const sessionId = currentSessionId.current;
+      const controller = new AbortController();
+      pendingRequest.current = controller;
+      const isCurrent = () => generation === sessionGeneration.current &&
+        sessionId === currentSessionId.current && activeBot.bot_id === currentBotId.current &&
+        pendingRequest.current === controller;
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, CHAT_REQUEST_TIMEOUT_MS);
 
       const now = new Date();
       const timeStr = now.toLocaleTimeString("th-TH", {
@@ -280,18 +328,20 @@ export function useChatSession({
       try {
         const res = await fetch(`/api/chat/${activeBot.bot_id}`, {
           method: "POST",
+          signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
             ...authHeaders(),
           },
           body: JSON.stringify({
             question: text,
-            session_id: currentSessionId.current,
+            session_id: sessionId,
             source_channel: "web",
           }),
         });
 
         const data = await res.json();
+        if (!isCurrent()) return;
 
         if (!res.ok) {
           throw new Error(data.detail || "เกิดข้อผิดพลาดในการเชื่อมต่อกับบอท");
@@ -324,8 +374,10 @@ export function useChatSession({
           void loadHistory();
         }
       } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
+        if (!isCurrent()) return;
+        const message = timedOut
+          ? "รอคำตอบนานเกินไป กรุณาลองใหม่อีกครั้ง"
+          : error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
         console.error("Chat Error:", error);
         setMessages((prev) => [
           ...prev,
@@ -338,7 +390,11 @@ export function useChatSession({
           },
         ]);
       } finally {
-        setIsTyping(false);
+        clearTimeout(timeout);
+        if (isCurrent()) {
+          pendingRequest.current = null;
+          setIsTyping(false);
+        }
       }
     },
     [inputValue, isTyping, activeBot, isAuthenticated, loadHistory, applyMode]
@@ -350,20 +406,22 @@ export function useChatSession({
   }, [handleSend]);
 
   const handleNewChat = useCallback(() => {
+    cancelPending();
     currentSessionId.current = Date.now().toString();
     chatModeRef.current = "bot";
     setChatMode("bot");
     setMessages([]);
     setInputValue("");
-  }, []);
+  }, [cancelPending]);
 
   const resetSessionForBot = useCallback(() => {
+    cancelPending();
     currentSessionId.current = Date.now().toString();
     chatModeRef.current = "bot";
     setChatMode("bot");
     setMessages([]);
     setInputValue("");
-  }, []);
+  }, [cancelPending]);
 
   return {
     messages,

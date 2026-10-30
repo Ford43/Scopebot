@@ -98,7 +98,7 @@ class GroundingPipelineTests(unittest.TestCase):
         doc = Document(page_content='นโยบายคืนสินค้า: ไม่รับคืนสินค้าทุกกรณี',
                        metadata={'source': 'policy.txt', 'semantic_relevance': 0.95})
         with patch.object(rag_pipeline, 'retrieve_docs', return_value=[doc]), \
-             patch.object(rag_pipeline.ollama, 'chat', return_value={'message': {'content': json.dumps({
+             patch.object(rag_pipeline, 'generate_answer', return_value={'message': {'content': json.dumps({
                  'answer': 'รับคืนสินค้าทุกกรณี', 'evidence_ids': [1]})}}):
             result = rag_pipeline.ask_rag('รับคืนสินค้าได้ไหม', 'test')
         self.assertEqual(result, ('REQUIRE_HUMAN_HANDOFF', []))
@@ -149,7 +149,7 @@ class CompleteListTests(unittest.TestCase):
             retrieved = retrieve_docs(question, 'test')
         self.assertEqual(len(retrieved), 12)
         with patch.object(rag_pipeline, 'retrieve_docs', return_value=retrieved), \
-             patch.object(rag_pipeline.ollama, 'chat') as model:
+             patch.object(rag_pipeline, 'generate_answer') as model:
             answer, sources = rag_pipeline.ask_rag(question, 'test')
         self.assertEqual(len(answer.splitlines()), 12)
         self.assertTrue(sources)

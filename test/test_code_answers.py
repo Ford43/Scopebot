@@ -10,7 +10,7 @@ class CodeAnswerTests(unittest.TestCase):
 
     def test_exact_code_returns_original_csv_row_without_model_paraphrase(self):
         docs=[Document(page_content='รหัสสินค้า: INV-015 | ราคา_บาท: 745 | คงเหลือ_ชิ้น: 20', metadata={'source':'inventory.csv'})]
-        with patch.object(rag_pipeline,'retrieve_docs',return_value=docs), patch.object(rag_pipeline.ollama,'chat') as model:
+        with patch.object(rag_pipeline,'retrieve_docs',return_value=docs), patch.object(rag_pipeline,'generate_answer') as model:
             answer,sources=rag_pipeline.ask_rag('INV-015 ราคาเท่าไร เหลือกี่ชิ้น','test')
         self.assertIn('745',answer)
         self.assertTrue(sources)
@@ -18,7 +18,7 @@ class CodeAnswerTests(unittest.TestCase):
 
     def test_wrong_code_is_never_accepted(self):
         docs=[Document(page_content='INV-016 ราคา 800 บาท',metadata={'source':'inventory.csv','semantic_relevance':.99})]
-        with patch.object(rag_pipeline,'retrieve_docs',return_value=docs),patch.object(rag_pipeline.ollama,'chat') as model:
+        with patch.object(rag_pipeline,'retrieve_docs',return_value=docs),patch.object(rag_pipeline,'generate_answer') as model:
             answer,_=rag_pipeline.ask_rag('INV-015 ราคาเท่าไร','test')
         self.assertEqual(answer,'REQUIRE_HUMAN_HANDOFF')
         model.assert_not_called()

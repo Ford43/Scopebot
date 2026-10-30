@@ -231,13 +231,13 @@ class ReviewFixTests(unittest.TestCase):
             "answer": "A leave form",
             "evidence": ["Annual leave requires a leave form"],
         })
-        with patch.object(rag_pipeline, "retrieve_docs", side_effect=retrieve), patch.object(rag_pipeline.ollama, "chat", return_value={"message": {"content": grounded}}):
+        with patch.object(rag_pipeline, "retrieve_docs", side_effect=retrieve), patch.object(rag_pipeline, "generate_answer", return_value={"message": {"content": grounded}}):
             answer, _ = rag_pipeline.ask_rag("What documents?", self.bot.bot_id, history=[{"question": "Annual leave", "answer": "Ten days"}])
         self.assertEqual(answer, "A leave form")
 
     def test_model_failure_is_not_counted_as_a_success(self):
         doc = types.SimpleNamespace(page_content="Policy", metadata={"source": "policy.txt"})
-        with patch.object(rag_pipeline, "retrieve_docs", return_value=[doc]), patch.object(rag_pipeline.ollama, "chat", side_effect=ConnectionError("offline")):
+        with patch.object(rag_pipeline, "retrieve_docs", return_value=[doc]), patch.object(rag_pipeline, "generate_answer", side_effect=ConnectionError("offline")):
             result = self.send("What is the policy?")
         self.assertFalse(result["is_answered_by_bot"])
         self.assertEqual(result.get("response_status"), "error")

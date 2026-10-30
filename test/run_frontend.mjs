@@ -14,3 +14,4 @@ try {
 } finally {
   await unlink(output);
 }
+await import("./chat_session.test.mjs");
