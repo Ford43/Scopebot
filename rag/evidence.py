@@ -408,6 +408,12 @@ def select_evidence_units(
 
 def unit_topic_matches(question, unit):
     from rag.semantic import semantic_match
+    codes = re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', question.upper())
+    if codes:
+        present = set(re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', unit.text.upper()))
+        families = {code.split('-')[0] for code in codes}
+        conflicting = {code for code in present if code.split('-')[0] in families} - set(codes)
+        return bool(set(codes) & present) and not conflicting
     requested = re.search(r"กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ)", question)
     mentioned = re.findall(r"กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ)", unit.text)
     if requested and mentioned and requested.group(0) not in mentioned:

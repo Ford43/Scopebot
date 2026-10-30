@@ -32,3 +32,15 @@ tests do not measure answer quality of a live model on production documents.
 
 Verified: 66 focused tests and 139 full backend tests passed. The full suite
 includes real Chroma/Qdrant index tests with deterministic local embeddings.
+
+## Multi-file ingestion and identifier answers
+
+`INGEST_TIMEOUT_SEC` defaults to 900 seconds and is configurable. Failed updates
+keep the previous published generation; an active bot may still have an update
+error, so check the knowledge update status when adding files.
+
+Explicit identifier questions (for example INV-015) exclude other identifiers.
+For bounded evidence from one source containing all requested identifiers, the
+bot can return original text with labels and restrictions, avoiding rejection
+of valid CSV records solely because a model paraphrased them. Regression tests
+are in `test/test_code_answers.py`.

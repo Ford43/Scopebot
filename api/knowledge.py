@@ -20,7 +20,7 @@ from api import models
 from config import VECTOR_DB_PATH
 
 logger = logging.getLogger(__name__)
-INGEST_TIMEOUT_SEC = 180
+INGEST_TIMEOUT_SEC = int(os.getenv('INGEST_TIMEOUT_SEC', '900'))
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -83,7 +83,7 @@ def build_snapshot(snapshot: Path, output: Path, backend="chroma"):
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
-            raise TimeoutError("ประมวลผลเกิน 180 วินาที กรุณาลองใหม่")
+            raise TimeoutError(f"ประมวลผลเกิน {INGEST_TIMEOUT_SEC} วินาที กรุณาลองใหม่")
     if code:
         logger.error("Knowledge build failed; diagnostics: %s", log_path)
         raise RuntimeError("อ่านเอกสารหรือสร้างฐานค้นหาไม่สำเร็จ กรุณาตรวจสอบไฟล์แล้วลองใหม่")

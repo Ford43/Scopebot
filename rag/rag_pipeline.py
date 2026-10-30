@@ -121,6 +121,17 @@ def ask_rag(
         return _reject_grounding("section_too_large", bot_id, question)
 
     context = build_context(selected_units)
+    codes = re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', question.upper())
+    if codes:
+        # Exact identifiers permit an extractive answer: retain column labels,
+        # values and restrictions instead of requiring a model to restate them.
+        present = set(re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', context.upper()))
+        sources = {unit.metadata.get('source') for unit in selected_units}
+        if set(codes).issubset(present) and len(sources) == 1 and len(context) <= 4000:
+            answer = 'ข้อมูลจากเอกสาร:\n' + '\n'.join(dict.fromkeys(u.text for u in selected_units))
+            valid, _ = validate_grounded_answer(question, answer, [u.text for u in selected_units], selected_units)
+            if valid:
+                return answer, extract_sources(selected_units)
     structured = extract_section_answer(question, selected_units)
     if structured is None and any(word in question for word in ('กะ','เข้างาน','เริ่มงาน','กี่โมง')):
         structured = extract_shift_start_answer(resolved_question, selected_units)
