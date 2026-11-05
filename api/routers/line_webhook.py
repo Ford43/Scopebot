@@ -2,9 +2,10 @@ import hashlib
 import hmac
 import base64
 import json
+import logging
 import urllib.error
 import urllib.request
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Request, HTTPException
 from starlette.concurrency import run_in_threadpool
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
@@ -17,6 +18,7 @@ from rag.rag_pipeline import ask_rag, RagUnavailableError, RAG_ERROR_MESSAGE
 from api.chat_history import recent_bot_history
 
 router = APIRouter(prefix="/api/line", tags=["Line Webhook"])
+logger = logging.getLogger(__name__)
 
 # แสดง loading ระหว่าง RAG (ต้องเป็นพหุคูณของ 5, สูงสุด 60)
 RAG_LOADING_SECONDS = 20
@@ -161,14 +163,28 @@ def _get_display_name(token: str, line_user_id: str) -> str:
 
 
 @router.post("/webhook/{bot_id}")
-async def line_webhook(bot_id: str, request: Request):
+async def line_webhook(bot_id: str, request: Request, background_tasks: BackgroundTasks):
     body = await request.body()
     signature = request.headers.get("X-Line-Signature", "")
-    # Keep the DB session, synchronous LINE SDK and RAG in the same worker.
-    return await run_in_threadpool(_process_line_webhook, bot_id, body, signature)
+    # Validate before acknowledging, but never wait for RAG or outbound LINE calls.
+    return await run_in_threadpool(
+        _process_line_webhook, bot_id, body, signature, background_tasks
+    )
 
 
-def _process_line_webhook(bot_id: str, body: bytes, signature: str):
+def _run_line_webhook(bot_id: str, body: bytes, signature: str):
+    try:
+        # Reopen a worker-owned session and recheck connection/credentials.
+        _process_line_webhook(bot_id, body, signature)
+    except Exception:
+        # The HTTP response has already been sent; report failure on the server.
+        logger.exception("LINE background processing failed for bot %s", bot_id)
+
+
+def _process_line_webhook(
+    bot_id: str, body: bytes, signature: str,
+    background_tasks: BackgroundTasks | None = None,
+):
     db = SessionLocal()
     try:
         bot = db.query(models.Bot).filter(
@@ -188,6 +204,11 @@ def _process_line_webhook(bot_id: str, body: bytes, signature: str):
 
         payload = json.loads(body_str)
         events = payload.get("events", [])
+
+        if background_tasks is not None:
+            if events:
+                background_tasks.add_task(_run_line_webhook, bot_id, body, signature)
+            return {"status": "ok"}
 
         configuration = Configuration(access_token=bot.line_channel_token)
 

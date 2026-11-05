@@ -190,14 +190,13 @@ class KnowledgeUpdateTests(unittest.TestCase):
             build_snapshot(job / "docs", job / "index")
         self.assertEqual(start.call_args.kwargs.get("env", {}).get("PYTHONIOENCODING"), "utf-8")
 
-    def test_qdrant_bot_dispatches_build_to_selected_backend(self):
-        self.bot.vector_backend = "qdrant"
-        self.db.commit()
+    def test_worker_builds_chroma_without_backend_dispatch(self):
         self.schedule()
-        def build(snapshot, output, *, backend):
-            self.assertEqual(backend, "qdrant")
+        def build(snapshot, output):
             output.mkdir()
+            (output / "chroma.sqlite3").write_text("verified")
         self.run_job(build)
+        self.assertEqual(self.bot.vector_backend, "chroma")
         self.assertEqual(self.bot.knowledge_update_status, "ready")
         self.assertTrue(self.bot.has_usable_knowledge)
 

@@ -127,7 +127,7 @@ def update_bot(
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
     if body.vector_backend is not None and body.vector_backend != bot.vector_backend:
-        raise HTTPException(status_code=400, detail="เปลี่ยนฐานค้นหาของบอทเดิมไม่ได้ กรุณาสร้างบอททดลองใหม่")
+        raise HTTPException(status_code=400, detail="กรุณาปรับปรุงฐานข้อมูลให้รองรับ ChromaDB ก่อนใช้งานบอทนี้")
     for field, value in body.dict(exclude_unset=True).items():
         if field == "vector_backend":
             continue

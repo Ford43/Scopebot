@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" pages="1">
+  <diagram id="scopebot-activity-07" name="UC07 สนทนาผ่านเว็บไซต์">
+    <mxGraphModel dx="1100" dy="1370" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="1370" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="UC07_title" value="UC07 สนทนาผ่านเว็บไซต์" vertex="1" parent="1" style="text;html=0;fontFamily=Tahoma;fontSize=27;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;">
+          <mxGeometry x="50" y="8" width="1000" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_actor" value="ผู้เริ่มกิจกรรม User / Admin เจ้าของบอท" vertex="1" parent="1" style="text;html=0;fontFamily=Tahoma;fontSize=22;fontStyle=0;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;">
+          <mxGeometry x="50" y="48" width="1000" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_start" value="" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=ellipse;fillColor=#222222;aspect=fixed;">
+          <mxGeometry x="409" y="99" width="22" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_input" value="เลือกบอทและส่งข้อความ" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="165" y="127" width="510" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_check" value="ตรวจเจ้าของ ความพร้อมฐานความรู้&#10;และความยาวข้อความ" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="165" y="230" width="510" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_valid" value="คำขอผ่านเงื่อนไข" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="205" y="345" width="430" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_invalid" value="แจ้งไม่มีสิทธิ์&#10;บอทไม่พร้อม&#10;หรือให้พิมพ์ข้อความใหม่" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="780" y="332.5" width="280" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_mode" value="อยู่ waiting/human&#10;หรือขอติดต่อเจ้าหน้าที่" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="195" y="497.5" width="450" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_human" value="บันทึกข้อความใน live session&#10;สร้าง waiting เมื่อมีคำขอ&#10;ตอบสถานะโดยไม่เรียก RAG" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="780" y="497.5" width="280" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_rag" value="ค้นหลักฐาน สร้างและตรวจคำตอบ&#10;จากเอกสารของบอท" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="165" y="685" width="510" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_answer" value="RAG ให้คำตอบที่รองรับได้" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="195" y="825" width="450" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_noanswer" value="แจ้งไม่พบข้อมูล&#10;หรือบริการผิดพลาดตามกรณี&#10;เสนอปุ่มติดต่อเจ้าหน้าที่" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="780" y="812.5" width="280" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_save" value="บันทึกและแสดงคำตอบพร้อมแหล่งอ้างอิง&#10;เมื่อมีข้อมูลแหล่งที่มาจากระบบ" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=12;">
+          <mxGeometry x="165" y="995" width="510" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_merge" value="" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="394" y="1203" width="52" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_end" value="" vertex="1" parent="1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=ellipse;aspect=fixed;">
+          <mxGeometry x="404" y="1294" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_end_inner" vertex="1" connectable="0" parent="UC07_end" style="shape=ellipse;aspect=fixed;fillColor=#222222;strokeColor=#222222;movable=0;resizable=0;">
+          <mxGeometry x="6" y="6" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_0" edge="1" parent="1" source="UC07_start" target="UC07_input" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_1" edge="1" parent="1" source="UC07_input" target="UC07_check" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_2" edge="1" parent="1" source="UC07_check" target="UC07_valid" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_3" edge="1" parent="1" source="UC07_rag" target="UC07_answer" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_4" edge="1" parent="1" source="UC07_save" target="UC07_merge" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_5" edge="1" parent="1" source="UC07_merge" target="UC07_end" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_edge_6" edge="1" parent="1" source="UC07_valid" target="UC07_mode" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_6" value="ใช่" vertex="1" connectable="0" parent="UC07_edge_6" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="40" y="14.25" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_7" edge="1" parent="1" source="UC07_valid" target="UC07_invalid" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_7" value="ไม่ใช่" vertex="1" connectable="0" parent="UC07_edge_7" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="105" y="-32" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_8" edge="1" parent="1" source="UC07_invalid" target="UC07_merge" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="400" />
+              <mxPoint x="1080" y="1225" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_9" edge="1" parent="1" source="UC07_mode" target="UC07_rag" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_9" value="ไม่ใช่" vertex="1" connectable="0" parent="UC07_edge_9" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="40" y="19.25" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_10" edge="1" parent="1" source="UC07_mode" target="UC07_human" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_10" value="ใช่" vertex="1" connectable="0" parent="UC07_edge_10" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="95" y="-32" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_11" edge="1" parent="1" source="UC07_human" target="UC07_merge" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1060" y="565" />
+              <mxPoint x="1060" y="1225" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_12" edge="1" parent="1" source="UC07_answer" target="UC07_save" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_12" value="ใช่" vertex="1" connectable="0" parent="UC07_edge_12" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="40" y="23" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_13" edge="1" parent="1" source="UC07_answer" target="UC07_noanswer" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC07_label_13" value="ไม่ใช่" vertex="1" connectable="0" parent="UC07_edge_13" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry x="-1" y="0" relative="1" as="geometry">
+            <mxPoint x="95" y="-32" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC07_edge_14" edge="1" parent="1" source="UC07_noanswer" target="UC07_merge" style="edgeStyle=none;orthogonalLoop=1;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;endSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="920" y="1225" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

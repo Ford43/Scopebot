@@ -54,7 +54,7 @@ class BotCreate(BaseModel):
     name: str
     description: Optional[str] = None
     system_prompt: Optional[str] = None
-    vector_backend: Literal["chroma", "qdrant"] = "chroma"
+    vector_backend: Literal["chroma"] = "chroma"
 
 
 class BotUpdate(BaseModel):
@@ -63,7 +63,7 @@ class BotUpdate(BaseModel):
     line_channel_token: Optional[str] = None
     line_channel_secret: Optional[str] = None
     system_prompt: Optional[str] = None
-    vector_backend: Optional[Literal["chroma", "qdrant"]] = None
+    vector_backend: Optional[Literal["chroma"]] = None
 
 
 class BotOut(BaseModel):
@@ -80,7 +80,7 @@ class BotOut(BaseModel):
     knowledge_update_status: str = "idle"
     knowledge_update_error: Optional[str] = None
     has_usable_knowledge: bool = False
-    vector_backend: Literal["chroma", "qdrant"] = "chroma"
+    vector_backend: Literal["chroma"] = "chroma"
 
     class Config:
         from_attributes = True

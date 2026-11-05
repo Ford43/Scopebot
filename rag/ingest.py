@@ -11,8 +11,8 @@ def build_index(snapshot, output, *, embedding=None, backend="chroma"):
     output = Path(output)
     if output.exists():
         raise ValueError("A generation must use a new index directory")
-    if backend not in {"chroma", "qdrant"}:
-        raise ValueError("Unknown vector backend")
+    if backend != "chroma":
+        raise ValueError("Only ChromaDB is supported")
     docs = load_documents(data_path=str(snapshot), strict=True)
     if not docs:
         raise ValueError("No readable documents")
@@ -23,10 +23,6 @@ def build_index(snapshot, output, *, embedding=None, backend="chroma"):
         from langchain_huggingface import HuggingFaceEmbeddings
         from config import EMBEDDING_MODEL
         embedding = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    if backend == "qdrant":
-        from rag.qdrant_store import build_qdrant
-        build_qdrant(chunks, output, embedding)
-        return True
     from langchain_chroma import Chroma
     db = Chroma.from_documents(documents=chunks, embedding=embedding, persist_directory=str(output))
     saved = db.get(limit=1, include=["documents"])
@@ -56,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("bot_id", nargs="?")
     parser.add_argument("--snapshot")
     parser.add_argument("--output")
-    parser.add_argument("--backend", choices=["chroma", "qdrant"], default="chroma")
+    parser.add_argument("--backend", choices=["chroma"], default="chroma")
     args = parser.parse_args()
     if args.snapshot and args.output:
         build_index(args.snapshot, args.output, backend=args.backend)

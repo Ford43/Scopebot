@@ -14,7 +14,7 @@ export interface BotItem {
   name: string;
   description: string;
   status: string;
-  vector_backend?: "chroma" | "qdrant";
+  vector_backend?: "chroma";
   knowledge_update_status?: "idle" | "queued" | "processing" | "ready" | "error";
   knowledge_update_error?: string | null;
   has_usable_knowledge?: boolean;

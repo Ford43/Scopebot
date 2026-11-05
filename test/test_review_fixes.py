@@ -315,25 +315,22 @@ class ReviewFixTests(unittest.TestCase):
         self.assertTrue(schemas.BotOut.model_validate(self.bot).has_usable_knowledge)
         self.assertEqual(self.bot.knowledge_update_status, "queued")
 
-    def test_create_backend_choice_is_persisted_and_cannot_change_later(self):
+    def test_new_bots_use_chroma_and_accept_compatible_updates(self):
         from api.routers import bots
-        trial = bots.create_bot(schemas.BotCreate(name="Qdrant trial", vector_backend="qdrant"), self.db, self.user)
-        self.assertEqual(trial.vector_backend, "qdrant")
-        self.assertEqual(schemas.BotOut.model_validate(trial).vector_backend, "qdrant")
-        with self.assertRaises(HTTPException) as error:
-            bots.update_bot(trial.bot_id, schemas.BotUpdate(vector_backend="chroma"), self.db, self.user)
-        self.assertEqual(error.exception.status_code, 400)
-        self.db.refresh(trial)
-        self.assertEqual(trial.vector_backend, "qdrant")
-        # Older clients that omit the choice still get the original backend.
-        self.assertEqual(self.bot.vector_backend, "chroma")
+        new_bot = bots.create_bot(schemas.BotCreate(name="Chroma bot"), self.db, self.user)
+        self.assertEqual(new_bot.vector_backend, "chroma")
+        self.assertEqual(schemas.BotOut.model_validate(new_bot).vector_backend, "chroma")
+        bots.update_bot(new_bot.bot_id, schemas.BotUpdate(vector_backend="chroma", name="Updated"), self.db, self.user)
+        self.db.refresh(new_bot)
+        self.assertEqual(new_bot.vector_backend, "chroma")
+        self.assertEqual(new_bot.name, "Updated")
 
-    def test_reusing_library_document_for_qdrant_does_not_rebuild_chroma_bot(self):
+    def test_reusing_library_document_does_not_rebuild_other_bot(self):
         from api.routers import bots
         doc, _ = self.upload("shared.txt", b"shared knowledge")
         documents.assign_to_bot(doc.id, self.bot.bot_id, BackgroundTasks(), self.db, self.user)
         first_revision = self.bot.knowledge_revision
-        trial = bots.create_bot(schemas.BotCreate(name="Qdrant trial", vector_backend="qdrant"), self.db, self.user)
+        trial = bots.create_bot(schemas.BotCreate(name="Second Chroma bot"), self.db, self.user)
         documents.assign_to_bot(doc.id, trial.bot_id, BackgroundTasks(), self.db, self.user)
         self.db.refresh(self.bot)
         self.assertEqual(self.bot.knowledge_revision, first_revision)

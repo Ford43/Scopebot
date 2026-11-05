@@ -30,13 +30,12 @@ class IncrementalDeleteTests(unittest.TestCase):
         self.assertTrue(bot.knowledge_blocked)
         self.assertEqual(len(jobs.tasks), 1)
 
-    def test_real_backends_remove_only_target_source_without_embeddings(self):
+    def test_real_chroma_removes_only_target_source_without_embeddings(self):
         import tempfile
         from pathlib import Path
         from langchain_core.documents import Document
         from langchain_core.embeddings import Embeddings
         from rag.index_delete import delete_source
-        from rag.qdrant_store import build_qdrant, QdrantIndex
         from langchain_chroma import Chroma
         class LocalEmbedding(Embeddings):
             def embed_documents(self, texts): return [[1.0, 0.0] for _ in texts]
@@ -47,13 +46,8 @@ class IncrementalDeleteTests(unittest.TestCase):
             root = Path(temp)
             embedding = LocalEmbedding()
             chroma = Chroma.from_documents(docs, embedding=embedding, persist_directory=str(root/'chroma'))
-            with patch('config.QDRANT_URL', ''):
-                build_qdrant(docs, root/'qdrant', embedding)
-                with patch.object(embedding, 'embed_documents', side_effect=AssertionError('must not embed')):
-                    delete_source(root/'chroma', 'a.csv')
-                    delete_source(root/'qdrant', 'a.csv')
-                self.assertEqual(chroma.get()['documents'], ['b.docx'])
-                qdrant = QdrantIndex(root/'qdrant', embedding)
-                self.assertEqual([d.page_content for d, _ in qdrant.similarity_search_with_score('query', 10)], ['b.docx'])
-                # Repeated deletion is safe.
-                delete_source(root/'qdrant', 'a.csv')
+            with patch.object(embedding, 'embed_documents', side_effect=AssertionError('must not embed')):
+                delete_source(root/'chroma', 'a.csv')
+            self.assertEqual(chroma.get()['documents'], ['b.docx'])
+            delete_source(root/'chroma', 'a.csv')
+            self.assertEqual(chroma.get()['documents'], ['b.docx'])

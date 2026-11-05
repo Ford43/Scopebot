@@ -15,9 +15,9 @@ def get_vector_db(bot_id, persist_directory=None):
     if path is None:
         return None
     from pathlib import Path
-    if (Path(path) / "qdrant.json").is_file():
-        from rag.qdrant_store import QdrantIndex
-        return QdrantIndex(path, get_embedding_model())
+    # Opening Chroma on another engine's directory would create an empty index.
+    if not (Path(path) / "chroma.sqlite3").is_file():
+        return None
     from langchain_chroma import Chroma
     return Chroma(
         persist_directory=str(path),
@@ -35,9 +35,11 @@ def retrieve_docs(query, bot_id, score_threshold=1.05, *, history=None, semantic
     import logging
     enabled = SEMANTIC_SEARCH_ENABLED if semantic is None else semantic
     persist_dir = resolve_index_path(bot_id)
-    if persist_dir is None or not any(os.path.isfile(os.path.join(persist_dir, name)) for name in ("chroma.sqlite3", "qdrant.json")):
+    if persist_dir is None or not os.path.isfile(os.path.join(persist_dir, "chroma.sqlite3")):
         return []
     db = get_vector_db(bot_id, persist_dir)
+    if db is None:
+        return []
     current_question = original_question or query
     plan = prepare_query(current_question, history) if enabled else QueryPlan(query, (query,))
     candidates, distances, seen = [], [], {}

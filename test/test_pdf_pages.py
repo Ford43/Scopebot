@@ -12,7 +12,7 @@ from langchain_core.documents import Document
 
 
 class PdfPageTests(unittest.TestCase):
-    def test_real_chroma_and_qdrant_store_physical_pages(self):
+    def test_real_chroma_stores_physical_pages(self):
         root=Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory(dir=root/'tmp') as folder:
             script=r'''
@@ -22,7 +22,6 @@ import sys,fitz
 from pathlib import Path
 from langchain_core.embeddings import Embeddings
 from rag.ingest import build_index
-from rag.qdrant_store import QdrantIndex
 from langchain_chroma import Chroma
 class LocalEmbedding(Embeddings):
  def embed_documents(self,texts): return [[1.0,0.0] for t in texts]
@@ -30,23 +29,16 @@ class LocalEmbedding(Embeddings):
 root=Path(sys.argv[1]); docs=root/'docs'; docs.mkdir()
 p=fitz.open(); p.new_page().insert_text((50,50),'1. Opening\n- First step'); p.new_page(); p.new_page().insert_text((50,50),'- Second step'); p.save(str(docs/'manual.pdf'));p.close()
 embedding=LocalEmbedding()
-for backend in ['chroma','qdrant']:
- output=root/backend
- build_index(docs,output,embedding=embedding,backend=backend)
- if backend=='chroma':
-  store=Chroma(persist_directory=str(output),embedding_function=embedding)
-  metadata=store.get()['metadatas']
- else:
-  store=QdrantIndex(output,embedding)
-  with store._connection() as c:
-   points,_=c.scroll(collection_name=store.manifest['collection'],limit=10,with_payload=True)
-  metadata=[p.payload['metadata'] for p in points]
- assert {m['page'] for m in metadata}=={1,3},metadata
- assert all(m['section']=='1. Opening' for m in metadata),metadata
- assert all(m['page_count']==3 for m in metadata),metadata
+output=root/'chroma'
+build_index(docs,output,embedding=embedding)
+store=Chroma(persist_directory=str(output),embedding_function=embedding)
+metadata=store.get()['metadatas']
+assert {m['page'] for m in metadata}=={1,3},metadata
+assert all(m['section']=='1. Opening' for m in metadata),metadata
+assert all(m['page_count']==3 for m in metadata),metadata
 '''
             result=subprocess.run([sys.executable,'-c',script,folder],cwd=root,capture_output=True,timeout=90,
-                env={**os.environ,'QDRANT_URL':'','PYTHONIOENCODING':'utf-8','ANONYMIZED_TELEMETRY':'False'})
+                env={**os.environ,'PYTHONIOENCODING':'utf-8','ANONYMIZED_TELEMETRY':'False'})
             self.assertEqual(result.returncode,0,result.stdout.decode(errors='replace')+result.stderr.decode(errors='replace'))
 
     def test_blank_pages_do_not_renumber_later_pages(self):

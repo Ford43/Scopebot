@@ -28,7 +28,7 @@ class FakeDocList(list):
 def _make_bot(bot_id: str, name: str, docs: list):
     class FakeBot(SimpleNamespace):
         has_usable_knowledge = models.Bot.has_usable_knowledge
-    bot = FakeBot(knowledge_revision=0, knowledge_blocked=False)
+    bot = FakeBot(knowledge_revision=0, knowledge_blocked=False, vector_backend="chroma")
     bot.bot_id = bot_id
     bot.id = abs(hash(bot_id)) % 10_000
     bot.name = name

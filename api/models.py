@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Enum, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Enum, Table, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from api.database import Base
@@ -47,6 +47,7 @@ class User(Base):
 
 class Bot(Base):
     __tablename__ = "bots"
+    __table_args__ = (CheckConstraint("vector_backend = 'chroma'", name="ck_bots_chroma_only"),)
 
     id = Column(Integer, primary_key=True, index=True)
     bot_id = Column(String, unique=True, index=True, nullable=False)
@@ -65,7 +66,7 @@ class Bot(Base):
 
     @property
     def has_usable_knowledge(self):
-        return bool(self.status == BotStatus.active and self.documents and not self.knowledge_blocked)
+        return bool(self.vector_backend == "chroma" and self.status == BotStatus.active and self.documents and not self.knowledge_blocked)
     is_line_connected = Column(Boolean, default=False)
     is_web_connected = Column(Boolean, default=False)
     line_channel_token = Column(String, nullable=True)

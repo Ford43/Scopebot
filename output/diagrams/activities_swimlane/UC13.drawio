@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" pages="1">
+  <diagram id="UC13_diagram" name="UC13 ดูบันทึกการดำเนินงาน">
+    <mxGraphModel dx="1180" dy="1240" grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="0" pageWidth="1180" pageHeight="1240" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="UC13_title" value="UC13 ดูบันทึกการดำเนินงาน" vertex="1" parent="1" style="text;html=0;fontFamily=Tahoma;fontSize=26;fontStyle=1;align=center;strokeColor=none;fillColor=none;">
+          <mxGeometry x="20" y="5" width="1140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_lane0" value="Actor&#10;Admin" vertex="1" parent="1" style="swimlane;html=0;horizontal=1;startSize=80;fontFamily=Tahoma;fontSize=21;fontStyle=1;align=center;fillColor=#f3f3f3;swimlaneFillColor=#ffffff;strokeColor=#555555;strokeWidth=2;collapsible=0;resizeParent=0;recursiveResize=0;">
+          <mxGeometry x="20" y="60" width="370" height="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_lane1" value="System&#10;Scopebot" vertex="1" parent="1" style="swimlane;html=0;horizontal=1;startSize=80;fontFamily=Tahoma;fontSize=21;fontStyle=1;align=center;fillColor=#f3f3f3;swimlaneFillColor=#ffffff;strokeColor=#555555;strokeWidth=2;collapsible=0;resizeParent=0;recursiveResize=0;">
+          <mxGeometry x="390" y="60" width="770" height="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_start" value="" vertex="1" parent="UC13_lane0" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=ellipse;fillColor=#222222;aspect=fixed;">
+          <mxGeometry x="174.0" y="99.0" width="22" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_input" value="เลือกประเภทการกระทำ&#10;กรอกคำค้น หรือเปลี่ยนหน้า" vertex="1" parent="UC13_lane0" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="20.0" y="150.0" width="330" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_check" value="ตรวจบทบาท Admin&#10;ค้น Audit Log และแบ่งหน้า" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="40.0" y="280.0" width="420" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_decision" value="มีสิทธิ์และโหลดสำเร็จ" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="80.0" y="415.0" width="340" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_success" value="เรียงรายการล่าสุดก่อน&#10;อ่านผู้กระทำ เป้าหมาย และรายละเอียด" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="40.0" y="582.5" width="420" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_display" value="แสดงรายการพร้อมเวลา&#10;หรือแสดงสถานะไม่มีข้อมูล" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="40.0" y="755.0" width="420" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_fail" value="ไม่มีสิทธิ์: ปฏิเสธ&#10;โหลดผิดพลาด: แจ้งผล&#10;ให้ลองใหม่" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=20;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="507.5" y="570.0" width="245" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_merge" value="" vertex="1" parent="UC13_lane1" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=rhombus;">
+          <mxGeometry x="226.0" y="950.0" width="48" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_read" value="ตรวจสอบผลการดำเนินการ" vertex="1" parent="UC13_lane0" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;rounded=1;arcSize=10;">
+          <mxGeometry x="20.0" y="1017.5" width="330" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_end" value="" vertex="1" parent="UC13_lane0" style="html=0;fontFamily=Tahoma;fontSize=22;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=#333333;strokeWidth=2;fillColor=#ffffff;shape=ellipse;aspect=fixed;">
+          <mxGeometry x="169.0" y="1124.0" width="32" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_end_inner" vertex="1" connectable="0" parent="UC13_end" style="shape=ellipse;fillColor=#222222;strokeColor=#222222;movable=0;resizable=0;">
+          <mxGeometry x="6" y="6" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge0" parent="1" edge="1" source="UC13_start" target="UC13_input" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge1" parent="1" edge="1" source="UC13_input" target="UC13_check" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="325.0" />
+              <mxPoint x="640" y="325.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC13_edge2" parent="1" edge="1" source="UC13_check" target="UC13_decision" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge3" parent="1" edge="1" source="UC13_success" target="UC13_display" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge4" parent="1" edge="1" source="UC13_display" target="UC13_merge" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge5" parent="1" edge="1" source="UC13_merge" target="UC13_read" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="1063.75" />
+              <mxPoint x="205" y="1063.75" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC13_edge6" parent="1" edge="1" source="UC13_read" target="UC13_end" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_edge7" parent="1" edge="1" source="UC13_decision" target="UC13_success" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UC13_label7" value="ผ่าน" vertex="1" connectable="0" parent="UC13_edge7" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=19;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry relative="1" x="-1" y="0" as="geometry">
+            <mxPoint as="offset" x="35" y="16.75" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC13_edge8" parent="1" edge="1" source="UC13_decision" target="UC13_fail" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=1;exitY=0.5;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1020" y="535" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC13_label8" value="ไม่ผ่าน" vertex="1" connectable="0" parent="UC13_edge8" style="edgeLabel;html=0;fontFamily=Tahoma;fontSize=19;align=center;verticalAlign=middle;labelBackgroundColor=#ffffff;resizable=0;">
+          <mxGeometry relative="1" x="-1" y="0" as="geometry">
+            <mxPoint as="offset" x="135.0" y="-27" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UC13_edge9" parent="1" edge="1" source="UC13_fail" target="UC13_merge" style="edgeStyle=none;rounded=0;html=0;strokeColor=#444444;strokeWidth=2;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=1;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1020" y="1030" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

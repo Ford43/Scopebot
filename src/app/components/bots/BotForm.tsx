@@ -72,7 +72,6 @@ export default function BotForm({
   const [name, setName] = useState(existing?.name ?? "");
   const [desc, setDesc] = useState(existing?.description ?? "");
   const [systemPrompt, setSystemPrompt] = useState(existing?.system_prompt ?? "");
-  const [vectorBackend, setVectorBackend] = useState<"chroma" | "qdrant">(existing?.vector_backend ?? "chroma");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [docs, setDocs] = useState<BotDocument[]>([]);
@@ -264,7 +263,6 @@ export default function BotForm({
         name: name.trim(),
         description: desc.trim(),
         system_prompt: systemPrompt.trim(),
-        vector_backend: vectorBackend,
       };
 
       const wasNew = !currentBot;
@@ -348,7 +346,6 @@ export default function BotForm({
             name: name.trim(),
             description: desc.trim(),
             system_prompt: systemPrompt.trim(),
-            vector_backend: vectorBackend,
           });
           setCurrentBot(bot);
           toast.success("สร้างบอทแล้ว", {
@@ -501,7 +498,7 @@ export default function BotForm({
       let bot = currentBot;
       if (!bot) {
         bot = await createBot({ name: name.trim(), description: desc.trim(),
-          system_prompt: systemPrompt.trim(), vector_backend: vectorBackend });
+          system_prompt: systemPrompt.trim() });
         // Preserve the created bot even if assignment fails, so retry cannot
         // create another bot or lose partially assigned documents.
         setCurrentBot(bot);
@@ -628,27 +625,6 @@ export default function BotForm({
               )}
             </button>
           ))}
-        </div>
-
-        <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <label htmlFor="vector-backend" className="block text-sm font-semibold text-gray-800 mb-2">
-            ฐานค้นหาของบอท
-          </label>
-          <select
-            id="vector-backend"
-            value={vectorBackend}
-            onChange={(e) => setVectorBackend(e.target.value as "chroma" | "qdrant")}
-            disabled={!isNewBot || isBusy || isSaving}
-            className="w-full sm:w-72 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:opacity-70"
-          >
-            <option value="chroma">Chroma — ค่าเริ่มต้น</option>
-            <option value="qdrant">Qdrant — ทดลองเปรียบเทียบ</option>
-          </select>
-          <p className="mt-2 text-xs text-gray-500">
-            {isNewBot
-              ? "เลือกก่อนอัปโหลดไฟล์ ใช้เอกสารและคำถามเดียวกับอีกบอทเพื่อเทียบผล"
-              : "บอทนี้ใช้ฐานค้นหาที่เลือกไว้ตอนสร้าง หากต้องการลองอีกระบบ ให้สร้างบอทใหม่"}
-          </p>
         </div>
 
         {activeTab === "general" && (

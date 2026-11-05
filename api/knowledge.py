@@ -63,13 +63,13 @@ def request_update(bot, *, destructive=False):
         bot.knowledge_update_status = "idle"
 
 
-def build_snapshot(snapshot: Path, output: Path, backend="chroma"):
+def build_snapshot(snapshot: Path, output: Path):
     """Child writes a new directory; only the parent can publish its pointer."""
     log_path = output.parent / "ingest.log"
     with log_path.open("wb") as log:
         process = subprocess.Popen(
             [sys.executable, "-m", "rag.ingest", "--snapshot", str(snapshot),
-             "--output", str(output), "--backend", backend],
+             "--output", str(output)],
             cwd=PROJECT_ROOT, stdout=log, stderr=subprocess.STDOUT,
             env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
@@ -107,7 +107,6 @@ def run_update(bot_id: str, bot_db_id: int, filename: str, user_id: int):
                     if bot.knowledge_update_status not in {"queued", "processing"}:
                         return
                     revision = bot.knowledge_revision
-                    backend = bot.vector_backend
                     job = vector_root() / ".generations" / bot_id / uuid.uuid4().hex
                     snapshot = job / "documents"
                     snapshot.mkdir(parents=True)
@@ -123,10 +122,7 @@ def run_update(bot_id: str, bot_db_id: int, filename: str, user_id: int):
                     db.commit()
 
                 output = job / "index"
-                if backend == "chroma":
-                    build_snapshot(snapshot, output)
-                else:
-                    build_snapshot(snapshot, output, backend=backend)
+                build_snapshot(snapshot, output)
                 if not output.is_dir():
                     raise RuntimeError("ไม่พบฐานค้นหาที่ประมวลผลแล้ว")
 
