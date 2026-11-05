@@ -1,0 +1,200 @@
+[
+  {
+    "text": "รายการอาหาร ร้าน Scopebot (อัปเดตล่าสุดปี 2026)\nหมวดหมู่: อาหารจานหลัก (Main Courses)",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 0,
+      "section": "รายการอาหาร ร้าน Scopebot (อัปเดตล่าสุดปี 2026)",
+      "unit_order": 0
+    }
+  },
+  {
+    "text": "1. ข้าวกะเพราหมูสับไข่ดาว\nราคา: 60 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 1,
+      "section": "1. ข้าวกะเพราหมูสับไข่ดาว",
+      "unit_order": 1
+    }
+  },
+  {
+    "text": "1. ข้าวกะเพราหมูสับไข่ดาว\nรายละเอียด: อาหารตามสั่งยอดฮิต ใช้หมูสับคัดพิเศษ ผัดกับใบกะเพราปลอดสารพิษ รสชาติจัดจ้าน",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 2,
+      "section": "1. ข้าวกะเพราหมูสับไข่ดาว",
+      "unit_order": 2
+    }
+  },
+  {
+    "text": "2. ผัดไทยกุ้งสด\nราคา: 80 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 3,
+      "section": "2. ผัดไทยกุ้งสด",
+      "unit_order": 3
+    }
+  },
+  {
+    "text": "2. ผัดไทยกุ้งสด\nรายละเอียด: เส้นจันท์เหนียวนุ่ม ผัดกับน้ำซอสมะขามสูตรโบราณ พร้อมกุ้งแชบ๊วยตัวโต",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 4,
+      "section": "2. ผัดไทยกุ้งสด",
+      "unit_order": 4
+    }
+  },
+  {
+    "text": "3. ข้าวผัดปู\nราคา: 120 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 5,
+      "section": "3. ข้าวผัดปู",
+      "unit_order": 5
+    }
+  },
+  {
+    "text": "3. ข้าวผัดปู\nรายละเอียด: ข้าวหอมมะลิผัดร่วนๆ ใส่เนื้อปูม้าแกะเน้นๆ หอมกลิ่นกระทะ",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 6,
+      "section": "3. ข้าวผัดปู",
+      "unit_order": 6
+    }
+  },
+  {
+    "text": "3. ข้าวผัดปู\nหมวดหมู่: ประเภทต้มและแกง (Soups & Curries)",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 7,
+      "section": "3. ข้าวผัดปู",
+      "unit_order": 7
+    }
+  },
+  {
+    "text": "4. ต้มยำกุ้งน้ำข้น\nราคา: 150 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 8,
+      "section": "4. ต้มยำกุ้งน้ำข้น",
+      "unit_order": 8
+    }
+  },
+  {
+    "text": "4. ต้มยำกุ้งน้ำข้น\nรายละเอียด: รสชาติเปรี้ยวเผ็ดกลมกล่อม หอมกลิ่นเครื่องต้มยำและน้ำพริกเผา",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 9,
+      "section": "4. ต้มยำกุ้งน้ำข้น",
+      "unit_order": 9
+    }
+  },
+  {
+    "text": "5. แกงเขียวหวานไก่\nราคา: 100 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 10,
+      "section": "5. แกงเขียวหวานไก่",
+      "unit_order": 10
+    }
+  },
+  {
+    "text": "5. แกงเขียวหวานไก่\nรายละเอียด: แกงกะทิรสชาติเข้มข้น หอมกลิ่นพริกแกงเขียวหวาน ทานคู่กับข้าวสวยหรือขนมจีนก็อร่อย",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 11,
+      "section": "5. แกงเขียวหวานไก่",
+      "unit_order": 11
+    }
+  },
+  {
+    "text": "5. แกงเขียวหวานไก่\nหมวดหมู่: ของหวาน (Desserts)",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 12,
+      "section": "5. แกงเขียวหวานไก่",
+      "unit_order": 12
+    }
+  },
+  {
+    "text": "6. ข้าวเหนียวมะม่วง\nราคา: 120 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 13,
+      "section": "6. ข้าวเหนียวมะม่วง",
+      "unit_order": 13
+    }
+  },
+  {
+    "text": "6. ข้าวเหนียวมะม่วง\nรายละเอียด: ข้าวเหนียวมูนกะทิหอมหวาน เสิร์ฟพร้อมมะม่วงน้ำดอกไม้สุกกำลังดี",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 14,
+      "section": "6. ข้าวเหนียวมะม่วง",
+      "unit_order": 14
+    }
+  },
+  {
+    "text": "7. บัวลอยไข่หวาน\nราคา: 50 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 15,
+      "section": "7. บัวลอยไข่หวาน",
+      "unit_order": 15
+    }
+  },
+  {
+    "text": "7. บัวลอยไข่หวาน\nรายละเอียด: แป้งบัวลอยเหนียวนุ่ม หลากสีจากธรรมชาติ ในน้ำกะทิหอมใบเตยหวานละมุน",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 16,
+      "section": "7. บัวลอยไข่หวาน",
+      "unit_order": 16
+    }
+  },
+  {
+    "text": "7. บัวลอยไข่หวาน\nหมวดหมู่: เครื่องดื่ม (Beverages)",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 17,
+      "section": "7. บัวลอยไข่หวาน",
+      "unit_order": 17
+    }
+  },
+  {
+    "text": "8. ชาไทยเย็น\nราคา: 45 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 18,
+      "section": "8. ชาไทยเย็น",
+      "unit_order": 18
+    }
+  },
+  {
+    "text": "8. ชาไทยเย็น\nรายละเอียด: ชาไทยสกัดเข้มข้น ชงผสมนมสด หอมหวานมัน",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 19,
+      "section": "8. ชาไทยเย็น",
+      "unit_order": 19
+    }
+  },
+  {
+    "text": "9. น้ำแตงโมปั่น\nราคา: 50 บาท",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 20,
+      "section": "9. น้ำแตงโมปั่น",
+      "unit_order": 20
+    }
+  },
+  {
+    "text": "9. น้ำแตงโมปั่น\nรายละเอียด: ดับกระหายคลายร้อนด้วยแตงโมสดปั่น หวานธรรมชาติ ไม่ใส่น้ำเชื่อมเพิ่ม",
+    "metadata": {
+      "source": "data\\bot_bea29390\\food_menu.txt",
+      "evidence_unit": 21,
+      "section": "9. น้ำแตงโมปั่น",
+      "unit_order": 21
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "raw_response": "{\n  \"answer\": \"ข้าวกะเพราหมูสับไข่ดาว, ผัดไทยกุ้งสด, ข้าวผัดปู\",\n  \"evidence_ids\": []\n}",
+  "result": [
+    "REQUIRE_HUMAN_HANDOFF",
+    []
+  ],
+  "seconds": 3.2130802999890875
+}

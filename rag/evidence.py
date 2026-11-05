@@ -427,6 +427,8 @@ def section_matches(question: str, heading: str) -> bool:
     """Match an explicitly requested section, independent of the document domain."""
     if not heading.strip():
         return False
+    if re.match(r'^หมวดหมู่\s*[:：]', heading.strip()):
+        return category_request_matches(question, heading)
     if not any(word in question for word in ("อะไรบ้าง", "อย่างไร", "ยังไง", "ต้องทำ", "ขั้นตอน", "ระเบียบ", "วิธี")):
         return False
     title = re.sub(r"^(?:\d+[.)]\s*|#{1,6}\s+)", "", heading)
@@ -442,6 +444,17 @@ def section_matches(question: str, heading: str) -> bool:
     return len(key) >= 4 and start >= 0 and (start == 0 or query[start - 1] not in "เแโใไ")
 
 
+def category_request_matches(question: str, heading: str) -> bool:
+    """Only explicit whole-category requests, never qualified price/item queries."""
+    title = re.sub(r'^หมวดหมู่\s*[:：]\s*', '', heading.strip())
+    title = re.sub(r'\([^)]*\)', '', title).strip()
+    query = re.sub(r'(?:ครับ|ค่ะ|หน่อย|นะ|ด้วย|ครับผม)+$', '', question.strip()).strip()
+    query = re.sub(r'^(?:ขอรายละเอียด|รายละเอียด|ขอรายการ|แสดงรายการ|รายการ|ขอดู|ขอ)\s*', '', query)
+    query = re.sub(r'^(?:ใน)?หมวด(?:หมู่)?\s*[:：]?\s*', '', query)
+    query = re.sub(r'\s*(?:มีอะไรบ้าง|อะไรบ้าง|ทั้งหมด)$', '', query)
+    return len(_compact(title)) >= 4 and _compact(query) == _compact(title)
+
+
 def extract_section_answer(question: str, units: Sequence[EvidenceUnit]) -> GroundedAnswer | None:
     matched = [u for u in units if section_matches(question, u.metadata.get("section", "")) or (
         u.metadata.get('semantic_section_match') and re.match(r'^\d+[.)]\s+', u.metadata.get('section', '')))]
@@ -454,6 +467,11 @@ def extract_section_answer(question: str, units: Sequence[EvidenceUnit]) -> Grou
     key = (matched[0].metadata.get("source"), matched[0].metadata["section"])
     matched = [u for u in matched if (u.metadata.get("source"), u.metadata["section"]) == key]
     matched.sort(key=lambda u: u.metadata.get("unit_order", 0))
+    if all(u.metadata.get('category_overview') for u in matched):
+        texts = list(dict.fromkeys(u.text for u in matched))
+        if len(texts) != 1:
+            return None
+        return GroundedAnswer(answer=texts[0], evidence=texts)
     bodies = list(dict.fromkeys(u.text.split("\n", 1)[-1].strip() for u in matched))
     return GroundedAnswer(answer="\n".join("- " + body for body in bodies), evidence=[u.text for u in matched])
 

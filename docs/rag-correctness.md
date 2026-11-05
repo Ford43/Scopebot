@@ -1,5 +1,28 @@
 # RAG correctness changes (2026-10-29)
 
+## Explicit categories (2026-11-06)
+
+Ingestion now recognizes explicit `หมวดหมู่: ชื่อหมวด` headings. Item evidence
+retains its parent category; bounded, unpaged category sections also get a
+complete overview record. Exact requests such as `ขอรายละเอียดอาหารจานหลัก`
+or `อาหารจานหลักมีอะไรบ้าง` read that record from the selected bot's published
+Chroma index before rewriting, embedding or reranking. The full original text
+passes the existing grounding checks and retains a source citation.
+
+This path requires a unique category record, at most 4,000 characters, and no
+extra item/price constraints. Paged documents, oversized sections, ambiguous
+records, unknown categories and paraphrases continue through normal retrieval;
+the fast path does not infer category membership or reduce relevance thresholds.
+More than 80 category records disables the bounded exact lookup. Category
+requests do not need to load embedding models; vector search still loads them
+on demand.
+
+Existing indexes need rebuilding through the normal bot knowledge publication
+flow to gain category metadata. Code deployment alone cannot update old chunks.
+Test coverage: `python -m unittest test.test_category_retrieval`, including a
+temporary real Chroma index, source grounding and bot isolation without model
+calls. Rebuilding production data is separate from these regression tests.
+
 - Grounding now requires literal support as well as factual-token checks. It
   rejects unsupported assertions, cropped restrictions and reassigned numeric
   values. Quotes are checked against their full source units. Deterministic

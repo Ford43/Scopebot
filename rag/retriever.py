@@ -1,6 +1,32 @@
 import os
 from functools import lru_cache
 from config import EMBEDDING_MODEL, TOP_K, DEBUG
+from langchain_core.embeddings import Embeddings
+
+
+class _LazyEmbeddings(Embeddings):
+    """Metadata-only category reads do not need to load an embedding model."""
+    def embed_documents(self, texts):
+        return get_embedding_model().embed_documents(texts)
+
+    def embed_query(self, text):
+        return get_embedding_model().embed_query(text)
+
+
+def _exact_category_documents(db, question):
+    from rag.evidence import category_request_matches
+    from langchain_core.documents import Document
+    stored = db.get(where={'category_overview': True}, limit=81)
+    texts, metadata = stored.get('documents') or [], stored.get('metadatas') or []
+    if len(texts) > 80:
+        return []  # Do not pick from a possibly incomplete/ambiguous catalog.
+    matches = [Document(page_content=text, metadata={
+        k: v for k, v in meta.items() if not k.startswith('semantic_') and k != 'resolved_question'
+    }) for text, meta in zip(texts, metadata)
+        if meta and category_request_matches(question, meta.get('section', ''))]
+    if len(matches) != 1:
+        return []
+    return matches
 
 
 @lru_cache(maxsize=1)
@@ -21,7 +47,7 @@ def get_vector_db(bot_id, persist_directory=None):
     from langchain_chroma import Chroma
     return Chroma(
         persist_directory=str(path),
-        embedding_function=get_embedding_model()
+        embedding_function=_LazyEmbeddings()
     )
 
 
@@ -41,6 +67,9 @@ def retrieve_docs(query, bot_id, score_threshold=1.05, *, history=None, semantic
     if db is None:
         return []
     current_question = original_question or query
+    exact = _exact_category_documents(db, current_question)
+    if exact:
+        return exact
     plan = prepare_query(current_question, history) if enabled else QueryPlan(query, (query,))
     candidates, distances, seen = [], [], {}
     for search in plan.queries:

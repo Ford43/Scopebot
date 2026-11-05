@@ -1,0 +1,41 @@
+{
+  "stages": [
+    {
+      "stage": "get_embedding_model",
+      "seconds": 68.718
+    },
+    {
+      "stage": "prepare_query",
+      "plan": {
+        "question": "ขอรายละเอียดอาหารจานหลัก",
+        "queries": [
+          "ขอรายละเอียดอาหารจานหลัก",
+          "อาหารจานหลัก",
+          "เมนูหลัก"
+        ]
+      },
+      "seconds": 8.209
+    },
+    {
+      "stage": "rank_candidates",
+      "input_count": 27,
+      "output_count": 0,
+      "seconds": 14.611
+    },
+    {
+      "stage": "retrieve_docs",
+      "documents": [],
+      "seconds": 102.417
+    }
+  ],
+  "question": "ขอรายละเอียดอาหารจานหลัก",
+  "bot": {
+    "id": "bot_bea29390",
+    "usable": true,
+    "index": "C:\\Users\\keror\\Documents\\GitHub\\Scopebot\\vector_db\\.generations\\bot_bea29390\\6d46d9c1d1ce46d1851418f93e71dd61\\index",
+    "update_status": "ready"
+  },
+  "answer": "REQUIRE_HUMAN_HANDOFF",
+  "sources": [],
+  "total_seconds": 102.419
+}

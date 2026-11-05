@@ -1,0 +1,8 @@
+{
+  "raw_response": "{\"answer\":\"ไม่พบข้อมูล\", \"evidence_ids\":[]}",
+  "result": [
+    "REQUIRE_HUMAN_HANDOFF",
+    []
+  ],
+  "seconds": 42.404529100022046
+}

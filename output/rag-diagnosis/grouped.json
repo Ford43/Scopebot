@@ -1,0 +1,77 @@
+[
+  {
+    "question": "ขอรายละเอียดอาหารจานหลัก",
+    "scores": [
+      {
+        "section": "หมวดหมู่: อาหารจานหลัก (Main Courses)",
+        "score": 0.7682167887687683
+      },
+      {
+        "section": "หมวดหมู่: ประเภทต้มและแกง (Soups & Curries)",
+        "score": 0.05899408832192421
+      },
+      {
+        "section": "หมวดหมู่: ของหวาน (Desserts)",
+        "score": 0.02671436406672001
+      },
+      {
+        "section": "หมวดหมู่: เครื่องดื่ม (Beverages)",
+        "score": 0.009321238845586777
+      }
+    ],
+    "rank_seconds": 6.632,
+    "answer": "REQUIRE_HUMAN_HANDOFF",
+    "sources": [],
+    "answer_seconds": 3.447
+  },
+  {
+    "question": "ขอรายละเอียดของหวาน",
+    "scores": [
+      {
+        "section": "หมวดหมู่: อาหารจานหลัก (Main Courses)",
+        "score": 0.001921899151057005
+      },
+      {
+        "section": "หมวดหมู่: ประเภทต้มและแกง (Soups & Curries)",
+        "score": 0.0011646592756733298
+      },
+      {
+        "section": "หมวดหมู่: ของหวาน (Desserts)",
+        "score": 0.29337504506111145
+      },
+      {
+        "section": "หมวดหมู่: เครื่องดื่ม (Beverages)",
+        "score": 0.014042524620890617
+      }
+    ],
+    "rank_seconds": 6.969,
+    "answer": "REQUIRE_HUMAN_HANDOFF",
+    "sources": [],
+    "answer_seconds": 0.0
+  },
+  {
+    "question": "มีพิซซ่าทะเลราคาเท่าไร",
+    "scores": [
+      {
+        "section": "หมวดหมู่: อาหารจานหลัก (Main Courses)",
+        "score": 0.0025058207102119923
+      },
+      {
+        "section": "หมวดหมู่: ประเภทต้มและแกง (Soups & Curries)",
+        "score": 0.0017658114666119218
+      },
+      {
+        "section": "หมวดหมู่: ของหวาน (Desserts)",
+        "score": 0.0006798047106713057
+      },
+      {
+        "section": "หมวดหมู่: เครื่องดื่ม (Beverages)",
+        "score": 0.000384480255888775
+      }
+    ],
+    "rank_seconds": 7.031,
+    "answer": "REQUIRE_HUMAN_HANDOFF",
+    "sources": [],
+    "answer_seconds": 0.001
+  }
+]
