@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import {
   Search,
   ChevronDown,
@@ -13,6 +13,85 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/AuthContext";
 import { authHeaders } from "../../lib/api";
+import { resetUserPassword } from "../../lib/users";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger,
+} from "../ui/dialog";
+
+function ResetPasswordDialog({ user }: { user: { id: number | string; username: string; email: string } }) {
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    const form = new FormData(event.currentTarget);
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await resetUserPassword(user.id, String(form.get("password")), String(form.get("confirmation")));
+      setOpen(false);
+      toast.success("รีเซ็ตรหัสผ่านเรียบร้อย");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "รีเซ็ตรหัสผ่านไม่สำเร็จ");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (isSubmitting) return;
+      setError("");
+      setOpen(nextOpen);
+    }}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+        >
+          รีเซ็ตรหัสผ่าน
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>รีเซ็ตรหัสผ่าน</DialogTitle>
+        <DialogDescription>
+          ตั้งรหัสผ่านใหม่ให้บัญชี {user.username} ({user.email})
+        </DialogDescription>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <label className="block space-y-1 text-sm font-medium">
+            <span>รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)</span>
+            <input
+              name="password" type="password" autoComplete="new-password"
+              required minLength={6} disabled={isSubmitting}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+          <label className="block space-y-1 text-sm font-medium">
+            <span>ยืนยันรหัสผ่านใหม่</span>
+            <input
+              name="confirmation" type="password" autoComplete="new-password"
+              required disabled={isSubmitting}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+          {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
+          <DialogFooter>
+            <button type="button" disabled={isSubmitting} onClick={() => setOpen(false)}
+              className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold disabled:opacity-60">
+              ยกเลิก
+            </button>
+            <button type="submit" disabled={isSubmitting}
+              className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold disabled:opacity-60">
+              {isSubmitting ? "กำลังบันทึก..." : "ยืนยันรีเซ็ตรหัสผ่าน"}
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function getStatusClass(status: string) {
   switch (status) {
@@ -517,14 +596,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                 </p>
               </div>
 
-              {isAdmin && (
-                <button
-                  onClick={() => toast.message("ระบบกำลังส่งอีเมลรีเซ็ตรหัสผ่าน...")}
-                  className="w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                >
-                  รีเซ็ตรหัสผ่านพนักงาน
-                </button>
-              )}
+              {isAdmin && <ResetPasswordDialog key={editModalUser.id} user={editModalUser} />}
             </div>
 
             <div className="mt-6 flex gap-3">
