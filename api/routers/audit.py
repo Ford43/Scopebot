@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+from datetime import date
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
 from api import auth, models, schemas
@@ -16,6 +17,14 @@ def get_audit_logs(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_role("admin")),
+    account: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
 ):
-    total, rows = list_audit_logs(db, action=action, q=q, limit=limit, offset=offset)
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(422, "วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด")
+    if date_to == date.max:
+        raise HTTPException(422, "วันที่สิ้นสุดอยู่นอกช่วงที่รองรับ")
+    total, rows = list_audit_logs(db, action=action, q=q, limit=limit, offset=offset,
+                                account=account, date_from=date_from, date_to=date_to)
     return {"total": total, "items": rows}

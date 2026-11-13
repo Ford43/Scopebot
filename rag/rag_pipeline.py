@@ -3,6 +3,7 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 import ollama
+from rag.identifiers import extract_identifiers
 from rag.evidence import (
     build_retrieval_query,
     parse_grounded_response,
@@ -10,6 +11,7 @@ from rag.evidence import (
     extract_shift_start_answer,
     extract_section_answer,
     extract_relevant_quote,
+    extract_direct_fact_answer,
     split_evidence_units,
     units_for_evidence_quotes,
     validate_grounded_answer,
@@ -125,20 +127,44 @@ def ask_rag(
         return _reject_grounding("weak_topic_match", bot_id, question)
     if any(unit.metadata.get("section_incomplete") for unit in selected_units):
         return _reject_grounding("section_too_large", bot_id, question)
+    if any(unit.metadata.get('evidence_incomplete') for unit in selected_units):
+        return _reject_grounding('incomplete_evidence', bot_id, question)
 
     context = build_context(selected_units)
-    codes = re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', question.upper())
+    codes = extract_identifiers(retrieval_query)
     if codes:
         # Exact identifiers permit an extractive answer: retain column labels,
         # values and restrictions instead of requiring a model to restate them.
-        present = set(re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', context.upper()))
+        field_requests = (
+            (('หมดอายุ', 'วันหมดอายุ'), ('หมดอายุ',)),
+            (('เก็บอยู่', 'เก็บที่', 'อยู่ตรงไหน', 'อยู่ที่ไหน'), ('ที่เก็บ', 'สถานที่', 'ตำแหน่ง', 'location')),
+            (('เหลือกี่', 'คงเหลือ', 'สต็อก'), ('เหลือ', 'สต็อก', 'stock')),
+            (('ราคา', 'กี่บาท'), ('ราคา', 'บาท', 'price')),
+        )
+        csv_units = all(str(u.metadata.get('source', '')).lower().endswith('.csv') for u in selected_units)
+        if csv_units:
+            # Identifier relevance alone does not supply an absent CSV field.
+            populated_fields = []
+            for unit in selected_units:
+                labels = []
+                for part in unit.text.split('|'):
+                    label, separator, value = part.partition(':')
+                    if separator and value.strip().lower() not in {'', '-', '—', 'n/a', 'null', 'none', 'ไม่ระบุ', 'ไม่มีข้อมูล'}:
+                        labels.append(label.lower())
+                populated_fields.append(' '.join(labels))
+            for asks, fields in field_requests:
+                if any(word in question for word in asks) and not all(any(field in labels for field in fields) for labels in populated_fields):
+                    return _reject_grounding('missing_requested_field', bot_id, question)
+        present = set(extract_identifiers(context))
         sources = {unit.metadata.get('source') for unit in selected_units}
         if set(codes).issubset(present) and len(sources) == 1 and len(context) <= 4000:
             answer = 'ข้อมูลจากเอกสาร:\n' + '\n'.join(dict.fromkeys(u.text for u in selected_units))
-            valid, _ = validate_grounded_answer(question, answer, [u.text for u in selected_units], selected_units)
+            valid, _ = validate_grounded_answer(retrieval_query, answer, [u.text for u in selected_units], selected_units)
             if valid:
                 return answer, extract_sources(selected_units)
     structured = extract_section_answer(question, selected_units)
+    if structured is None:
+        structured = extract_direct_fact_answer(retrieval_query, selected_units)
     if structured is None and any(word in question for word in ('กะ','เข้างาน','เริ่มงาน','กี่โมง')):
         structured = extract_shift_start_answer(resolved_question, selected_units)
     if structured is not None:

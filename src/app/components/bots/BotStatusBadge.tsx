@@ -1,6 +1,12 @@
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 export function BotStatusBadge({ status }: { status?: string }) {
+  if (status === "error")
+    return (
+      <span className="flex items-center gap-1 text-[11px] text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
+        <AlertCircle className="w-3 h-3" /> อัปเดตฐานความรู้ไม่สำเร็จ
+      </span>
+    );
   if (status === "ready" || status === "active")
     return (
       <span className="flex items-center gap-1 text-[11px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full">

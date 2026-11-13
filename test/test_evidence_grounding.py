@@ -97,6 +97,13 @@ class EvidenceUnitTests(unittest.TestCase):
 
 
 class EvidenceGatedPipelineTests(unittest.TestCase):
+    def setUp(self):
+        # These tests deliberately exercise untrusted model output validation.
+        # Direct extractive answers have their own independent regression suite.
+        direct = patch('rag.rag_pipeline.extract_direct_fact_answer', return_value=None)
+        direct.start()
+        self.addCleanup(direct.stop)
+
     def test_invalid_model_json_hands_off_after_one_model_call(self):
         from rag import rag_pipeline
 

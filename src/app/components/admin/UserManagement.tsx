@@ -428,7 +428,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                         setEditModalUser(user);
                         setEditFormData({
                           role: user.role,
-                          max_bots: user.max_bots || 5,
+                          max_bots: user.max_bots ?? 5,
                           is_active: user.is_active,
                         });
                       }}
@@ -442,7 +442,7 @@ export default function UserManagement({ initialQuery = "" }: { initialQuery?: s
                       <td className="px-4 py-4 text-slate-700 font-medium">
                         {user.role === "support"
                           ? "—"
-                          : `${user.bot_count ?? 0}/${user.max_bots || 5}`}
+                          : `${user.bot_count ?? 0}/${user.max_bots ?? 5}`}
                       </td>
                       <td className="px-4 py-4">
                         <span

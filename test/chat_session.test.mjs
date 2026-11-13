@@ -13,7 +13,7 @@ export function useCallback(f,deps){let i=c++,prev=callbacks[i];if(!prev||deps.s
 export function useEffect(f,deps){let i=e++,prev=effects[i];if(!prev||deps?.some((d,j)=>d!==prev.deps?.[j])||!deps)pending.push(()=>{prev?.cleanup?.();effects[i]={deps,cleanup:f()};});}`;
 const result = await build({ entryPoints: [fileURLToPath(new URL("../src/app/hooks/useChatSession.ts", import.meta.url))], bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "boundaries", setup(b) {
   b.onResolve({ filter: /^(react|sonner)$|lib\/api$/ }, (a) => ({ path: a.path, namespace: "mock" }));
-  b.onLoad({ filter: /.*/, namespace: "mock" }, (a) => ({ contents: a.path === "react" ? mockReact : a.path === "sonner" ? "export const toast={error:()=>{}}" : "export const authHeaders=()=>({})" }));
+  b.onLoad({ filter: /.*/, namespace: "mock" }, (a) => ({ contents: a.path === "react" ? mockReact : a.path === "sonner" ? "export const toast={error:()=>{},info:(message)=>{globalThis.__chatNotice=message;}}" : "export const authHeaders=()=>({})" }));
 } }] });
 const file = new URL(`./.chat-hook-${randomUUID()}.mjs`, import.meta.url);
 await writeFile(file, result.outputFiles[0].text);
@@ -87,26 +87,51 @@ test("late staff poll cannot populate a new conversation", () => isolated(async 
   assert.deepEqual(hook.messages, []);
   assert.equal(hook.chatMode, "bot");
 }));
-test("a stalled chat request times out and allows another send", () => isolated(async () => {
+test("a slow chat keeps the original request and accepts its eventual answer without duplicate sends", () => isolated(async () => {
   const originalSetTimeout = globalThis.setTimeout, originalClearTimeout = globalThis.clearTimeout;
-  let timeout;
-  globalThis.setTimeout = (fn) => {
-    timeout = fn;
-    return 123;
-  };
-  globalThis.clearTimeout = () => {
-  };
+  let timeout, finish, signal, requests = 0;
+  globalThis.setTimeout = (fn) => { timeout = fn; return 123; };
+  globalThis.clearTimeout = () => {};
   try {
-    globalThis.fetch = (_url, init) => new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+    globalThis.fetch = (_url, init) => {
+      requests++;
+      signal = init.signal;
+      return new Promise(resolve => { finish = resolve; });
+    };
     let hook = render();
     const pending = hook.handleSend("question");
-    assert.equal(typeof timeout, "function");
     timeout();
+    assert.equal(signal.aborted, false);
+    assert.match(globalThis.__chatNotice, /ประมวลผล/);
+    hook = render();
+    assert.equal(hook.isTyping, true);
+    await hook.handleSend("question");
+    assert.equal(requests, 1);
+    finish(ok("late answer"));
     await pending;
     hook = render();
     assert.equal(hook.isTyping, false);
-    assert.equal(hook.messages.at(-1).category, "Error");
-    assert.match(hook.messages.at(-1).text, /ลองใหม่/);
+    assert.deepEqual(hook.messages.map(m => m.text), ["question", "late answer"]);
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  }
+}));
+test("unmount aborts a slow request and clears its waiting notice", () => isolated(async () => {
+  const originalSetTimeout = globalThis.setTimeout, originalClearTimeout = globalThis.clearTimeout;
+  let signal, cleared = false;
+  globalThis.setTimeout = () => 123;
+  globalThis.clearTimeout = id => { if (id === 123) cleared = true; };
+  try {
+    globalThis.fetch = (_url, init) => {
+      signal = init.signal;
+      return new Promise((_, reject) => signal.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+    };
+    const pending = render().handleSend("question");
+    globalThis.__chatHook.reset();
+    await pending;
+    assert.equal(signal.aborted, true);
+    assert.equal(cleared, true);
   } finally {
     globalThis.setTimeout = originalSetTimeout;
     globalThis.clearTimeout = originalClearTimeout;

@@ -6,7 +6,10 @@ import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+from api import login_security
 from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -84,23 +87,77 @@ def register(body: schemas.UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(body: schemas.UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == body.email).first()
+def login(body: schemas.UserLogin, db: Session = Depends(get_db), request: Request = None):
+    # ASGI client is the only accepted source. Forwarded headers must be handled
+    # by a correctly configured trusted-proxy server, never by this endpoint.
+    ip = request.client.host if request is not None and request.client else "unknown"
+    email = body.email.strip()
+    try:
+        rows = login_security.lock_limits(db, email, ip)
+        now = login_security.utcnow()
+        # Preserve existing case-sensitive account identity. Only the limiter
+        # groups case variants; old accounts may differ in local-part case.
+        user = db.query(models.User).filter(models.User.email == email).first()
+        unknown = "บัญชีไม่ทราบชื่อ [" + login_security.private_key('account', email).split(':')[1][:12] + "]"
+        wait = login_security.retry_after(rows, now)
+        if wait:
+            write_audit_log(db, action="login_throttled", target=user,
+                            target_name=None if user else unknown, detail="จำกัดการเข้าสู่ระบบชั่วคราว")
+            db.commit()
+            raise HTTPException(429, "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอก่อนลองใหม่", headers={"Retry-After": str(wait)})
 
-    if not user or not auth.verify_password(body.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Email หรือ Password ไม่ถูกต้อง")
+        valid = auth.verify_password(body.password, user.hashed_password if user else _DUMMY_PASSWORD_HASH)
+        if not user or not valid or not user.is_active or not user.is_approved:
+            login_security.record_failure(rows, now)
+            write_audit_log(db, action="login_failed", target=user,
+                            target_name=None if user else unknown, detail="เข้าสู่ระบบไม่สำเร็จ")
+            wait = login_security.retry_after(rows, now)
+            db.commit()  # Persist failures and audit before raising an HTTP error.
+            if wait:
+                raise HTTPException(429, "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอก่อนลองใหม่", headers={"Retry-After": str(wait)})
+            raise HTTPException(401, "อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชียังไม่พร้อมใช้งาน")
 
-    if not user.is_active:
-        raise HTTPException(status_code=403, detail="บัญชีถูกระงับ")
+        login_security.reset_account(rows, now)
+        token = auth.create_access_token({"sub": str(user.id)})
+        write_audit_log(db, action="login_success", actor=user, target=user, detail="เข้าสู่ระบบสำเร็จ")
+        db.commit()
+        return {"access_token": token, "token_type": "bearer"}
+    except Exception:
+        db.rollback()
+        raise
 
-    if not user.is_approved:
-        raise HTTPException(
-            status_code=403,
-            detail="บัญชียังไม่ได้รับการอนุมัติ กรุณาติดต่อผู้ดูแลระบบ",
-        )
 
-    token = auth.create_access_token({"sub": str(user.id)})
-    return {"access_token": token, "token_type": "bearer"}
+# Equalize the expensive verification path for unknown accounts. This is not a
+# usable account or credential and is never persisted or returned.
+_DUMMY_PASSWORD_HASH = auth.hash_password(secrets.token_urlsafe(32))
+
+
+@router.post("/logout")
+def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(auth.oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        user_id = int(payload['sub'])
+        expires = datetime.fromtimestamp(float(payload['exp']), timezone.utc)
+    except (JWTError, KeyError, TypeError, ValueError, OverflowError):
+        raise HTTPException(401, "Token ไม่ถูกต้องหรือหมดอายุ")
+    try:
+        # Atomic insert wins once; concurrent/retried logout is successful but
+        # never duplicates its audit event. Legacy JWTs need no jti to revoke.
+        statement = login_security.insert_for(db, models.RevokedToken).values(
+            token_hash=auth.token_hash(token), expires_at=expires)
+        result = db.execute(statement.on_conflict_do_nothing(index_elements=['token_hash']))
+        if result.rowcount:
+            user = db.get(models.User, user_id)
+            write_audit_log(db, action="logout", actor=user, target=user, detail="ออกจากระบบสำเร็จ")
+        db.commit()
+        return {"message": "ออกจากระบบสำเร็จ"}
+    except Exception:
+        db.rollback()
+        raise
 
 
 @router.post("/forgot-password")

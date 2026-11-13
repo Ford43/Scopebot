@@ -15,6 +15,14 @@ interface ChatSession {
 }
 interface BotItem { bot_id: string; name: string; }
 
+function messageTime(dateStr: string): string {
+  const date = new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(dateStr) ? dateStr : dateStr + "Z");
+  return Number.isNaN(date.getTime()) ? "ไม่ทราบเวลา" : date.toLocaleString("th-TH", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  });
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(dateStr) ? dateStr : dateStr + "Z").getTime();
   const mins = Math.floor(diff / 60000);
@@ -175,9 +183,15 @@ export default function SearchHistory({ initialQuery = "" }: { initialQuery?: st
                         </span>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                       </div>
+                      <time dateTime={msg.created_at} className="block mt-2 text-[11px] text-gray-500">
+                        {messageTime(msg.created_at)}
+                      </time>
                     </div>
                   )) : session.messages.map(msg => (
                     <div key={msg.id} className="bg-white rounded-lg p-3 border border-gray-100">
+                      <time dateTime={msg.created_at} className="block mb-2 text-[11px] text-gray-500">
+                        เวลาบันทึกการสนทนา: {messageTime(msg.created_at)}
+                      </time>
                       <div className="flex items-start gap-2 mb-2">
                         <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full flex-shrink-0">Q</span>
                         <p className="text-sm text-gray-800">{msg.question}</p>

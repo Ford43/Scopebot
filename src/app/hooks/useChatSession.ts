@@ -5,7 +5,7 @@ import type { BotItem } from "../types/bot";
 import { authHeaders } from "../lib/api";
 import { timeNow } from "../utils/date";
 
-const CHAT_REQUEST_TIMEOUT_MS = 180_000;
+const CHAT_SLOW_NOTICE_MS = 180_000;
 
 interface UseChatSessionOptions {
   isAuthenticated: boolean;
@@ -306,11 +306,14 @@ export function useChatSession({
       const isCurrent = () => generation === sessionGeneration.current &&
         sessionId === currentSessionId.current && activeBot.bot_id === currentBotId.current &&
         pendingRequest.current === controller;
-      let timedOut = false;
       const timeout = setTimeout(() => {
-        timedOut = true;
-        controller.abort();
-      }, CHAT_REQUEST_TIMEOUT_MS);
+        // Cold model startup can exceed three minutes. Keep the original request
+        // alive so its eventual answer arrives, while pendingRequest blocks duplicates.
+        if (isCurrent()) {
+          toast.info("ระบบยังประมวลผลคำตอบอยู่ กรุณารอสักครู่ หากต้องการยกเลิกให้เริ่มแชทใหม่");
+        }
+      }, CHAT_SLOW_NOTICE_MS);
+      controller.signal.addEventListener("abort", () => clearTimeout(timeout), { once: true });
 
       const now = new Date();
       const timeStr = now.toLocaleTimeString("th-TH", {
@@ -375,9 +378,7 @@ export function useChatSession({
         }
       } catch (error: unknown) {
         if (!isCurrent()) return;
-        const message = timedOut
-          ? "รอคำตอบนานเกินไป กรุณาลองใหม่อีกครั้ง"
-          : error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
+        const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
         console.error("Chat Error:", error);
         setMessages((prev) => [
           ...prev,

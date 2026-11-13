@@ -1,7 +1,7 @@
 """Platform audit trail and read-only system totals (admin)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import func, or_
@@ -49,12 +49,24 @@ def list_audit_logs(
     *,
     action: Optional[str] = None,
     q: Optional[str] = None,
+    account: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
     limit: int = 50,
     offset: int = 0,
 ):
     query = db.query(models.AuditLog)
     if action:
         query = query.filter(models.AuditLog.action == action)
+    if account and account.strip():
+        like = '%' + account.strip().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
+        query = query.filter(or_(models.AuditLog.actor_name.ilike(like, escape='\\'),
+                                 models.AuditLog.target_name.ilike(like, escape='\\')))
+    thai = timezone(timedelta(hours=7))
+    if date_from:
+        query = query.filter(models.AuditLog.created_at >= datetime.combine(date_from, time.min, thai).astimezone(timezone.utc))
+    if date_to:
+        query = query.filter(models.AuditLog.created_at < datetime.combine(date_to + timedelta(days=1), time.min, thai).astimezone(timezone.utc))
     needle = (q or "").strip()
     if needle:
         like = f"%{needle}%"
@@ -67,7 +79,7 @@ def list_audit_logs(
         )
     total = query.count()
     rows = (
-        query.order_by(models.AuditLog.created_at.desc())
+        query.order_by(models.AuditLog.created_at.desc(), models.AuditLog.id.desc())
         .offset(max(offset, 0))
         .limit(min(max(limit, 1), 100))
         .all()

@@ -49,9 +49,12 @@ interface BotFormProps {
 
 function docBadgeStatus(
   botStatus: string,
-  isNewBot: boolean
-): "pending" | "processing" | "ready" | "inactive" {
+  isNewBot: boolean,
+  updateStatus: BotItem["knowledge_update_status"]
+): "pending" | "processing" | "ready" | "inactive" | "error" {
   if (isNewBot) return "pending";
+  if (updateStatus === "error") return "error";
+  if (updateStatus === "queued" || updateStatus === "processing") return "processing";
   if (botStatus === "processing") return "processing";
   if (botStatus === "active") return "ready";
   return "inactive";
@@ -1021,7 +1024,7 @@ export default function BotForm({
                             {new Date(doc.uploaded_at).toLocaleDateString("th-TH")}
                           </p>
                           <BotStatusBadge
-                            status={docBadgeStatus(botStatus, isNewBot)}
+                            status={docBadgeStatus(botStatus, isNewBot, updateStatus)}
                           />
                         </div>
                       </div>

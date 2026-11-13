@@ -1,7 +1,9 @@
 import os
+import re
 from functools import lru_cache
 from config import EMBEDDING_MODEL, TOP_K, DEBUG
 from langchain_core.embeddings import Embeddings
+from rag.identifiers import extract_identifiers
 
 
 class _LazyEmbeddings(Embeddings):
@@ -35,6 +37,29 @@ def get_embedding_model():
     return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
 
+def _exact_evidence_documents(db, question):
+    """Bounded metadata read; only unique explicit facts or whole section titles."""
+    from rag.evidence import direct_fact_matches, _compact
+    from langchain_core.documents import Document
+    stored = db.get(limit=401)
+    if len(stored.get('documents') or []) > 400:
+        return []
+    docs = [Document(page_content=t, metadata={k: v for k, v in (m or {}).items()
+            if not k.startswith('semantic_') and k != 'resolved_question'})
+            for t, m in zip(stored.get('documents') or [], stored.get('metadatas') or [])]
+    query = re.sub(r'^(?:ขอ|ช่วย)?(?:ขั้นตอน|วิธี|ระเบียบ)', '', question.strip())
+    query = re.sub(r'(?:ครับ|ค่ะ|หน่อย)+$', '', query).strip()
+    query = re.sub(r'(?:ต้องทำอะไรบ้าง|มีอะไรบ้าง|ทำอย่างไร)$', '', query).strip()
+    if query != question.strip():
+        matched = [d for d in docs if d.metadata.get('section') and
+                   _compact(re.sub(r'^\d+[.)]\s*', '', d.metadata['section']).replace('(', '').replace(')', '')) == _compact(query)]
+        if matched and len(matched) <= 80 and len({(d.metadata.get('source'), d.metadata['section']) for d in matched}) == 1:
+            return matched
+    matched = [d for d in docs if direct_fact_matches(question, d.page_content)]
+    unique = {(d.metadata.get('source'), d.metadata.get('page'), d.page_content): d for d in matched}
+    return list(unique.values()) if len(unique) == 1 else []
+
+
 def get_vector_db(bot_id, persist_directory=None):
     from api.knowledge import resolve_index_path
     path = persist_directory or resolve_index_path(bot_id)
@@ -56,7 +81,7 @@ def retrieve_docs(query, bot_id, score_threshold=1.05, *, history=None, semantic
     from config import SEMANTIC_SEARCH_ENABLED
     from api.knowledge import resolve_index_path
     from rag.semantic import prepare_query, rank_candidates, QueryPlan
-    from rag.evidence import section_matches
+    from rag.evidence import section_matches, build_retrieval_query
     from langchain_core.documents import Document
     import logging
     enabled = SEMANTIC_SEARCH_ENABLED if semantic is None else semantic
@@ -67,7 +92,22 @@ def retrieve_docs(query, bot_id, score_threshold=1.05, *, history=None, semantic
     if db is None:
         return []
     current_question = original_question or query
+    contextual_question = build_retrieval_query(current_question, history)
+    codes = extract_identifiers(contextual_question)
+    if codes:
+        records = db.get(where_document={'$or': [{'$contains': code} for code in codes]} if len(codes) > 1 else {'$contains': codes[0]}, limit=81)
+        matches = []
+        for text, metadata in zip(records.get('documents') or [], records.get('metadatas') or []):
+            present = set(extract_identifiers(text))
+            if metadata.get('source', '').lower().endswith('.csv') and present.intersection(codes):
+                matches.append(Document(page_content=text, metadata={k: v for k, v in metadata.items() if not k.startswith('semantic_') and k != 'resolved_question'}))
+        found = {code for doc in matches for code in extract_identifiers(doc.page_content) if code in codes}
+        if len(records.get('documents') or []) <= 80 and len(matches) == len(codes) and found == set(codes) and len({d.metadata.get('source') for d in matches}) == 1:
+            return matches
     exact = _exact_category_documents(db, current_question)
+    if exact:
+        return exact
+    exact = _exact_evidence_documents(db, current_question)
     if exact:
         return exact
     plan = prepare_query(current_question, history) if enabled else QueryPlan(query, (query,))

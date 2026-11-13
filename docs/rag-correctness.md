@@ -1,5 +1,52 @@
 # RAG correctness changes (2026-10-29)
 
+## Answer accuracy safeguards (2026-11-12)
+
+- Document identifiers use one ASCII-boundary parser throughout retrieval,
+  follow-up resolution, rewriting and grounding. Thai text touching a code
+  (`INV-015ราคาเท่าไร`) no longer disables identity checks. Generated search
+  alternatives must preserve the requested identifiers as well.
+- Explicit branch/model/shift conflicts are checked before semantic relevance
+  or direct section answers. Qualified section answers retain their heading so
+  a branch-specific procedure is not presented as a universal procedure.
+- Grounding preserves complete restrictive clauses (including receipt/member
+  requirements and English negation), not just the presence of a keyword.
+- New ingestion keeps the complete original atomic record in metadata when it
+  needs multiple search chunks, up to 4,000 characters. Retrieval restores and
+  deduplicates that record before constructing model context or citations. Larger
+  fragmented records are marked incomplete and cannot be published as complete
+  answers. This metadata requires rebuilding existing knowledge through the
+  normal publication flow; deployment cannot recover missing text from old
+  fragments. No production index was rebuilt as part of this code change.
+  Sections with a separately listed requirement also retain their bounded full
+  scope. For existing indexes, retrieved requirement siblings in the same source
+  section participate in validation even when the model cites only an assertion.
+- LINE small talk matches a whole utterance. A question with a greeting or
+  thanks now continues to RAG instead of receiving only a canned response.
+
+Regressions: `test_condition_accuracy`, `test_qualifier_accuracy`,
+`test_identifier_accuracy`, and `test_line_question_routing`.
+
+## Reported document and follow-up cases (2026-11-10)
+
+Bounded exact lookups now cover unique explicit price/duration facts and weekday
+times, plus exact section-title requests. They return original evidence with its
+conditions and citations through the existing grounding validation. The Chroma
+lookup scans at most 401 records and declines this shortcut when the index has
+more than 400; ambiguous evidence continues through normal retrieval. This is
+not a general replacement for semantic search or a model-quality improvement.
+
+Identifier follow-ups use preceding user questions, never preceding bot answers,
+to recover the requested record. CSV answers also check requested field labels
+for supported field intents instead of treating an identifier match alone as an
+answer. Regression coverage is in `test/test_direct_document_answers.py`.
+
+The web chat's three-minute timer now displays a processing notice while keeping
+the original request active. Starting a new chat, switching bots and leaving the
+page still cancel it. This avoids discarding a response arriving after 180
+seconds; it does not accelerate model startup or recover a lost connection.
+There is no new automatic retry or hard client deadline.
+
 ## Explicit categories (2026-11-06)
 
 Ingestion now recognizes explicit `หมวดหมู่: ชื่อหมวด` headings. Item evidence

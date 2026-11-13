@@ -39,7 +39,7 @@ export default function BotsPage({
   const { user } = useAuth();
   const { scopeParam } = useAdminScope();
 
-  const maxBots = user?.max_bots || 5;
+  const maxBots = user?.max_bots ?? 5;
   const ownBotCount = bots.filter(
     (b) => Number(b.owner_id) === Number(user?.id)
   ).length;

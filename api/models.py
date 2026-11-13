@@ -193,3 +193,18 @@ class AuditLog(Base):
     target_name = Column(String, nullable=True)
     detail = Column(Text, nullable=False, default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class LoginThrottle(Base):
+    __tablename__ = "login_throttles"
+    key = Column(String(80), primary_key=True)
+    failures = Column(Text, nullable=False, default="[]")
+    blocked_until = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+
+
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+    token_hash = Column(String(64), primary_key=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

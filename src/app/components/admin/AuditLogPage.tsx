@@ -12,6 +12,10 @@ interface AuditItem {
 }
 
 const ACTION_LABELS: Record<string, string> = {
+  login_success: "เข้าสู่ระบบสำเร็จ",
+  login_failed: "เข้าสู่ระบบไม่สำเร็จ",
+  login_throttled: "จำกัดการเข้าสู่ระบบ",
+  logout: "ออกจากระบบ",
   signup: "สมัครสมาชิก",
   approve: "อนุมัติ",
   reject: "ปฏิเสธ",
@@ -25,6 +29,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const ACTION_FILTERS = [
   { value: "", label: "ทุกประเภท" },
+  ...["login_success", "login_failed", "login_throttled", "logout"].map(value => ({ value, label: ACTION_LABELS[value] })),
   { value: "signup", label: "สมัครสมาชิก" },
   { value: "approve", label: "อนุมัติ" },
   { value: "reject", label: "ปฏิเสธ" },
@@ -62,7 +67,8 @@ function formatWhen(dateStr: string): string {
   if (Number.isNaN(d.getTime())) return dateStr;
   return d.toLocaleString("th-TH", {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: "medium",
+    timeZone: "Asia/Bangkok",
   });
 }
 
@@ -73,25 +79,37 @@ export default function AuditLogPage() {
   const [action, setAction] = useState("");
   const [q, setQ] = useState("");
   const [search, setSearch] = useState("");
+  const [account, setAccount] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(0);
+  const [error, setError] = useState("");
+  const pageSize = 50;
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setError("");
       try {
-        const params = new URLSearchParams({ limit: "80", offset: "0" });
+        const params = new URLSearchParams({ limit: String(pageSize), offset: String(page * pageSize) });
+        if (account.trim()) params.set("account", account.trim());
+        if (dateFrom) params.set("date_from", dateFrom);
+        if (dateTo) params.set("date_to", dateTo);
+        if (dateFrom && dateTo && dateFrom > dateTo) throw new Error("วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด");
         if (action) params.set("action", action);
         if (search.trim()) params.set("q", search.trim());
         const res = await fetch(`/api/audit-logs/?${params}`, {
           headers: authHeaders(),
         });
-        if (!res.ok) throw new Error("load failed");
+        if (!res.ok) throw new Error("โหลดบันทึกไม่สำเร็จ กรุณาลองใหม่");
         const data = await res.json();
         if (cancelled) return;
         setTotal(data.total ?? 0);
         setItems(Array.isArray(data.items) ? data.items : []);
-      } catch {
+      } catch (cause) {
         if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : "โหลดบันทึกไม่สำเร็จ");
           setItems([]);
           setTotal(0);
         }
@@ -103,7 +121,7 @@ export default function AuditLogPage() {
     return () => {
       cancelled = true;
     };
-  }, [action, search]);
+  }, [action, search, account, dateFrom, dateTo, page]);
 
   return (
     <div>
@@ -111,7 +129,7 @@ export default function AuditLogPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Log</h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            บันทึกการสมัคร อนุมัติ ระงับ เปลี่ยนสิทธิ์ และลบบัญชี — ดูได้อย่างเดียว
+            บันทึกการเข้าสู่ระบบ ออกจากระบบ และจัดการบัญชี · เวลาไทย (UTC+7)
           </p>
         </div>
         <span className="text-sm text-gray-400">{total} รายการ</span>
@@ -125,16 +143,19 @@ export default function AuditLogPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") setSearch(q);
+              if (e.key === "Enter") { setSearch(q); setPage(0); }
             }}
             placeholder="ค้นหาชื่อผู้ทำ / เป้าหมาย / รายละเอียด"
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
           />
         </div>
+        <input aria-label="บัญชีผู้ใช้" placeholder="ชื่อบัญชีผู้ใช้" value={account} onChange={e => { setAccount(e.target.value); setPage(0); }} className="border rounded-lg px-3 py-2 text-sm" />
+        <label className="text-sm">ตั้งแต่ (เวลาไทย)<input aria-label="ตั้งแต่วันที่" type="date" value={dateFrom} max={dateTo || undefined} onChange={e => { setDateFrom(e.target.value); setPage(0); }} className="block border rounded-lg px-3 py-2" /></label>
+        <label className="text-sm">ถึง (เวลาไทย)<input aria-label="ถึงวันที่" type="date" value={dateTo} min={dateFrom || undefined} onChange={e => { setDateTo(e.target.value); setPage(0); }} className="block border rounded-lg px-3 py-2" /></label>
         <select
           aria-label="กรองประเภท Log"
           value={action}
-          onChange={(e) => setAction(e.target.value)}
+          onChange={(e) => { setAction(e.target.value); setPage(0); }}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-amber-400"
         >
           {ACTION_FILTERS.map((f) => (
@@ -145,13 +166,14 @@ export default function AuditLogPage() {
         </select>
         <button
           type="button"
-          onClick={() => setSearch(q)}
+          onClick={() => { setSearch(q); setPage(0); }}
           className="px-4 py-2 rounded-lg bg-amber-400 text-gray-900 text-sm font-semibold"
         >
           ค้นหา
         </button>
       </div>
 
+      {error && <p role="alert" className="mb-4 text-sm text-red-600">{error}</p>}
       {loading ? (
         <div className="flex justify-center py-16 text-gray-400">
           <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
@@ -188,6 +210,11 @@ export default function AuditLogPage() {
           ))}
         </div>
       )}
+      <div className="flex items-center justify-between mt-5 text-sm">
+        <button disabled={loading || page === 0} onClick={() => setPage(p => p - 1)} className="border rounded px-3 py-2 disabled:opacity-40">ก่อนหน้า</button>
+        <span>หน้า {page + 1} / {Math.max(1, Math.ceil(total / pageSize))}</span>
+        <button disabled={loading || (page + 1) * pageSize >= total} onClick={() => setPage(p => p + 1)} className="border rounded px-3 py-2 disabled:opacity-40">ถัดไป</button>
+      </div>
     </div>
   );
 }

@@ -111,30 +111,38 @@ def _handle_small_talk(text: str) -> str | None:
     จัดการคำทักทาย/ขอบคุณ/คำทั่วไป
     คืน None ถ้าไม่ใช่ small talk → ส่งต่อให้ RAG
     """
-    t = text.strip().lower()
+    import re
+
+    t = text.strip().lower().strip(" \t\r\n.!?,:;…ฯ🙏😊🙂👋")
+
+    def matches(phrases):
+        # Match the whole utterance; a greeting/thanks inside a question is not small talk.
+        polite_suffix = r"(?:\s*(?:นะครับ|นะค่ะ|นะคะ|ครับ|ค่ะ|คะ|นะ|จ้า|จ๊ะ))*"
+        phrases_pattern = "|".join(re.escape(phrase) for phrase in phrases)
+        return re.fullmatch(rf"(?:{phrases_pattern}){polite_suffix}", t) is not None
 
     # ทักทาย
     greetings = ["สวัสดี", "หวัดดี", "ดีครับ", "ดีค่ะ", "hello", "hi", "hey",
                  "สวัสดีครับ", "สวัสดีค่ะ", "ดีจ้า", "หวัดดีครับ", "หวัดดีค่ะ"]
-    if any(t.startswith(g) or t == g for g in greetings):
+    if matches(greetings):
         return "สวัสดีครับ/ค่ะ 😊 มีอะไรให้ช่วยเหลือไหมครับ?"
 
     # ขอบคุณ
     thanks = ["ขอบคุณ", "ขอบใจ", "thanks", "thank you", "thx",
               "ขอบคุณครับ", "ขอบคุณค่ะ", "ขอบคุณมาก", "ขอบคุณนะ",
               "ขอบคุณนะครับ", "ขอบคุณนะค่ะ", "โอเคขอบคุณ", "ok ขอบคุณ"]
-    if any(t2 in t for t2 in thanks):
+    if matches(thanks):
         return "ยินดีให้บริการเสมอครับ/ค่ะ 😊 หากมีคำถามเพิ่มเติมสามารถถามได้เลย"
 
     # ลาก่อน
     bye = ["ลาก่อน", "บาย", "bye", "goodbye", "แล้วเจอกัน",
            "โอเคครับ", "โอเคค่ะ", "ได้เลย", "โอเค", "ok", "oke", "okay"]
-    if any(t == b or t.startswith(b) for b in bye):
+    if matches(bye):
         return "ลาก่อนครับ/ค่ะ 👋 หากต้องการความช่วยเหลือกลับมาได้เสมอนะครับ"
 
     # ถามสบายดีไหม
     how_are_you = ["สบายดีไหม", "เป็นยังไงบ้าง", "how are you"]
-    if any(h in t for h in how_are_you):
+    if matches(how_are_you):
         return "สบายดีครับ/ค่ะ 😊 ขอบคุณที่ถาม มีอะไรให้ช่วยเหลือไหมครับ?"
 
     return None  # ไม่ใช่ small talk → ส่งต่อให้ RAG

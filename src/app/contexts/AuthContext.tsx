@@ -6,6 +6,7 @@ import {
   useEffect,
 } from "react";
 import type { User } from "../types/auth";
+import { logoutSession, retryAfterSeconds } from "../lib/authentication";
 import {
   clearAuthToken,
   getAuthToken,
@@ -14,9 +15,9 @@ import {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string; retryAfter?: number }>;
   signup: (email: string, password: string, name: string) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
+  logout: () => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSupport: boolean;
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string
-  ): Promise<{ ok: boolean; error?: string }> => {
+  ): Promise<{ ok: boolean; error?: string; retryAfter?: number }> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         typeof detail === "string"
           ? detail
           : "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
-      return { ok: false, error: message };
+      return { ok: false, error: message, retryAfter: res.status === 429 ? retryAfterSeconds(res) : undefined };
     } catch (error) {
       console.error("Login error:", error);
       return { ok: false, error: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" };
@@ -107,9 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    clearAuthToken();
+  const logout = async () => {
+    const completed = await logoutSession();
+    if (completed) setUser(null);
+    return completed;
   };
 
   return (

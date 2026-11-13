@@ -1,4 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import hashlib
+import base64
+import uuid
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -35,8 +38,8 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire, "jti": uuid.uuid4().hex})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -53,17 +56,30 @@ def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-        if user_id is None:
+        if user_id is None or payload.get("exp") is None:
             raise credentials_exception
-    except JWTError:
+        user_id = int(user_id)
+    except (JWTError, ValueError, TypeError):
         raise credentials_exception
 
-    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    if db.get(models.RevokedToken, token_hash(token)) is not None:
+        raise credentials_exception
+    user = db.query(models.User).filter(models.User.id == user_id).first()
     if user is None:
         raise credentials_exception
     if not user.is_active:
         raise HTTPException(status_code=403, detail="บัญชีถูกระงับ")
     return user
+
+
+def token_hash(token: str) -> str:
+    # Call only after JWT verification. Signature padding/unused base64 bits
+    # can differ without changing its decoded bytes. Preserve the exact signed
+    # input but canonicalize the signature so those aliases cannot evade logout.
+    signing_input, signature = token.rsplit('.', 1)
+    signature_bytes = base64.urlsafe_b64decode(signature + '=' * (-len(signature) % 4))
+    canonical = signing_input.encode('ascii') + b'.' + base64.urlsafe_b64encode(signature_bytes).rstrip(b'=')
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def get_approved_user(current_user: models.User = Depends(get_current_user)):

@@ -111,9 +111,12 @@ function ChatShell() {
     setActiveView("chat");
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      if (await logout()) navigate("/login");
+    } catch {
+      window.alert("ยังยืนยันการออกจากระบบไม่ได้ กรุณาตรวจสอบการเชื่อมต่อและลองอีกครั้ง");
+    }
   };
 
   const handleSelectBot = (bot: BotItem) => {

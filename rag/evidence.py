@@ -8,11 +8,17 @@ import json
 import re
 import unicodedata
 from typing import Iterable, Sequence
+from rag.identifiers import extract_identifiers
+from rag.qualifiers import qualifier_matches
 
 
 MAX_EVIDENCE_CHARS = 450
 EVIDENCE_OVERLAP = 60
 MAX_SELECTED_EVIDENCE = 8
+MAX_COMPLETE_RECORD_CHARS = 4000
+_RESTRICTION_START = re.compile(
+    r'^(?:โดยต้อง|แต่ต้อง|ต้อง|สำหรับ|เฉพาะ|ยกเว้น|เงื่อนไข|หาก|ถ้า|ห้าม|'
+    r'(?:no|not|never|only|unless|except|if|must|provided)\b|non-)', re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -215,7 +221,7 @@ def _split_long_text(text: str, max_chars: int, overlap: int) -> list[str]:
     return [piece for piece in pieces if piece]
 
 
-def _segment_text(text: str, max_chars: int, overlap: int, initial_heading: str = "", trailing_heading: str = "") -> list[str]:
+def _segment_text(text: str, max_chars: int, overlap: int, initial_heading: str = "", trailing_heading: str = "") -> list[tuple[str, str | None, bool]]:
     lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
     first_content_index = next((i for i, line in enumerate(lines) if line.strip()), 0)
     heading = initial_heading
@@ -256,13 +262,33 @@ def _segment_text(text: str, max_chars: int, overlap: int, initial_heading: str 
     if not units and text.strip():
         units = [text.strip()]
 
-    result: list[str] = []
+    # A separate requirement bullet can scope the neighbouring assertions.
+    # Keep the bounded section together at answer time, even if search hits only
+    # the assertion. Independent sections and ordinary list items stay separate.
+    section_records = {}
+    for unit in units:
+        title, sep, body = unit.partition('\n')
+        if sep:
+            section_records.setdefault(title, []).append(body)
+    scoped_parents = {
+        title: title + '\n' + '\n'.join(bodies)
+        for title, bodies in section_records.items()
+        if len(bodies) > 1 and any(_RESTRICTION_START.match(body) for body in bodies)
+    }
+    result = []
     for unit in units:
         title, sep, body = unit.partition("\n")
         if sep and len(unit) > max_chars:
-            result.extend(title + "\n" + piece for piece in _split_long_text(body, max_chars - len(title) - 1, overlap))
+            pieces = [title + "\n" + piece for piece in _split_long_text(body, max_chars - len(title) - 1, overlap)]
         else:
-            result.extend(_split_long_text(unit, max_chars, overlap))
+            pieces = _split_long_text(unit, max_chars, overlap)
+        # Search small passages, but validate/answer against the whole record.
+        # Never present an unbounded record's isolated fragment as complete.
+        whole = scoped_parents.get(title, unit)
+        needs_parent = len(pieces) > 1 or whole != unit
+        parent = whole if needs_parent and len(whole) <= MAX_COMPLETE_RECORD_CHARS else None
+        incomplete = needs_parent and parent is None
+        result.extend((piece, parent, incomplete) for piece in pieces)
     return result
 
 
@@ -274,9 +300,22 @@ def split_evidence_units(
     units: list[EvidenceUnit] = []
     page_sections = {}
     source_order = {}
+    seen_parents = set()
     docs = list(docs)
     for doc_index, doc in enumerate(docs):
         metadata = dict(getattr(doc, "metadata", {}) or {})
+        parent = metadata.get('evidence_parent_text')
+        if isinstance(parent, str) and parent:
+            if len(parent) > MAX_COMPLETE_RECORD_CHARS:
+                metadata['evidence_incomplete'] = True
+            else:
+                key = (metadata.get('source'), metadata.get('page'), parent)
+                if key in seen_parents:
+                    continue
+                seen_parents.add(key)
+                # Keep the parent marker so a repeated evidence pass is stable.
+                units.append(EvidenceUnit(parent, metadata))
+                continue
         if metadata.get("section") and "evidence_unit" in metadata:
             units.append(EvidenceUnit(text=doc.page_content, metadata=metadata))
             continue
@@ -289,11 +328,15 @@ def split_evidence_units(
             next_lines = [line.strip() for line in following.page_content.splitlines() if line.strip()]
             if following.metadata.get("source") == source and following.metadata.get("page") and lines and next_lines and re.match(r"^\d+[.)]\s+\S", lines[-1]) and next_lines[0].startswith(("-", "*", "•")):
                 trailing = lines[-1]
-        for index, text in enumerate(
+        for index, (text, parent, incomplete) in enumerate(
             _segment_text(getattr(doc, "page_content", ""), max_chars, overlap, initial, trailing)
         ):
             unit_metadata = dict(metadata)
             unit_metadata["evidence_unit"] = index
+            if parent:
+                unit_metadata['evidence_parent_text'] = parent
+            if incomplete:
+                unit_metadata['evidence_incomplete'] = True
             first_line = text.split("\n", 1)[0]
             if "\n" in text or re.match(r"^\d+[.)]\s+\S", first_line):
                 unit_metadata["section"] = first_line
@@ -408,9 +451,11 @@ def select_evidence_units(
 
 def unit_topic_matches(question, unit):
     from rag.semantic import semantic_match
-    codes = re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', question.upper())
+    if not qualifier_matches(question, unit.metadata.get('section', '')) or not qualifier_matches(question, unit.text):
+        return False
+    codes = extract_identifiers(question)
     if codes:
-        present = set(re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b', unit.text.upper()))
+        present = set(extract_identifiers(unit.text))
         families = {code.split('-')[0] for code in codes}
         conflicting = {code for code in present if code.split('-')[0] in families} - set(codes)
         return bool(set(codes) & present) and not conflicting
@@ -418,6 +463,8 @@ def unit_topic_matches(question, unit):
     mentioned = re.findall(r"กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ)", unit.text)
     if requested and mentioned and requested.group(0) not in mentioned:
         return False
+    if direct_fact_matches(question, unit.text):
+        return True
     if semantic_match(unit.metadata):
         return True
     return _topic_matches(question, unit.text)
@@ -426,6 +473,8 @@ def unit_topic_matches(question, unit):
 def section_matches(question: str, heading: str) -> bool:
     """Match an explicitly requested section, independent of the document domain."""
     if not heading.strip():
+        return False
+    if not qualifier_matches(question, heading):
         return False
     if re.match(r'^หมวดหมู่\s*[:：]', heading.strip()):
         return category_request_matches(question, heading)
@@ -436,6 +485,7 @@ def section_matches(question: str, heading: str) -> bool:
     if requested_shift and "กะ" in heading and requested_shift.group(0) not in heading:
         return False
     title = re.sub(r"\([^)]*\)", "", title).strip()
+    title = re.split(r'\s+(?=สาขา|รุ่น|กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ))', title, maxsplit=1)[0]
     title = re.sub(r"^การ", "", title)
     key, query = _compact(title), _compact(question)
     start = query.find(key)
@@ -456,8 +506,9 @@ def category_request_matches(question: str, heading: str) -> bool:
 
 
 def extract_section_answer(question: str, units: Sequence[EvidenceUnit]) -> GroundedAnswer | None:
-    matched = [u for u in units if section_matches(question, u.metadata.get("section", "")) or (
-        u.metadata.get('semantic_section_match') and re.match(r'^\d+[.)]\s+', u.metadata.get('section', '')))]
+    matched = [u for u in units if qualifier_matches(question, u.metadata.get('section', ''))
+               and qualifier_matches(question, u.text) and (section_matches(question, u.metadata.get("section", "")) or (
+        u.metadata.get('semantic_section_match') and re.match(r'^\d+[.)]\s+', u.metadata.get('section', ''))))]
     if not matched:
         return None
     if any(u.metadata.get("section_incomplete") for u in matched):
@@ -473,7 +524,11 @@ def extract_section_answer(question: str, units: Sequence[EvidenceUnit]) -> Grou
             return None
         return GroundedAnswer(answer=texts[0], evidence=texts)
     bodies = list(dict.fromkeys(u.text.split("\n", 1)[-1].strip() for u in matched))
-    return GroundedAnswer(answer="\n".join("- " + body for body in bodies), evidence=[u.text for u in matched])
+    answer = "\n".join("- " + body for body in bodies)
+    heading = matched[0].metadata['section']
+    if re.search(r'สาขา|รุ่น|กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ)', heading):
+        answer = heading + '\n' + answer
+    return GroundedAnswer(answer=answer, evidence=[u.text for u in matched])
 
 
 def extract_relevant_quote(question: str, units: Sequence[EvidenceUnit]) -> GroundedAnswer | None:
@@ -487,6 +542,49 @@ def extract_relevant_quote(question: str, units: Sequence[EvidenceUnit]) -> Grou
         return None
     text = matched[0].text
     return GroundedAnswer(answer="ข้อมูลจากเอกสาร:\n" + text, evidence=[text])
+
+
+def direct_fact_matches(question: str, text: str) -> bool:
+    """Require an explicit subject and requested fields, with no fuzzy relevance."""
+    compact = _compact(question)
+    subject = _subject_from_question(question)
+    if _detect_item_intent(question) in {'price', 'duration'}:
+        if ';' in text or '；' in text:
+            return False  # Multiple statements may assign the value elsewhere.
+        subject = re.sub(r'(?:ใช้เวลา|นาที|ชั่วโมง|และ|เท่าใด|เท่าไร|เท่าไหร่)', '', subject)
+        # An unqualified vehicle noun adds no service identity; keep specific
+        # vehicle classes (รถไฟฟ้า, รถบรรทุก, etc.) as mandatory constraints.
+        subject = subject.removesuffix('รถ')
+        if len(subject) < 8 or subject not in _compact(text):
+            return False
+        if _detect_item_intent(question) == 'price' and not re.search(r'\d+\s*บาท', text):
+            return False
+        asks_duration = any(_compact(w) in compact for w in _ITEM_INTENTS['duration'])
+        if asks_duration and not re.search(r'(?:ใช้เวลา|ระยะเวลา|นาน)[^\n]*?(?:\d+|หนึ่ง|สอง|สาม|ครึ่ง)\s*(?:นาที|ชั่วโมง|วัน)', text):
+            return False
+        return True
+    days = [day for day in _WEEKDAYS if day in compact]
+    if days and 'กี่โมง' in compact:
+        if any(day in text and day not in days for day in _WEEKDAYS):
+            return False  # Do not associate another day's time with this day.
+        subject = compact.replace('กี่โมง', '')
+        for word in (*_POLITE_OR_FILLER, *days, 'วัน', 'เวลา', 'ถึง'):
+            subject = subject.replace(word, '')
+        return (len(subject) >= 4 and subject in _compact(text)
+                and all(day in text for day in days)
+                and bool(re.search(r'\d{1,2}:\d{2}', text)))
+    return False
+
+
+def extract_direct_fact_answer(question, units):
+    matched = [u for u in units if direct_fact_matches(question, u.text)]
+    unique = {(u.metadata.get('source'), u.metadata.get('page'), u.text): u for u in matched}
+    if len(unique) != 1:
+        return None
+    unit = next(iter(unique.values()))
+    if len(unit.text) > 4000 or unit.metadata.get('section_incomplete'):
+        return None
+    return GroundedAnswer('ข้อมูลจากเอกสาร:\n' + unit.text, [unit.text])
 
 
 def extract_shift_start_answer(question: str, units: Sequence[EvidenceUnit]) -> GroundedAnswer | None:
@@ -522,6 +620,8 @@ def extract_shift_start_answer(question: str, units: Sequence[EvidenceUnit]) -> 
 
 def is_followup_question(question: str) -> bool:
     compact = _compact(question)
+    if re.match(r'^(?:แล้ว|อันนี้|เรื่องนี้|แบบนี้|มัน|นั้น)', compact):
+        return True
     if any(_compact(marker) in compact for marker in _FOLLOWUP_MARKERS):
         return True
     return bool(_detect_item_intent(question) and len(_subject_from_question(question)) < 3)
@@ -529,10 +629,18 @@ def is_followup_question(question: str) -> bool:
 
 def build_retrieval_query(question: str, history: Sequence[dict] | None) -> str:
     question = (question or "").strip()
+    if extract_identifiers(question):
+        return question  # Explicit current identities supersede earlier ones.
     if not question or not history or not is_followup_question(question):
         return question
-    previous = (history[-1].get("question") or "").strip()
-    return f"{previous}\n{question}" if previous else question
+    previous_questions = []
+    for turn in reversed(history[-3:]):
+        previous = (turn.get('question') or '').strip()[:500]
+        if previous:
+            previous_questions.insert(0, previous)
+            if not is_followup_question(previous) or extract_identifiers(previous):
+                break
+    return '\n'.join([*previous_questions, question])
 
 
 def parse_grounded_response(raw: str, units: Sequence[EvidenceUnit] | None = None) -> tuple[GroundedAnswer | None, str | None]:
@@ -574,7 +682,7 @@ def _factual_tokens(text: str) -> set[str]:
     compact = _compact(normalized)
     tokens.update(f"weekday:{day}" for day in _WEEKDAYS if day in compact)
     tokens.update(f"month:{month}" for month in _MONTHS if month in compact)
-    for code in re.findall(r"\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b", normalized.upper()):
+    for code in extract_identifiers(normalized):
         tokens.add(f"code:{code}")
     return tokens
 
@@ -587,6 +695,8 @@ def validate_grounded_answer(
 ) -> tuple[bool, str | None]:
     if not answer.strip() or not evidence_quotes or not selected_units:
         return False, "unsupported_evidence"
+    if any(unit.metadata.get('evidence_incomplete') for unit in selected_units):
+        return False, "incomplete_evidence"
     unit_texts = [normalize_whitespace(unit.text) for unit in selected_units]
     for quote in evidence_quotes:
         normalized_quote = normalize_whitespace(quote)
@@ -606,6 +716,13 @@ def validate_grounded_answer(
         return True, None
     cited_texts = [unit.text for unit in selected_units if any(
         normalize_whitespace(quote) in normalize_whitespace(unit.text) for quote in evidence_quotes)]
+    cited_sections = {(u.metadata.get('source'), u.metadata.get('section')) for u in selected_units
+                      if u.text in cited_texts and u.metadata.get('source') and u.metadata.get('section')}
+    for unit in selected_units:
+        if ((unit.metadata.get('source'), unit.metadata.get('section')) in cited_sections
+                and _RESTRICTION_START.match(unit.text.split('\n', 1)[-1].strip())
+                and unit.text not in cited_texts):
+            cited_texts.append(unit.text)
     if not _literal_answer_supported(answer, evidence_quotes) or not _literal_answer_supported(answer, cited_texts):
         return False, "unsupported_claim"
     return True, None
@@ -616,9 +733,17 @@ def _literal_answer_supported(answer: str, quotes: Sequence[str]) -> bool:
         text = re.sub(r"^\s*[-*•]\s*", "", text.strip())
         return normalize_whitespace(text).replace("：", ":").casefold()
 
-    guards = ("ไม่", "ห้าม", "งด", "เฉพาะ", "ยกเว้น", "กรณี", "ถ้า", "เมื่อ", "เท่านั้น",
-              "not ", "never ", "only ", "unless ", "except ", "if ")
+    guards = ("ไม่", "ห้าม", "งด", "เฉพาะ", "ยกเว้น", "กรณี", "ถ้า", "เมื่อ", "เท่านั้น", "ต้อง", "สำหรับ",
+              "not ", "never ", "only ", "unless ", "except ", "if ", "no ", "non-", "must ", "provided ")
     normalized_answer = clean(answer)
+    # Retaining the word "ต้อง" alone does not retain its requirement. Preserve
+    # the whole restricting clause, including one on a preceding source line.
+    restriction = re.compile(r'(?:โดยต้อง|แต่ต้อง|ต้อง|สำหรับ|เฉพาะ|ยกเว้น|หาก|ถ้า|ห้าม|'
+                             r'\b(?:no|not|never|only|unless|except|if|must|provided)\b|\bnon-)[^\n;；]*', re.IGNORECASE)
+    for quote in quotes:
+        for clause in restriction.findall(quote):
+            if clean(clause) not in normalized_answer:
+                return False
     # A restriction can live on the heading or the preceding line. Comparing
     # counts also prevents a second "ไม่" from masking a deleted negation.
     if any(clean(quote).count(word) > normalized_answer.count(word)

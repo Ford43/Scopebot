@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Zap, ChevronRight } from "lucide-react";
@@ -16,18 +16,31 @@ export default function LoginPage() {
   const [error, setError]               = useState("");
   const [isLoading, setIsLoading]       = useState(false);
   const [showDemo, setShowDemo]         = useState(false);
+  const [retryAt, setRetryAt] = useState(0);
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    const update = () => setRemaining(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
+    update();
+    if (!retryAt) return;
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [retryAt]);
 
   const { login } = useAuth();
   const navigate  = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading || retryAt > Date.now()) return;
     setError("");
     setIsLoading(true);
     try {
       const result = await login(email, password);
       if (result.ok) navigate("/chat");
-      else setError(result.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      else {
+        setError(result.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        if (result.retryAfter) setRetryAt(Date.now() + result.retryAfter * 1000);
+      }
     } catch {
       setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -67,6 +80,7 @@ export default function LoginPage() {
         </div>
 
         {/* Error */}
+        {remaining > 0 && <p role="status" className="mb-3 text-sm text-amber-700">ลองใหม่ได้ใน {remaining} วินาที</p>}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -169,7 +183,7 @@ export default function LoginPage() {
           {/* Login button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || remaining > 0}
             className="w-full bg-amber-400 hover:bg-amber-500 text-gray-900 py-3 rounded-xl text-sm transition-colors disabled:opacity-60 shadow-sm shadow-amber-200"
             style={{ fontWeight: 700 }}
           >

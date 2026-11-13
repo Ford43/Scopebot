@@ -7,6 +7,8 @@ import re
 from threading import Lock
 from langchain_core.documents import Document
 from config import MODEL_NAME, RERANKER_MODEL, RERANK_MIN_SCORE
+from rag.identifiers import extract_identifiers
+from rag.qualifiers import qualifiers_preserved
 
 logger = logging.getLogger(__name__)
 _model_lock = Lock()
@@ -31,12 +33,12 @@ def prepare_query(question, history=None):
     def follows_up(text):
         return is_followup_question(text) or bool(
             re.search(r'^(?:แล้ว|อันนี้|เรื่องนี้|แบบนี้|มัน|นั้น)', text.strip()))
-    contextual = bool(prior and follows_up(question))
+    contextual = bool(prior and follows_up(question) and not extract_identifiers(question))
     context = []
     if contextual:
         for previous in reversed(prior):
             context.insert(0, previous)
-            if not follows_up(previous):
+            if not follows_up(previous) or extract_identifiers(previous):
                 break
     primary = question + '\nบริบทคำถามก่อนหน้า: ' + '\n'.join(context) if contextual else question
     fallback = QueryPlan(primary, (primary,))
@@ -60,9 +62,16 @@ def prepare_query(question, history=None):
         if any(not set(re.findall(r'\d+(?:[:.,]\d+)*',q)).issubset(allowed_numbers) for q in queries):
             return fallback
         shifts = re.findall(r'กะ(?:เช้า|บ่าย|เย็น|ดึก|กลางวัน|กลางคืน|พิเศษ)',question)
-        protected = shifts + re.findall(r'\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b',question)
+        protected = shifts
         protected += re.findall(r'["“]([^"”]+)["”]',question)
         if any(term not in resolved for term in protected):
+            return fallback
+        # Every generated search query must retain the current exact record
+        # identity, including an identifier resolved from a short follow-up.
+        codes = set(extract_identifiers(primary))
+        if any(set(extract_identifiers(q)) != codes for q in queries[1:]):
+            return fallback
+        if any(not qualifiers_preserved(primary, q) for q in queries[1:]):
             return fallback
         # Branch/model/code-bearing questions keep their exact identity. They
         # can still benefit from candidate search and reranking without rewrite.

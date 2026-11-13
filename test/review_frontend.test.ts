@@ -2,6 +2,52 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { uploadDocument } from "../src/app/lib/documents";
 import { resetUserPassword } from "../src/app/lib/users";
+import { logoutSession, retryAfterSeconds } from "../src/app/lib/authentication";
+
+test("logout retains token when server cannot confirm revocation and clears after retry", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalStorage = globalThis.localStorage;
+  let token: string | null = "session-token";
+  globalThis.localStorage = { getItem: () => token, removeItem: () => { token = null; } } as unknown as Storage;
+  try {
+    globalThis.fetch = async () => { throw new Error("offline"); };
+    await assert.rejects(logoutSession());
+    assert.equal(token, "session-token");
+    globalThis.fetch = async (url, init) => {
+      assert.equal(url, "/api/auth/logout");
+      assert.equal((init?.headers as Record<string, string>).Authorization, "Bearer session-token");
+      return Response.json({message: "ok"});
+    };
+    await logoutSession();
+    assert.equal(token, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+    globalThis.localStorage = originalStorage;
+  }
+});
+
+test("cooldown respects Retry-After and rejects malformed negative values", () => {
+  assert.equal(retryAfterSeconds(new Response(null, {headers: {"Retry-After": "180"}})), 180);
+  assert.equal(retryAfterSeconds(new Response(null, {headers: {"Retry-After": "-2"}})), 0);
+});
+
+test("logout cannot clear or navigate away from a newer login", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalStorage = globalThis.localStorage;
+  let token: string | null = "old-token";
+  globalThis.localStorage = { getItem: () => token, removeItem: () => { token = null; } } as unknown as Storage;
+  try {
+    globalThis.fetch = async () => {
+      token = "new-token";
+      return Response.json({message: "ok"});
+    };
+    assert.equal(await logoutSession(), false);
+    assert.equal(token, "new-token");
+  } finally {
+    globalThis.fetch = originalFetch;
+    globalThis.localStorage = originalStorage;
+  }
+});
 
 test("admin password reset validates confirmation and submits only the new password", async () => {
   const originalFetch = globalThis.fetch;

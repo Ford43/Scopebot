@@ -15,3 +15,4 @@ try {
   await unlink(output);
 }
 await import("./chat_session.test.mjs");
+await import("./management_ui.test.mjs");
