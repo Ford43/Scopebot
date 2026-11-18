@@ -24,8 +24,24 @@ export default function UnifiedChat() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [activeSession, setActiveSession] = useState<LiveSession | null>(null);
   const [messages, setMessages] = useState<LiveMessage[]>([]);
-  const [replyText, setReplyText] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const replyText = activeSession ? replyDrafts[activeSession.id] ?? "" : "";
   const [isSending, setIsSending] = useState(false);
+  const selectedSessionId = useRef<string | null>(null);
+  const selectionVersion = useRef(0);
+  const messageRequest = useRef(0);
+  const appliedMessageRequest = useRef(0);
+  const pendingReplies = useRef(new Set<string>());
+  const selectSession = (session: LiveSession | null) => {
+    if (selectedSessionId.current === (session?.id ?? null)) return;
+    selectedSessionId.current = session?.id ?? null;
+    selectionVersion.current += 1;
+    messageRequest.current += 1;
+    setMessages([]);
+    setIsSending(!!session && pendingReplies.current.has(session.id));
+    setActiveSession(session);
+  };
+  useEffect(() => () => { selectionVersion.current += 1; selectedSessionId.current = null; }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { scopeParam } = useAdminScope();
 
@@ -52,32 +68,39 @@ export default function UnifiedChat() {
     return () => clearInterval(interval);
   }, [scopeParam]);
 
-  // 2. ดึงประวัติแชทเมื่อคลิกเลือก Session
+  const refreshMessages = async (sessionId: string, version: number) => {
+    if (version !== selectionVersion.current) return;
+    const request = ++messageRequest.current;
+    try {
+      const res = await fetch(`/api/live/sessions/${sessionId}`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (version !== selectionVersion.current || request < appliedMessageRequest.current) return;
+      appliedMessageRequest.current = request;
+      setMessages(data.messages || []);
+      setTimeout(() => {
+        if (version === selectionVersion.current) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (error) {
+      console.error("Failed to fetch messages", error);
+    }
+  };
+
+  // Polling and reply refreshes share the same selection/request ownership.
   useEffect(() => {
     if (!activeSession) return;
-    const fetchMessages = async () => {
-      try {
-        const res = await fetch(`/api/live/sessions/${activeSession.id}`, {
-          headers: authHeaders(),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setMessages(data.messages || []); // สมมติว่า API ส่งกลับมาในฟิลด์ messages
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-        }
-      } catch (error) {
-        console.error("Failed to fetch messages", error);
-      }
-    };
-
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000); // ดึงข้อความใหม่ทุก 3 วินาที
+    const version = selectionVersion.current;
+    const refresh = () => { void refreshMessages(activeSession.id, version); };
+    refresh();
+    const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
   }, [activeSession]);
 
   // 3. ฟังก์ชันส่งข้อความ
   const handleSendReply = async () => {
-    if (!replyText.trim() || !activeSession) return;
+    if (!replyText.trim() || !activeSession || pendingReplies.current.has(activeSession.id)) return;
+    const version = selectionVersion.current;
+    pendingReplies.current.add(activeSession.id);
     setIsSending(true);
 
     try {
@@ -91,26 +114,27 @@ export default function UnifiedChat() {
       });
 
       if (res.ok) {
-        setReplyText("");
-        const updatedRes = await fetch(`/api/live/sessions/${activeSession.id}`, {
-          headers: authHeaders(),
+        // A completed request only owns the draft it sent, even after switching customers.
+        setReplyDrafts((drafts) => {
+          if (drafts[activeSession.id] !== replyText) return drafts;
+          const remaining = { ...drafts };
+          delete remaining[activeSession.id];
+          return remaining;
         });
-        if (updatedRes.ok) {
-          const data = await updatedRes.json();
-          setMessages(data.messages || []);
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-        }
+        if (version === selectionVersion.current) await refreshMessages(activeSession.id, version);
       }
     } catch (error) {
       console.error("Reply error:", error);
     } finally {
-      setIsSending(false);
+      pendingReplies.current.delete(activeSession.id);
+      if (selectedSessionId.current === activeSession.id) setIsSending(false);
     }
   };
 
   // 4. ฟังก์ชันจบการสนทนา (คืนการตอบให้ Bot)
   const handleEndSession = async () => {
     if (!activeSession) return;
+    const version = selectionVersion.current;
     if (!window.confirm("ต้องการจบการสนทนาและให้บอทกลับมาทำงานต่อใช่หรือไม่?")) return;
 
     try {
@@ -120,8 +144,8 @@ export default function UnifiedChat() {
       });
 
       if (res.ok) {
-        setActiveSession(null);
-        setMessages([]);
+        setSessions((current) => current.filter((session) => session.id !== activeSession.id));
+        if (version === selectionVersion.current) selectSession(null);
         toast.success("จบการสนทนาเรียบร้อย บอทกลับมาทำงานแล้ว");
       } else {
         toast.error("จบการสนทนาไม่สำเร็จ");
@@ -159,7 +183,7 @@ export default function UnifiedChat() {
             sessions.map((session) => (
               <div
                 key={session.id}
-                onClick={() => setActiveSession(session)}
+                onClick={() => selectSession(session)}
                 className={`p-3 rounded-xl cursor-pointer transition-all border ${
                   activeSession?.id === session.id
                     ? "bg-amber-50 border-amber-300 shadow-sm"
@@ -199,7 +223,7 @@ export default function UnifiedChat() {
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   type="button"
-                  onClick={() => setActiveSession(null)}
+                  onClick={() => selectSession(null)}
                   className="md:hidden text-xs text-amber-700 border border-amber-200 bg-amber-50 px-2 py-1 rounded-lg flex-shrink-0"
                 >
                   ← คิว
@@ -270,7 +294,10 @@ export default function UnifiedChat() {
               <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl p-2 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-100 transition-all">
                 <textarea
                   value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setReplyDrafts((drafts) => ({ ...drafts, [activeSession.id]: value }));
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();

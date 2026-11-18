@@ -16,3 +16,5 @@ try {
 }
 await import("./chat_session.test.mjs");
 await import("./management_ui.test.mjs");
+await import("./unified_chat.test.mjs");
+await import("./integration_ui.test.mjs");

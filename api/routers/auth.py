@@ -317,6 +317,20 @@ def approve_user(
     if body.is_active is False and user.id == current_user.id:
         raise HTTPException(status_code=400, detail="ไม่สามารถระงับบัญชีของตัวเองได้")
 
+    new_role = None
+    if body.role is not None:
+        if current_user.role != models.UserRole.admin:
+            raise HTTPException(
+                status_code=403,
+                detail="เฉพาะ Admin ที่เปลี่ยนบทบาทได้",
+            )
+        try:
+            new_role = models.UserRole(body.role)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="บทบาทไม่ถูกต้อง")
+        if user.id == current_user.id and new_role != models.UserRole.admin:
+            raise HTTPException(status_code=400, detail="ไม่สามารถลดบทบาท Admin ของตัวเองได้")
+
     old_approved = user.is_approved
     old_active = user.is_active
     old_role = user.role
@@ -328,16 +342,8 @@ def approve_user(
         user.is_active = body.is_active
     if body.max_bots is not None:
         user.max_bots = body.max_bots
-    if body.role is not None:
-        if current_user.role != models.UserRole.admin:
-            raise HTTPException(
-                status_code=403,
-                detail="เฉพาะ Admin ที่เปลี่ยนบทบาทได้",
-            )
-        try:
-            user.role = models.UserRole(body.role)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="บทบาทไม่ถูกต้อง")
+    if new_role is not None:
+        user.role = new_role
 
     target_name = user.username
     if body.is_approved is not None and body.is_approved != old_approved:
@@ -543,6 +549,15 @@ def admin_reset_password(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="ไม่พบ User")
+
+    if (
+        current_user.role == models.UserRole.support
+        and user.role == models.UserRole.admin
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Support ไม่สามารถแก้ไขบัญชี Admin ได้",
+        )
 
     if len(body.new_password) < 6:
         raise HTTPException(status_code=400, detail="รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร")

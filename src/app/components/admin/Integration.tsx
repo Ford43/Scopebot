@@ -376,7 +376,7 @@ export default function Integration() {
             </div>
             {expanded && (
               <div className="px-5 pb-5">
-                <LineConfigPanel bot={bot} onSaved={patchBot} />
+                <LineConfigPanel key={bot.bot_id} bot={bot} onSaved={patchBot} />
               </div>
             )}
           </div>

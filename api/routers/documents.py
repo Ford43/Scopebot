@@ -58,6 +58,27 @@ def _bot_copy_path(bot_id: str, filename: str) -> Path:
     return path
 
 
+def _check_bot_filename_conflict(bot, doc, *, assigning=False):
+    """Use portable filename identity before touching a shared bot copy.
+
+    Legacy colliding relations are deliberately left intact for explicit repair;
+    neither replacement nor removal can safely identify their shared copy.
+    """
+    name = doc.filename.casefold()
+    conflict = any(other is not doc and other.filename.casefold() == name
+                   for other in bot.documents)
+    if assigning and not conflict:
+        dest = _bot_copy_path(bot.bot_id, doc.filename)
+        conflict = dest.exists() or (dest.parent.exists() and any(
+            entry.name.casefold() == name for entry in dest.parent.iterdir()
+        ))
+    if conflict:
+        raise HTTPException(status_code=409, detail={
+            "code": "document_filename_conflict",
+            "message": "ชื่อไฟล์ชนกับเอกสารในบอท (ไม่แยกตัวพิมพ์เล็กใหญ่) กรุณาแก้ชื่อไฟล์ที่ชนกันก่อนดำเนินการ",
+        })
+
+
 def _replace_document(doc, file_path, category, size, db):
     """Stage every copy first, and restore originals if installation/commit fails."""
     staged = []
@@ -159,6 +180,10 @@ async def upload_document(
                 "message": "มีเอกสารชื่อนี้แล้ว ต้องยืนยันก่อนแทนที่เนื้อหา",
                 "assigned_bots": [b.name for b in existing.bots],
             })
+
+        if existing:
+            for bot in existing.bots:
+                _check_bot_filename_conflict(bot, existing)
 
         # บันทึกไฟล์
         folder = _library_folder(current_user.id)
@@ -319,6 +344,9 @@ def _purge_document_from_assigned_bots(
     assigned = list(doc.bots)
     bot_names = [b.name for b in assigned]
     filename = doc.filename
+    # Validate every destination before changing any of them.
+    for bot in assigned:
+        _check_bot_filename_conflict(bot, doc)
     for bot in assigned:
         _remove_bot_copy(bot.bot_id, filename)
         if doc in bot.documents:
@@ -410,6 +438,8 @@ def assign_to_bot(
     if doc in bot.documents:
         return {"message": "เอกสารนี้อยู่ในบอทแล้ว"}
 
+    _check_bot_filename_conflict(bot, doc, assigning=True)
+
     # copy ไฟล์ไปยังโฟลเดอร์ของ Bot
     dest_path = _bot_copy_path(bot_id, doc.filename)
     source_path = Path(doc.file_path).resolve()
@@ -460,6 +490,7 @@ def unassign_from_bot(
     if doc not in bot.documents:
         raise HTTPException(status_code=400, detail="เอกสารนี้ไม่ได้ถูก assign ให้ Bot นี้")
 
+    _check_bot_filename_conflict(bot, doc)
     _remove_bot_copy(bot_id, doc.filename)
     bot.documents.remove(doc)
     _sync_bot_knowledge_after_doc_change(

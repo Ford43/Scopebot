@@ -70,10 +70,18 @@ def create_bot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
-    # เช็คจำนวน Bot ที่มีอยู่
+    # Serialize quota allocation on the owner's database row until commit.
+    # A no-op UPDATE takes a write lock on PostgreSQL and SQLite, including
+    # across API workers (SQLite ignores SELECT ... FOR UPDATE).
+    owner_query = db.query(models.User).filter(models.User.id == current_user.id)
+    if owner_query.update({models.User.max_bots: models.User.max_bots}, synchronize_session=False) != 1:
+        db.rollback()
+        raise HTTPException(status_code=404, detail="ไม่พบบัญชีผู้ใช้")
+    max_bots = owner_query.with_entities(models.User.max_bots).scalar()
     bot_count = db.query(models.Bot).filter(models.Bot.owner_id == current_user.id).count()
-    if bot_count >= current_user.max_bots:
-        raise HTTPException(status_code=400, detail=f"ถึงจำนวนสูงสุดแล้ว ({current_user.max_bots} Bot)")
+    if bot_count >= max_bots:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"ถึงจำนวนสูงสุดแล้ว ({max_bots} Bot)")
 
     # สร้าง bot_id แบบ unique (ใช้เป็นชื่อโฟลเดอร์ด้วย)
     bot_id_str = f"bot_{uuid.uuid4().hex[:8]}"

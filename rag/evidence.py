@@ -16,9 +16,15 @@ MAX_EVIDENCE_CHARS = 450
 EVIDENCE_OVERLAP = 60
 MAX_SELECTED_EVIDENCE = 8
 MAX_COMPLETE_RECORD_CHARS = 4000
-_RESTRICTION_START = re.compile(
-    r'^(?:โดยต้อง|แต่ต้อง|ต้อง|สำหรับ|เฉพาะ|ยกเว้น|เงื่อนไข|หาก|ถ้า|ห้าม|'
-    r'(?:no|not|never|only|unless|except|if|must|provided)\b|non-)', re.IGNORECASE)
+# Use the same clause markers when preserving source sections and validating
+# answers. Requirements can describe a means ("โดยแสดง", "with receipt")
+# without an explicit "must"; keeping only the marker is not sufficient.
+_RESTRICTION_MARKER = (
+    r'(?:โดย|แต่ต้อง|ต้อง|สำหรับ|เฉพาะ|ยกเว้น|เงื่อนไข|หาก|ถ้า|ห้าม|'
+    r'\b(?:no|not|never|only|unless|except|if|must|provided|with|without)\b|\bnon-)'
+)
+_RESTRICTION_START = re.compile(r'^' + _RESTRICTION_MARKER, re.IGNORECASE)
+_RESTRICTION_CLAUSE = re.compile(_RESTRICTION_MARKER + r'[^\n;；]*', re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -738,10 +744,8 @@ def _literal_answer_supported(answer: str, quotes: Sequence[str]) -> bool:
     normalized_answer = clean(answer)
     # Retaining the word "ต้อง" alone does not retain its requirement. Preserve
     # the whole restricting clause, including one on a preceding source line.
-    restriction = re.compile(r'(?:โดยต้อง|แต่ต้อง|ต้อง|สำหรับ|เฉพาะ|ยกเว้น|หาก|ถ้า|ห้าม|'
-                             r'\b(?:no|not|never|only|unless|except|if|must|provided)\b|\bnon-)[^\n;；]*', re.IGNORECASE)
     for quote in quotes:
-        for clause in restriction.findall(quote):
+        for clause in _RESTRICTION_CLAUSE.findall(quote):
             if clean(clause) not in normalized_answer:
                 return False
     # A restriction can live on the heading or the preceding line. Comparing

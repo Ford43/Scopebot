@@ -1,5 +1,18 @@
 # RAG correctness changes (2026-10-29)
 
+## Receipt condition validation (2026-11-13)
+
+Grounding now preserves complete clauses beginning with `โดย` (including
+`โดยแสดงใบเสร็จ` and `โดยมีใบเสร็จ`) and English `with` / `without`.
+The same markers preserve separately listed requirements during chunking and
+check retrieved sibling requirements. Cropped clauses are rejected; complete
+answers retain their source citation. Regression coverage in
+`test_condition_accuracy` exercises both rejection and successful publication.
+This is deterministic validation, not a guarantee of understanding every
+possible natural-language condition. Existing complete records benefit at
+runtime; isolated old chunks missing a neighbouring condition need rebuilding
+through normal ingestion to obtain the expanded parent metadata.
+
 ## Answer accuracy safeguards (2026-11-12)
 
 - Document identifiers use one ASCII-boundary parser throughout retrieval,
