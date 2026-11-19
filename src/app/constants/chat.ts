@@ -54,6 +54,7 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
   { id: "user-management", label: "จัดการผู้ใช้งาน", icon: User },
   { id: "system-overview", label: "ภาพรวมระบบ", icon: Globe },
   { id: "audit-log", label: "Log", icon: ScrollText },
+  { id: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard },
   { id: "bots", label: "บอท", icon: Bot },
   {
     id: "unified-chat",

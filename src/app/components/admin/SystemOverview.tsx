@@ -3,8 +3,6 @@ import {
   Users,
   Clock,
   Bot,
-  MessageSquare,
-  AlertTriangle,
   CheckCircle,
   Smartphone,
   Shield,
@@ -125,22 +123,6 @@ export default function SystemOverviewPage({
       iconColor: "text-violet-600",
     },
     {
-      label: "แชททั้งหมด",
-      value: stats.chats.total_sessions.toLocaleString(),
-      sub: `วันนี้ ${stats.chats.today_sessions} แชท · บอทตอบได้ ${stats.chats.success_rate}%`,
-      icon: MessageSquare,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      label: "คิวรอเจ้าหน้าที่",
-      value: stats.chats.waiting_queue,
-      sub: "จำนวนคิวรวมทุกบัญชี — อ่านอย่างเดียว",
-      icon: AlertTriangle,
-      iconBg: stats.chats.waiting_queue > 0 ? "bg-red-100" : "bg-gray-100",
-      iconColor: stats.chats.waiting_queue > 0 ? "text-red-500" : "text-gray-400",
-    },
-    {
       label: "เชื่อม LINE",
       value: stats.bots.line_connected,
       sub: `จากบอททั้งหมด ${stats.bots.total} ตัว`,
@@ -177,7 +159,7 @@ export default function SystemOverviewPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

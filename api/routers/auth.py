@@ -104,7 +104,7 @@ def login(body: schemas.UserLogin, db: Session = Depends(get_db), request: Reque
             write_audit_log(db, action="login_throttled", target=user,
                             target_name=None if user else unknown, detail="จำกัดการเข้าสู่ระบบชั่วคราว")
             db.commit()
-            raise HTTPException(429, "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอก่อนลองใหม่", headers={"Retry-After": str(wait)})
+            raise HTTPException(429, "เข้าสู่ระบบบ่อยเกินไป กรุณาลองใหม่อีกครั้งในภายหลัง", headers={"Retry-After": str(wait)})
 
         valid = auth.verify_password(body.password, user.hashed_password if user else _DUMMY_PASSWORD_HASH)
         if not user or not valid or not user.is_active or not user.is_approved:
@@ -114,7 +114,7 @@ def login(body: schemas.UserLogin, db: Session = Depends(get_db), request: Reque
             wait = login_security.retry_after(rows, now)
             db.commit()  # Persist failures and audit before raising an HTTP error.
             if wait:
-                raise HTTPException(429, "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอก่อนลองใหม่", headers={"Retry-After": str(wait)})
+                raise HTTPException(429, "เข้าสู่ระบบบ่อยเกินไป กรุณาลองใหม่อีกครั้งในภายหลัง", headers={"Retry-After": str(wait)})
             raise HTTPException(401, "อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชียังไม่พร้อมใช้งาน")
 
         login_security.reset_account(rows, now)

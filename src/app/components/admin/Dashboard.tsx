@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  MessageSquare, Clock, FileText, CheckCircle,
+  MessageSquare, Clock, FileText,
   TrendingUp, Bot, Users, Smartphone, Globe,
   AlertTriangle, ArrowRight,
 } from "lucide-react";
@@ -10,13 +10,11 @@ import { useAdminScope } from "../../contexts/AdminScopeContext";
 
 /* ─────────────── Types ─────────────── */
 interface DailyStats { date: string; total: number; line: number; web: number; }
-interface BotStat { bot_name: string; bot_id: string; status: string; total_conversations: number; success_rate: number; document_count: number; }
-interface TopQuestion { question: string; count: number; }
 
 interface DashboardStats {
   total_bots: number; active_bots: number;
   total_sessions: number; today_sessions: number;
-  unanswered: number; success_rate: number;
+  unanswered: number;
   total_documents: number; unassigned_documents: number; unread_notifications: number;
   platform: { line: number; web: number };
   users: { new: number; returning: number };
@@ -142,39 +140,20 @@ export default function Dashboard({
   onNavigate?: (view: "unified-chat" | "bots" | "search-history") => void;
 } = {}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [botStats, setBotStats] = useState<BotStat[]>([]);
-  const [topQuestions, setTopQuestions] = useState<TopQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [days, setDays] = useState(7);
   const { scopeParam } = useAdminScope();
 
-  const fetchAll = async (d: number) => {
+  const fetchStats = async (d: number) => {
     setLoading(true);
     setError(false);
     const headers = authHeaders();
     const scopeQ = `scope=${encodeURIComponent(scopeParam)}`;
     try {
-      const [statsRes, botsRes, topRes] = await Promise.all([
-        fetch(`/api/dashboard/stats?days=${d}&${scopeQ}`, { headers }),
-        fetch(`/api/bots/?${scopeQ}`, { headers }),
-        fetch(`/api/dashboard/top-questions?days=${d}&${scopeQ}`, { headers }),
-      ]);
-      const statsData = await statsRes.json();
-      const botsData = await botsRes.json();
-      const topData = await topRes.json();
-      setStats(statsData);
-      setTopQuestions(Array.isArray(topData) ? topData : []);
-
-      // ดึง bot-stats แต่ละตัว
-      if (Array.isArray(botsData) && botsData.length > 0) {
-        const botStatResults = await Promise.all(
-          botsData.map((b: any) =>
-            fetch(`/api/dashboard/bot-stats/${b.bot_id}`, { headers }).then(r => r.json())
-          )
-        );
-        setBotStats(botStatResults.filter(Boolean));
-      }
+      const response = await fetch(`/api/dashboard/stats?days=${d}&${scopeQ}`, { headers });
+      if (!response.ok) throw new Error("Failed to load dashboard stats");
+      setStats(await response.json());
     } catch {
       setError(true);
     } finally {
@@ -182,7 +161,7 @@ export default function Dashboard({
     }
   };
 
-  useEffect(() => { fetchAll(days); }, [days, scopeParam]);
+  useEffect(() => { fetchStats(days); }, [days, scopeParam]);
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -198,7 +177,7 @@ export default function Dashboard({
       <div className="text-center">
         <p className="text-red-400 text-lg mb-2">⚠️ โหลดข้อมูลไม่ได้</p>
         <p className="text-gray-400 text-sm mb-4">กรุณาตรวจสอบว่า Backend รันอยู่</p>
-        <button onClick={() => fetchAll(days)} className="px-4 py-2 bg-amber-400 text-gray-900 rounded-lg text-sm font-semibold">ลองใหม่</button>
+        <button onClick={() => fetchStats(days)} className="px-4 py-2 bg-amber-400 text-gray-900 rounded-lg text-sm font-semibold">ลองใหม่</button>
       </div>
     </div>
   );
@@ -299,9 +278,8 @@ export default function Dashboard({
       </div>
 
       {/* ── Metric Cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "อัตราตอบสำเร็จ", value: `${stats.success_rate}%`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", border: "border-green-200", progress: stats.success_rate, pColor: "bg-green-500" },
           { label: "แชทวันนี้",       value: stats.today_sessions,     icon: TrendingUp,   color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", progress: null, pColor: "" },
           { label: "Bot พร้อมใช้",    value: `${stats.active_bots}/${stats.total_bots}`, icon: Bot, color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-200", progress: stats.total_bots > 0 ? (stats.active_bots / stats.total_bots * 100) : 0, pColor: "bg-orange-400" },
           { label: "ผู้ใช้วันนี้",    value: stats.users.new + stats.users.returning, icon: Users, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", progress: null, pColor: "" },
@@ -380,71 +358,6 @@ export default function Dashboard({
           ]} size={110} />
           {stats.users.new === 0 && stats.users.returning === 0 && (
             <p className="text-xs text-gray-400 text-center mt-3">ยังไม่มีผู้ใช้วันนี้</p>
-          )}
-        </Card>
-      </div>
-
-      {/* ── Bot Performance + Top Questions ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
-        {/* Bot Stats Table */}
-        <Card className="p-5 rounded-2xl border border-gray-200 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-4">ประสิทธิภาพแต่ละ Bot</h2>
-          {botStats.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-gray-400 text-sm">ยังไม่มีข้อมูล Bot</div>
-          ) : (
-            <div className="space-y-4">
-              {botStats.map((b, i) => (
-                <div key={i}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${b.status === "active" ? "bg-green-400" : "bg-gray-300"}`} />
-                      <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]"title={b.bot_name}>{b.bot_name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{b.total_conversations}</span>
-                      <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{b.document_count}</span>
-                      <span className={`font-semibold ${b.success_rate >= 70 ? "text-green-600" : b.success_rate >= 40 ? "text-amber-500" : "text-red-500"}`}>
-                        {b.success_rate}%
-                      </span>
-                    </div>
-                  </div>
-                  <ProgressBar
-                    value={b.success_rate}
-                    color={b.success_rate >= 70 ? "bg-green-400" : b.success_rate >= 40 ? "bg-amber-400" : "bg-red-400"}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Top Questions */}
-        <Card className="p-5 rounded-2xl border border-gray-200 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-4">คำถามยอดนิยม</h2>
-          {topQuestions.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-gray-400 text-sm">ยังไม่มีข้อมูล</div>
-          ) : (
-            <div className="space-y-3">
-              {topQuestions.map((q, i) => {
-                const maxCount = topQuestions[0]?.count || 1;
-                return (
-                  <div key={i}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="text-xs font-bold text-gray-400 w-4">{i + 1}</span>
-                        <span className="text-xs text-gray-700 truncate">{q.question}</span>
-                      </div>
-                      <span className="text-xs font-semibold text-gray-500 ml-2 flex-shrink-0">{q.count} ครั้ง</span>
-                    </div>
-                    <ProgressBar
-                      value={Math.round((q.count / maxCount) * 100)}
-                      color="bg-amber-400"
-                    />
-                  </div>
-                );
-              })}
-            </div>
           )}
         </Card>
       </div>
