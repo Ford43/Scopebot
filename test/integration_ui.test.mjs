@@ -41,3 +41,14 @@ test('late save for A preserves B selection and credentials',async()=>{
  assert.equal(selected().props.value,'B');
  assert.deepEqual(inputs().map(n=>n.props.value),['B token','B secret']);
 });
+test('saving credentials leaves LINE disabled until the switch is explicitly enabled',async()=>{
+ globalThis.__integration.reset();
+ globalThis.__saveBot=async(id)=>({bot_id:id,is_line_connected:false});
+ const toggle=()=>{const n=nodes(parent()).find(n=>n.type?.name==='Toggle');return n.type(n.props);};
+ assert.equal(toggle().props.role,'switch');
+ assert.equal(toggle().props['aria-checked'],false);
+ fill('A token','A secret');await save();
+ assert.equal(toggle().props['aria-checked'],false);
+ await toggle().props.onClick();
+ assert.equal(toggle().props['aria-checked'],true);
+});

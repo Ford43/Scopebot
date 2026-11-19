@@ -113,6 +113,10 @@ export default function UnifiedChat() {
         body: JSON.stringify({ message: replyText }),
       });
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(typeof data?.detail === "string" ? data.detail : "ส่งข้อความไม่สำเร็จ กรุณาลองอีกครั้ง");
+      }
       if (res.ok) {
         // A completed request only owns the draft it sent, even after switching customers.
         setReplyDrafts((drafts) => {
@@ -124,7 +128,7 @@ export default function UnifiedChat() {
         if (version === selectionVersion.current) await refreshMessages(activeSession.id, version);
       }
     } catch (error) {
-      console.error("Reply error:", error);
+      toast.error(error instanceof Error ? error.message : "ส่งข้อความไม่สำเร็จ กรุณาลองอีกครั้ง");
     } finally {
       pendingReplies.current.delete(activeSession.id);
       if (selectedSessionId.current === activeSession.id) setIsSending(false);

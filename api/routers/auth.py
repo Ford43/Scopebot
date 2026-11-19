@@ -194,9 +194,8 @@ def forgot_password(body: schemas.ForgotPasswordRequest, db: Session = Depends(g
         emailed = send_password_reset_email(user.email, reset_url)
     else:
         logger.warning(
-            "Password reset for %s (SMTP not configured). Link: %s",
+            "Password reset for %s (SMTP not configured).",
             user.email,
-            reset_url,
         )
         # Notify admins so pilot IT can help without SMTP
         admins = (
@@ -222,7 +221,7 @@ def forgot_password(body: schemas.ForgotPasswordRequest, db: Session = Depends(g
     if _debug_mode() and not emailed:
         return {**generic, "dev_reset_url": reset_url, "email_sent": False}
 
-    return {**generic, "email_sent": emailed}
+    return generic
 
 
 @router.post("/reset-password")

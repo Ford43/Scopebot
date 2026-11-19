@@ -57,7 +57,7 @@ class LineWebhookTimeoutTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 400)
         self.assertEqual(work, [])
 
-    async def test_disconnected_bot_rejected_before_processing(self):
+    async def test_disconnected_bot_acknowledges_before_sending_unavailable_notice(self):
         status, work = await self.request(connected=False)
-        self.assertEqual(status, 404)
-        self.assertEqual(work, [])
+        self.assertEqual(status, 200)
+        self.assertEqual(work, [True])

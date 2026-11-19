@@ -241,6 +241,10 @@ def toggle_line(
     current_user: models.User = Depends(auth.require_shop_operator)
 ):
     bot = _get_bot_or_404(bot_id, db, current_user)
+    if not bot.is_line_connected and not (
+        (bot.line_channel_token or "").strip() and (bot.line_channel_secret or "").strip()
+    ):
+        raise HTTPException(status_code=400, detail="กรุณาบันทึก Channel Access Token และ Channel Secret ก่อนเปิดการเชื่อมต่อ LINE")
     bot.is_line_connected = not bot.is_line_connected
     db.commit()
     return {"is_line_connected": bot.is_line_connected}

@@ -42,6 +42,9 @@ function Toggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-label="เปิดใช้งาน LINE ใน Scopebot"
+      aria-checked={enabled}
       disabled={disabled}
       onClick={onToggle}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
@@ -123,7 +126,7 @@ function LineConfigPanel({
       onSaved(updated);
       setChannelToken("");
       setChannelSecret("");
-      toast.success("บันทึก LINE credentials เรียบร้อย");
+      toast.success("บันทึก LINE credentials แล้ว — ตรวจสวิตช์เปิดใช้งานและ Webhook ใน LINE Developers Console ด้วย");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "บันทึกไม่สำเร็จ"
@@ -141,7 +144,7 @@ function LineConfigPanel({
         </p>
         <CodeBlock code={webhookUrl} />
         <p className="text-[11px] text-gray-400 mt-1.5">
-          หาก deploy แล้ว ให้ใช้โดเมนสาธารณะแทน localhost
+          ต้องใช้ URL แบบ HTTPS ที่ LINE เข้าถึงได้จากอินเทอร์เน็ต หาก URL ด้านบนเป็น localhost ให้เปลี่ยนเป็นโดเมนสาธารณะของระบบ
         </p>
       </div>
 
@@ -155,12 +158,17 @@ function LineConfigPanel({
           {
             step: "2",
             title: "รับ Credentials",
-            desc: "คัดลอก Channel Access Token และ Channel Secret",
+            desc: "คัดลอก Channel Access Token และ Channel Secret มาบันทึกด้านล่าง การบันทึกยังไม่เปิดใช้งาน LINE",
           },
           {
             step: "3",
             title: "วาง Webhook URL ด้านบน",
-            desc: "Messaging API → Webhook settings → ใส่ URL แล้ว Verify",
+            desc: "Messaging API → Webhook settings → ใส่ URL สาธารณะของบอทนี้ กด Verify ให้สำเร็จ แล้วเปิด Use webhook",
+          },
+          {
+            step: "4",
+            title: "เปิดใช้งานและทดสอบข้อความ",
+            desc: "เปิดสวิตช์ LINE ใน Scopebot แล้วส่งข้อความจาก LINE OA เพื่อทดสอบรับและตอบข้อความจริง",
           },
         ].map((s) => (
           <div
@@ -182,6 +190,10 @@ function LineConfigPanel({
           </div>
         ))}
       </div>
+
+      <p className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2">
+        หากยังไม่ได้ตั้งค่า Webhook หรือปิด Use webhook ใน LINE ระบบจะไม่ได้รับข้อความ จึงส่งข้อความแจ้งว่าไม่พร้อมใช้งานกลับไปไม่ได้
+      </p>
 
       <div className="space-y-3">
         <div>
@@ -267,7 +279,7 @@ export default function Integration() {
     try {
       const next = await toggleBotLine(bot.bot_id);
       patchBot({ ...bot, is_line_connected: next });
-      toast.success(next ? "เปิดการเชื่อมต่อ LINE แล้ว" : "ปิดการเชื่อมต่อ LINE แล้ว");
+      toast.success(next ? "เปิดใช้งาน LINE ใน Scopebot แล้ว — โปรดทดสอบผ่าน LINE OA" : "ปิดใช้งาน LINE ใน Scopebot แล้ว");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "สลับ LINE ไม่สำเร็จ"
@@ -350,11 +362,11 @@ export default function Integration() {
               {lineOn ? (
                 <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 bg-green-50 rounded-lg px-3 py-1.5">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  เปิดใช้งานแล้ว — อย่าลืมบันทึก Token/Secret
+                  เปิดใช้งานใน Scopebot แล้ว — ยังไม่ยืนยันว่า Webhook ใน LINE พร้อมใช้งาน
                 </div>
               ) : (
                 <div className="mt-3 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-1.5">
-                  ยังไม่ได้เปิด — webhook จะไม่รับข้อความ
+                  ปิดใช้งาน LINE ใน Scopebot — บอทจะไม่ตอบคำถามตามปกติ แม้บันทึก Token/Secret แล้ว ต้องเปิดสวิตช์นี้ด้วย
                 </div>
               )}
 

@@ -3,21 +3,26 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct
 from api.database import get_db
 from api import models, auth
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 try:
     from zoneinfo import ZoneInfo
     _TZ = ZoneInfo("Asia/Bangkok")
 except Exception:
-    _TZ = None
+    _TZ = timezone(timedelta(hours=7))
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 
 def _today():
-    if _TZ is not None:
-        return datetime.now(_TZ).date()
-    return datetime.utcnow().date()
+    return datetime.now(_TZ).date()
+
+
+def _utc_day_bounds(day):
+    """Local calendar day as a half-open UTC range for stored timestamps."""
+    start = datetime.combine(day, datetime.min.time(), tzinfo=_TZ)
+    end = datetime.combine(day + timedelta(days=1), datetime.min.time(), tzinfo=_TZ)
+    return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
 
 
 def _waiting_queue_count(db: Session, bot_ids: list) -> int:
@@ -65,11 +70,13 @@ def get_stats(
     ).scalar() or 0 if bot_ids else 0
 
     today = _today()
+    today_start, today_end = _utc_day_bounds(today)
     today_sessions = db.query(
         func.count(distinct(models.Conversation.session_id))
     ).filter(
         models.Conversation.bot_id.in_(bot_ids),
-        func.date(models.Conversation.created_at) == today
+        models.Conversation.created_at >= today_start,
+        models.Conversation.created_at < today_end
     ).scalar() or 0 if bot_ids else 0
 
     # รอเจ้าหน้าที่ = คิว LiveSession (ไม่ใช่ Conversation ที่ค้าง resolve)
@@ -118,7 +125,8 @@ def get_stats(
         distinct(models.Conversation.session_id)
     ).filter(
         models.Conversation.bot_id.in_(bot_ids),
-        func.date(models.Conversation.created_at) == today
+        models.Conversation.created_at >= today_start,
+        models.Conversation.created_at < today_end
     ).all() if bot_ids else []
 
     today_session_ids = [s[0] for s in today_session_ids if s[0]]
@@ -130,7 +138,7 @@ def get_stats(
         prev = db.query(models.Conversation).filter(
             models.Conversation.session_id == sid,
             models.Conversation.bot_id.in_(bot_ids),
-            func.date(models.Conversation.created_at) < today
+            models.Conversation.created_at < today_start
         ).first()
         if prev:
             returning_users += 1
@@ -140,12 +148,14 @@ def get_stats(
     # ---- Daily stats ตาม range ที่เลือก ----
     daily_stats = []
     for i in range(days - 1, -1, -1):
-        day = _today() - timedelta(days=i)
+        day = today - timedelta(days=i)
+        day_start, day_end = _utc_day_bounds(day)
         sessions = db.query(
             func.count(distinct(models.Conversation.session_id))
         ).filter(
             models.Conversation.bot_id.in_(bot_ids),
-            func.date(models.Conversation.created_at) == day
+            models.Conversation.created_at >= day_start,
+            models.Conversation.created_at < day_end
         ).scalar() or 0 if bot_ids else 0
 
         line_count = db.query(
@@ -153,7 +163,8 @@ def get_stats(
         ).filter(
             models.Conversation.bot_id.in_(bot_ids),
             models.Conversation.source_channel == "line",
-            func.date(models.Conversation.created_at) == day
+            models.Conversation.created_at >= day_start,
+            models.Conversation.created_at < day_end
         ).scalar() or 0 if bot_ids else 0
 
         web_count = db.query(
@@ -161,7 +172,8 @@ def get_stats(
         ).filter(
             models.Conversation.bot_id.in_(bot_ids),
             models.Conversation.source_channel == "web",
-            func.date(models.Conversation.created_at) == day
+            models.Conversation.created_at >= day_start,
+            models.Conversation.created_at < day_end
         ).scalar() or 0 if bot_ids else 0
 
         daily_stats.append({

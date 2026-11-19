@@ -145,7 +145,7 @@ def chat(
     if rag_failed:
         is_bot_answered = False
         offer_handoff = source == "web"
-    elif answer == "REQUIRE_HUMAN_HANDOFF":
+    elif answer.strip() in {"REQUIRE_HUMAN_HANDOFF", "ไม่พบข้อมูล"}:
         if source == "web":
             answer = (
                 "ไม่พบข้อมูลที่เกี่ยวข้องในฐานความรู้ "
@@ -159,7 +159,7 @@ def chat(
             is_bot_answered = False
             create_live = True
     else:
-        is_bot_answered = "ไม่พบข้อมูล" not in answer
+        is_bot_answered = True
         create_live = source != "web" and not is_bot_answered
         offer_handoff = source == "web" and not is_bot_answered
 

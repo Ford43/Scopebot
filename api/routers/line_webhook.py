@@ -199,8 +199,8 @@ def _process_line_webhook(
             models.Bot.bot_id == bot_id
         ).first()
 
-        if not bot or not bot.is_line_connected:
-            raise HTTPException(status_code=404, detail="ไม่พบ Bot หรือยังไม่ได้เชื่อม Line")
+        if not bot:
+            raise HTTPException(status_code=404, detail="ไม่พบ Bot")
 
         if not bot.line_channel_secret or not bot.line_channel_token:
             raise HTTPException(status_code=400, detail="ยังไม่ได้ตั้งค่า Line credentials")
@@ -231,6 +231,17 @@ def _process_line_webhook(
             line_user_id = event.get("source", {}).get("userId", "")
 
             if not user_message or not reply_token:
+                continue
+
+            # A signed webhook can arrive while the local connection switch is
+            # off. Acknowledge availability without accessing customer history
+            # or running RAG. Missing credentials cannot authenticate/send this.
+            if not bot.is_line_connected:
+                with ApiClient(configuration) as api_client:
+                    _line_reply_or_push(
+                        MessagingApi(api_client), reply_token, line_user_id,
+                        [TextMessage(text="ขออภัย ระบบตอบอัตโนมัติยังไม่พร้อมให้บริการในขณะนี้ กรุณาติดต่อผู้ดูแลบัญชี LINE นี้หรือลองใหม่ภายหลัง")],
+                    )
                 continue
 
             # ดึงหรือสร้าง live session
@@ -374,11 +385,11 @@ def _process_line_webhook(
                     answer, rag_failed = RAG_ERROR_MESSAGE, True
                 if rag_failed:
                     is_bot_answered = False
-                elif answer == "REQUIRE_HUMAN_HANDOFF":
+                elif answer.strip() in {"REQUIRE_HUMAN_HANDOFF", "ไม่พบข้อมูล"}:
                     answer = "ไม่พบข้อมูล สามารถกดติดต่อเจ้าหน้าที่ได้"
                     is_bot_answered = False
                 else:
-                    is_bot_answered = "ไม่พบข้อมูล" not in answer
+                    is_bot_answered = True
 
                 db.add(models.Conversation(
                     session_id=line_user_id,

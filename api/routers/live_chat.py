@@ -28,9 +28,21 @@ def _push_line_message(token: str, line_user_id: str, text: str):
                 )
             )
     except ImportError:
-        print("[live] LINE SDK not installed; skip push")
-    except Exception as e:
-        print(f"[live] Push message error: {e}")
+        raise HTTPException(status_code=503, detail="ระบบส่งข้อความ LINE ไม่พร้อมใช้งาน") from None
+    except Exception:
+        raise HTTPException(status_code=502, detail="ส่งข้อความผ่าน LINE ไม่สำเร็จ กรุณาลองอีกครั้ง") from None
+
+
+def _is_line_session(db: Session, session: models.LiveSession) -> bool:
+    conversation = db.query(models.Conversation).filter(
+        models.Conversation.bot_id == session.bot_id,
+        models.Conversation.session_id == session.line_user_id,
+    ).order_by(models.Conversation.id.desc()).first()
+    if conversation:
+        return conversation.source_channel == "line"
+    # A LINE handoff can be created before its first Conversation is recorded.
+    import re
+    return bool(re.fullmatch(r"U[0-9a-fA-F]{32}", session.line_user_id))
 
 
 def _get_or_create_session(db: Session, line_user_id: str, bot_db_id: int, display_name: str = None):
@@ -152,15 +164,21 @@ def staff_reply(
     if session.mode not in [models.SessionMode.human, models.SessionMode.waiting]:
         raise HTTPException(status_code=400, detail="session นี้ยังไม่ได้อยู่ใน mode human")
 
-    # อัปเดต mode เป็น human ถ้ายังเป็น waiting — แจ้งลูกค้าว่าเจ้าหน้าที่เข้ามาแล้ว
-    just_joined = False
-    if session.mode == models.SessionMode.waiting:
-        session.mode = models.SessionMode.human
-        just_joined = True
-        db.commit()
-
-    # normalize line break ก่อนบันทึก
     clean_message = body.message.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not clean_message:
+        raise HTTPException(status_code=400, detail="กรุณาระบุข้อความ")
+
+    # Only persist an answer after LINE accepts it; failures leave the queue intact.
+    if _is_line_session(db, session):
+        token = session.bot.line_channel_token
+        if not token or not token.strip():
+            raise HTTPException(status_code=503, detail="ยังไม่ได้ตั้งค่าการส่งข้อความ LINE")
+        text = f"[เจ้าหน้าที่] {clean_message}"
+        if session.mode == models.SessionMode.waiting:
+            text = "👩‍💻 เจ้าหน้าที่เข้ามาดูแลการสนทนานี้แล้วครับ/ค่ะ\n" + text
+        _push_line_message(token, session.line_user_id, text)
+
+    session.mode = models.SessionMode.human
 
     # บันทึกข้อความ
     msg = models.LiveMessage(
@@ -184,21 +202,6 @@ def staff_reply(
     # Commit ทีเดียวพร้อมกันทั้ง 2 ตาราง
     db.commit()
 
-    # ส่งข้อความผ่าน Line — ถ้าเพิ่งรับคิว ให้บอกลูกค้าชัดเจนว่ากำลังคุยกับคน
-    bot = session.bot
-    if bot.line_channel_token:
-        if just_joined:
-            _push_line_message(
-                bot.line_channel_token,
-                session.line_user_id,
-                "👩‍💻 เจ้าหน้าที่เข้ามาดูแลการสนทนานี้แล้วครับ/ค่ะ",
-            )
-        _push_line_message(
-            bot.line_channel_token,
-            session.line_user_id,
-            f"[เจ้าหน้าที่] {clean_message}"
-        )
-
     return {"message": "ส่งข้อความสำเร็จ"}
 
 
@@ -220,12 +223,16 @@ def end_session(
     db.commit()
 
     bot = session.bot
-    if bot.line_channel_token:
-        _push_line_message(
-            bot.line_channel_token,
-            session.line_user_id,
-            "ขอบคุณที่ใช้บริการครับ/ค่ะ 😊 บอทพร้อมให้บริการแล้ว หากมีคำถามเพิ่มเติมสามารถถามได้เลย"
-        )
+    if bot.line_channel_token and _is_line_session(db, session):
+        # Ending a session is local state; its courtesy notice is best effort.
+        try:
+            _push_line_message(
+                bot.line_channel_token,
+                session.line_user_id,
+                "ขอบคุณที่ใช้บริการครับ/ค่ะ 😊 บอทพร้อมให้บริการแล้ว หากมีคำถามเพิ่มเติมสามารถถามได้เลย"
+            )
+        except HTTPException:
+            pass
 
     notif = models.Notification(
         user_id=current_user.id,

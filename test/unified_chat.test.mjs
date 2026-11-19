@@ -9,8 +9,8 @@ const result = await build({
   entryPoints: ["src/app/components/admin/UnifiedChat.tsx"], bundle: true,
   platform: "node", format: "esm", packages: "external", jsx: "automatic", write: false,
   plugins: [{ name: "boundaries", setup(b) {
-    b.onResolve({ filter: /^react$|lib\/api$|contexts\/AdminScopeContext$/ }, a => ({ path: a.path, namespace: "mock" }));
-    b.onLoad({ filter: /.*/, namespace: "mock" }, a => ({ contents: a.path === "react" ? `
+    b.onResolve({ filter: /^react$|^sonner$|lib\/api$|contexts\/AdminScopeContext$/ }, a => ({ path: a.path, namespace: "mock" }));
+    b.onLoad({ filter: /.*/, namespace: "mock" }, a => ({ contents: a.path === "sonner" ? "export const toast={error:message=>globalThis.__replyErrors.push(message),success:()=>{}};" : a.path === "react" ? `
       let states=[], refs=[], effects=[], s=0, r=0, e=0, pending=[];
       globalThis.__unified={begin(){s=r=e=0;},flush(){pending.splice(0).forEach(f=>f());},reset(){effects.forEach(x=>x?.cleanup?.());states=[];refs=[];effects=[];pending=[];}};
       export function useState(v){const i=s++;if(!(i in states))states[i]=v;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v];}
@@ -131,3 +131,13 @@ test('older poll cannot overwrite a newer completed history',()=>deferredMessage
  gets[0].resolve(response('old history'));await settle();
  assert.deepEqual(visibleMessages(),['newer history']);
 }));
+
+ test('failed delivery shows an error and preserves the draft for retry',()=>isolated(async posts=>{
+ globalThis.__replyErrors=[];
+ select('Alice');type('Unsent answer');enter();await settle();
+ posts[0].resolve({ok:false,json:async()=>({detail:'LINE delivery failed'})});await settle();
+ assert.equal(input().props.value,'Unsent answer');
+ assert.deepEqual(globalThis.__replyErrors,['LINE delivery failed']);
+ enter();await settle();assert.equal(posts.length,2);
+ posts[1].resolve({ok:true});await settle();
+ }));

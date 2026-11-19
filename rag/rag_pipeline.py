@@ -250,7 +250,7 @@ def ask_rag(
             return _reject_grounding(parse_reason or "invalid_model_json", bot_id, question)
 
         answer = grounded.answer
-        if not answer or "ไม่พบข้อมูล" in answer:
+        if not answer or (answer.strip() == "ไม่พบข้อมูล" and not grounded.evidence):
             quote = extract_relevant_quote(retrieval_query, selected_units)
             if quote is None:
                 return _reject_grounding("model_no_answer", bot_id, question)
